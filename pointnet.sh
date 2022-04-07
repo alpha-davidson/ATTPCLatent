@@ -6,7 +6,8 @@
 
 type='BINARY'
 sem_seg=True
+num_classes=2
 mkdir $SLURM_JOB_ID
 
-python3 train_pointnet.py $sem_seg
-python3 evaluate_pointnet.py $SLURM_JOB_ID $type $sem_seg
+python3 train_pointnet.py $sem_seg $num_classes
+python3 evaluate_pointnet.py $SLURM_JOB_ID $type $sem_seg $num_classes

@@ -31,6 +31,7 @@ def plot_learning_curve(history):
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.xticks(range(0, len(history.history['loss']), 10), range(1, len(history.history['loss']) + 1, 10))
+    plt.yscale('log')
     filename = 'LossCurve.png' 
     plt.savefig(filename) 
     

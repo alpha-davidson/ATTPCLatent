@@ -3,7 +3,7 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from matplotlib import pyplot as plt
-
+import sys
 import cnn_functions as cnn
 from models.pointnet_model import pnet
 
@@ -37,10 +37,10 @@ def train():
         train_ds = tf.data.Dataset.from_tensor_slices((train_points, train_labels))
         val_ds = tf.data.Dataset.from_tensor_slices((val_points, val_labels))
     
-    train_ds = train_ds.shuffle(len(train_points)).batch(config['batch_size'])
-    val_ds = val_ds.shuffle(len(val_points)).batch(config['batch_size'])
+    train_ds = train_ds.shuffle(len(train_ds)).batch(config['batch_size'])
+    val_ds = val_ds.shuffle(len(val_ds)).batch(config['batch_size'])
     
-    model = pnet(config['sem_seg_flag'], config['num_points'], config['num_classes'])
+    model = pnet(config['sem_seg_flag'], config['num_points'], int(config['num_classes']))
     
     model.compile(
     loss="sparse_categorical_crossentropy",
@@ -51,7 +51,7 @@ def train():
     history = model.fit(
     train_ds,
     validation_data=val_ds,
-    epochs=20,
+    epochs=50,
     verbose = 1
     )
     
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     'test_points2' : 'data2/Mg22_size512test_convertXYZ.npy',
     'num_points' : 512,
     'batch_size' : 32,
-    'num_classes' : 6,
-    'sem_seg_flag' : sys.argv[1]
+    'num_classes' : sys.argv[2],
+    'sem_seg_flag' : True #sys.argv[1]
     }
     train()

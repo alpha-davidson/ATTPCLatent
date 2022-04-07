@@ -54,18 +54,25 @@ def pnet(sem_seg_flag, num_points, num_classes):
     #Since current number of classes is about 1/4 of pointnet, used 1/4 of size for all layers except initial 3 for input (x,y,z)
     inputs = keras.Input(shape=(num_points, 3))
     x = tnet(inputs, 3)
+    #print(tf.shape(x))
     x = conv_bn(x, 16)
+    #print(tf.shape(x))
     x = conv_bn(x, 16)
+    #print(tf.shape(x))
     x_transform = tnet(x, 16)
+    #print('x_transform: ' + str(tf.shape(x_transform)))
 
     x = conv_bn(x_transform, 16)
+    #print(tf.shape(x))
     x = conv_bn(x, 32)
+    #print(tf.shape(x))
     x = conv_bn(x, 256)
-    x = layers.GlobalMaxPooling1D()(x)
+    #print(tf.shape(x))
+    
 
     if sem_seg_flag:
         #Current uses Fig 2 archituecture, may want to change to better Fig 9 later
-        x = Concatenate(axis=1)([x_transform,x])
+        x = layers.Concatenate(axis=2)([x_transform,x])
         x = conv_bn(x, 128)
         x = conv_bn(x, 64)
         x = conv_bn(x, 32)
@@ -75,11 +82,19 @@ def pnet(sem_seg_flag, num_points, num_classes):
         model.summary()
 
     else:
+        x = layers.GlobalMaxPooling1D()(x)
+        #print(tf.shape(x))
         x = dense_bn(x, 128)
+        #print(tf.shape(x))
         x = layers.Dropout(0.3)(x)
+        #print(tf.shape(x))
         x = dense_bn(x, 64)
+        #print(tf.shape(x))
         x = layers.Dropout(0.3)(x)
+        #print(tf.shape(x))
         outputs = layers.Dense(num_classes, activation="softmax")(x)
+        #print(tf.shape(outputs))
+        exit()
         model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
         model.summary()
         

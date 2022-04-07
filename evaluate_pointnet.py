@@ -9,7 +9,7 @@ from models.pointnet_model import pnet
 
 
 def build_model():
-    model = pnet(config['sem_seg_flag'], config['num_points'], config['num_classes'])
+    model = pnet(config['sem_seg_flag'], config['num_points'], int(config['num_classes']))
     model.load_weights('./logs/pnet_1/model/weights')
     return model
 
@@ -61,7 +61,7 @@ def evaluate(targets, predictions):
     
     print(classification_report(targets, predictions, target_names=class_names))
 
-    cnn.plot_confusion_matrix(targets, predictions, class_names, './ConfusionMatrix.png', title= config['class_type'] + ' Confusion Matrix ' + str(config['j']))
+    cnn.plot_confusion_matrix(targets, predictions, class_names, './ConfusionMatrix.png', title= config['class_type'] + ' Vanilla Pointnet Confusion Matrix ' + str(config['j']))
     print('Confusion matrix made!')
     
     
@@ -69,10 +69,10 @@ if __name__ == '__main__':
     config = {
     'test_points' : 'data/Mg22_size512test_convertXYZ.npy',
     'test_labels' : 'data/Mg22_size512_track_labels_test_convertXYZ.npy',
-    'test_ds' : 'data/Mg22_size{}test_convert{}.npy',
+    'test_ds' : 'data2/Mg22_size{}test_convert{}.npy',
     'num_points' : 512,
     'batch_size' : 16,
-    'num_classes' : 6,
+    'num_classes' : sys.argv[4],
     'sem_seg_flag' : sys.argv[3],
     'j' : sys.argv[1],
     'class_type' : sys.argv[2],
@@ -81,8 +81,8 @@ if __name__ == '__main__':
     
     if config['sem_seg_flag']:
         model = build_model()
-        set1 = config['test_ds'].format(sample_size, str(1) + projection)
-        set2 = config['test_ds'].format(sample_size, str(2) + projection)
+        set1 = config['test_ds'].format(config['num_points'], str(1) + config['projection'])
+        set2 = config['test_ds'].format(config['num_points'], str(2) + config['projection'])
 
         test_features1, test_targets1 = load_data2(set1)
         test_features2, test_targets2 = load_data2(set2)
