@@ -4,7 +4,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from matplotlib import pyplot as plt
 
-tf.random.set_seed(1234)
 
 def conv_bn(x, filters):
     x = layers.Conv1D(filters, kernel_size=1, padding="valid")(x)
@@ -50,6 +49,7 @@ def tnet(inputs, num_features):
     # Apply affine transformation to input features
     return layers.Dot(axes=(2, 1))([inputs, feat_T])
 
+# TODO: switch order of parameters and give sem_seg a default value
 def pnet(sem_seg_flag, num_points, num_classes):
     # Since current number of classes is about 1/4 of pointnet, used 1/4 of size 
     # for all layers except initial 3 for input (x,y,z)    
