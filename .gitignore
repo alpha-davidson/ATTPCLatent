@@ -131,3 +131,4 @@ dmypy.json
 # log directories
 models/
 plots/
+data/
