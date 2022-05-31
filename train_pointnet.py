@@ -16,26 +16,40 @@ def fix_shape(points, labels):
 
 def train():
     sem_seg_flag = config['sem_seg_flag']
-    if sem_seg_flag:
-        train_ds = np.load(config['train_points2'])
-        val_ds = np.load(config['val_points2'])
+    voxel_shuffle_flag = config['voxel_shuffle_flag']
+    
+    if voxel_shuffle_flag:
+        train_ds = np.load(config['train_points3'])
+        val_ds = np.load(config['val_points3'])
 
         train_features = train_ds[:, :, :3]
         train_labels = train_ds[:, :, 3]
         train_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).map(fix_shape)
-        
+
         val_features = val_ds[:, :, :3]
         val_labels = val_ds[:, :, 3]
-        val_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).map(fix_shape)
+        val_ds = tf.data.Dataset.from_tensor_slices((val_features, val_labels)).map(fix_shape)
     else:
-        train_points = np.load(config['train_points1'])
-        train_labels = np.load(config['train_labels1'])
-        
-        val_points = np.load(config['val_points1'])
-        val_labels = np.load(config['val_labels1'])
-        
-        train_ds = tf.data.Dataset.from_tensor_slices((train_points, train_labels))
-        val_ds = tf.data.Dataset.from_tensor_slices((val_points, val_labels))
+        if sem_seg_flag:
+            train_ds = np.load(config['train_points2'])
+            val_ds = np.load(config['val_points2'])
+
+            train_features = train_ds[:, :, :3]
+            train_labels = train_ds[:, :, 3]
+            train_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).map(fix_shape)
+
+            val_features = val_ds[:, :, :3]
+            val_labels = val_ds[:, :, 3]
+            val_ds = tf.data.Dataset.from_tensor_slices((val_features, val_labels)).map(fix_shape)
+        else:
+            train_points = np.load(config['train_points1'])
+            train_labels = np.load(config['train_labels1'])
+
+            val_points = np.load(config['val_points1'])
+            val_labels = np.load(config['val_labels1'])
+
+            train_ds = tf.data.Dataset.from_tensor_slices((train_points, train_labels))
+            val_ds = tf.data.Dataset.from_tensor_slices((val_points, val_labels))
     
     train_ds = train_ds.shuffle(len(train_ds)).batch(config['batch_size'])
     val_ds = val_ds.shuffle(len(val_ds)).batch(config['batch_size'])
@@ -44,10 +58,10 @@ def train():
     
     model.compile(
     loss="sparse_categorical_crossentropy",
-    optimizer=keras.optimizers.Adam(learning_rate=0.001),
+    optimizer=keras.optimizers.Adam(learning_rate=0.0005),
     metrics=["sparse_categorical_accuracy"],
     )
-
+    
     history = model.fit(
     train_ds,
     validation_data=val_ds,
@@ -66,14 +80,14 @@ if __name__ == '__main__':
     'train_labels1' : 'data/Mg22_size512_track_labels_train_convertXYZ.npy',
     'val_points1' : 'data/Mg22_size512val_convertXYZ.npy',
     'val_labels1' : 'data/Mg22_size512_track_labels_val_convertXYZ.npy',
-    'test_points1' : 'data/Mg22_size512test_convertXYZ.npy',
-    'test_labels1' : 'data/Mg22_size512_track_labels_test_convertXYZ.npy',
     'train_points2' : 'data2/Mg22_size512train_convertXYZ.npy',
     'val_points2' : 'data2/Mg22_size512val_convertXYZ.npy',
-    'test_points2' : 'data2/Mg22_size512test_convertXYZ.npy',
+    'train_points3' : 'data3/Mg22_size512train.npy',
+    'val_points3' : 'data3/Mg22_size512val.npy',
     'num_points' : 512,
     'batch_size' : 32,
+    'sem_seg_flag' : True, #sys.argv[1],
     'num_classes' : sys.argv[2],
-    'sem_seg_flag' : True #sys.argv[1]
+    'voxel_shuffle_flag' : sys.argv[3]
     }
     train()

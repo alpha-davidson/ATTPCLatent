@@ -51,44 +51,59 @@ def tnet(inputs, num_features):
     return layers.Dot(axes=(2, 1))([inputs, feat_T])
 
 def pnet(sem_seg_flag, num_points, num_classes):
-    #Since current number of classes is about 1/4 of pointnet, used 1/4 of size for all layers except initial 3 for input (x,y,z)
+    #Since current number of classes is about 1/4 of pointnet, used 1/4 of size for all layers except initial 3 for input (x,y,z)    
     inputs = keras.Input(shape=(num_points, 3))
-    x = tnet(inputs, 3)
-    #print(tf.shape(x))
-    x = conv_bn(x, 16)
-    #print(tf.shape(x))
-    x = conv_bn(x, 16)
-    #print(tf.shape(x))
-    x_transform = tnet(x, 16)
-    #print('x_transform: ' + str(tf.shape(x_transform)))
+    a = tnet(inputs, 3)
+    #print(a.shape)
+    b = conv_bn(a, 32) #
+    #print(b.shape)
+    c = conv_bn(b, 32) #
+    #print(c.shape)
+    d = tnet(c, 32) #
+    #print('x_transform: ' + str(d.shape))
 
-    x = conv_bn(x_transform, 16)
-    #print(tf.shape(x))
-    x = conv_bn(x, 32)
-    #print(tf.shape(x))
-    x = conv_bn(x, 256)
-    #print(tf.shape(x))
-    
+    e = conv_bn(d, 32) #
+    #print(e.shape)
+    f = conv_bn(e, 64) #
+    #print(f.shape)
+    g = conv_bn(f, 512)
+    #print(g.shape)
+    x = layers.GlobalMaxPooling1D()(g)
+    #print(x.shape)
+
 
     if sem_seg_flag:
-        #Current uses Fig 2 archituecture, may want to change to better Fig 9 later
-        x = layers.Concatenate(axis=2)([x_transform,x])
+        #Current uses Fig 9 archituecture, can change to Fig 2 later
+        long = layers.Concatenate(axis=2)([b,c])
+        long = layers.Concatenate(axis=2)([long,d])
+        long = layers.Concatenate(axis=2)([long,e])
+        long = layers.Concatenate(axis=2)([long,f])
+        x = tf.expand_dims(x, axis=1)
+        #print(x.shape)
+        x = tf.repeat(x, repeats=512, axis=1)
+        #print(x.shape)
+#         x = layers.Concatenate(axis=2)([d,x])
+#         print(x.shape)
+        long = layers.Concatenate(axis=2)([long,x])
+        x = conv_bn(x, 256)
+        x = conv_bn(long, 128)
         x = conv_bn(x, 128)
         x = conv_bn(x, 64)
-        x = conv_bn(x, 32)
-        x = conv_bn(x, 32)
-        outputs = conv_bn(x, num_classes)
+        x = layers.Dropout(0.3)(x)
+        x = conv_bn(x, 64)
+        x = layers.Dropout(0.3)(x)
+        #outputs = conv_bn(x, num_classes)
+        outputs = layers.Dense(num_classes, activation="softmax")(x)
         model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
         model.summary()
 
     else:
-        x = layers.GlobalMaxPooling1D()(x)
-        #print(tf.shape(x))
-        x = dense_bn(x, 128)
+        
+        x = dense_bn(x, 256)
         #print(tf.shape(x))
         x = layers.Dropout(0.3)(x)
         #print(tf.shape(x))
-        x = dense_bn(x, 64)
+        x = dense_bn(x, 128)
         #print(tf.shape(x))
         x = layers.Dropout(0.3)(x)
         #print(tf.shape(x))

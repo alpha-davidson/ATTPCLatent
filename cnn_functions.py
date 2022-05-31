@@ -30,6 +30,7 @@ def plot_learning_curve(history):
     plt.title('Learning Curve')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
+    #plt.axis([0, 100, 0, 2])
     plt.xticks(range(0, len(history.history['loss']), 10), range(1, len(history.history['loss']) + 1, 10))
     plt.yscale('log')
     filename = 'LossCurve.png' 
@@ -60,3 +61,5 @@ def plot_confusion_matrix(y_true, y_pred, classes, filename, title=None, cmap=pl
     fig.tight_layout()
 
     plt.savefig(filename)
+    
+# def plot_voxels(original, )
