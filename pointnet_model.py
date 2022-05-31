@@ -16,6 +16,7 @@ def dense_bn(x, filters):
     x = layers.BatchNormalization(momentum=0.0)(x)
     return layers.Activation("relu")(x)
 
+
 class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
         self.num_features = num_features
@@ -27,6 +28,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         xxt = tf.tensordot(x, x, axes=(2, 2))
         xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.eye))
+    
     
 def tnet(inputs, num_features):
     # Initalise bias as the indentity matrix
