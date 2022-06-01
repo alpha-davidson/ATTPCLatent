@@ -16,7 +16,10 @@ import os
 @click.option('--num-epochs', default=10, type=click.INT, help='Number of epochs of training')
 @click.argument('file-stem')
 def train(num_points, batch_size, num_classes, num_epochs, file_stem):
-
+    """
+    Example invocation:
+        python3 train_event_classification_model.py --num-classes 6 data/Mg22_size512_convertXYZ
+    """
     # load training data
     train_features_filename = file_stem + '_train_features.npy'
     train_labels_filename = file_stem + '_train_labels.npy'
@@ -35,6 +38,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
 
     # build and train model
     model = pnet(sem_seg_flag=False, num_points=num_points, num_classes=num_classes)
+    model.summary()
     model.compile(loss="sparse_categorical_crossentropy",
                   optimizer=keras.optimizers.Adam(learning_rate=0.0005),
                   metrics=["sparse_categorical_accuracy"])
