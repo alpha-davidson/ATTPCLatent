@@ -132,6 +132,7 @@ dmypy.json
 models/
 plots/
 data/
+voxel_data/
 
 # slurm files
 slurm*.out
