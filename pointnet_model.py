@@ -4,7 +4,6 @@ from tensorflow import keras
 from tensorflow.keras import layers
 from matplotlib import pyplot as plt
 
-tf.random.set_seed(1234)
 
 def conv_bn(x, filters):
     x = layers.Conv1D(filters, kernel_size=1, padding="valid")(x)
@@ -17,6 +16,7 @@ def dense_bn(x, filters):
     x = layers.BatchNormalization(momentum=0.0)(x)
     return layers.Activation("relu")(x)
 
+
 class OrthogonalRegularizer(keras.regularizers.Regularizer):
     def __init__(self, num_features, l2reg=0.001):
         self.num_features = num_features
@@ -28,6 +28,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         xxt = tf.tensordot(x, x, axes=(2, 2))
         xxt = tf.reshape(xxt, (-1, self.num_features, self.num_features))
         return tf.reduce_sum(self.l2reg * tf.square(xxt - self.eye))
+    
     
 def tnet(inputs, num_features):
     # Initalise bias as the indentity matrix
@@ -50,27 +51,19 @@ def tnet(inputs, num_features):
     # Apply affine transformation to input features
     return layers.Dot(axes=(2, 1))([inputs, feat_T])
 
+# TODO: switch order of parameters and give sem_seg a default value
 def pnet(sem_seg_flag, num_points, num_classes):
-    #Since current number of classes is about 1/4 of pointnet, used 1/4 of size for all layers except initial 3 for input (x,y,z)    
+    # Since current number of classes is about 1/4 of pointnet, used 1/4 of size 
+    # for all layers except initial 3 for input (x,y,z)    
     inputs = keras.Input(shape=(num_points, 3))
     a = tnet(inputs, 3)
-    #print(a.shape)
-    b = conv_bn(a, 32) #
-    #print(b.shape)
-    c = conv_bn(b, 32) #
-    #print(c.shape)
-    d = tnet(c, 32) #
-    #print('x_transform: ' + str(d.shape))
-
-    e = conv_bn(d, 32) #
-    #print(e.shape)
-    f = conv_bn(e, 64) #
-    #print(f.shape)
+    b = conv_bn(a, 32)
+    c = conv_bn(b, 32)
+    d = tnet(c, 32)
+    e = conv_bn(d, 32) 
+    f = conv_bn(e, 64)
     g = conv_bn(f, 512)
-    #print(g.shape)
     x = layers.GlobalMaxPooling1D()(g)
-    #print(x.shape)
-
 
     if sem_seg_flag:
         #Current uses Fig 9 archituecture, can change to Fig 2 later
@@ -79,11 +72,7 @@ def pnet(sem_seg_flag, num_points, num_classes):
         long = layers.Concatenate(axis=2)([long,e])
         long = layers.Concatenate(axis=2)([long,f])
         x = tf.expand_dims(x, axis=1)
-        #print(x.shape)
         x = tf.repeat(x, repeats=512, axis=1)
-        #print(x.shape)
-#         x = layers.Concatenate(axis=2)([d,x])
-#         print(x.shape)
         long = layers.Concatenate(axis=2)([long,x])
         x = conv_bn(x, 256)
         x = conv_bn(long, 128)
@@ -92,25 +81,15 @@ def pnet(sem_seg_flag, num_points, num_classes):
         x = layers.Dropout(0.3)(x)
         x = conv_bn(x, 64)
         x = layers.Dropout(0.3)(x)
-        #outputs = conv_bn(x, num_classes)
         outputs = layers.Dense(num_classes, activation="softmax")(x)
-        model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
-        model.summary()
-
     else:
-        
         x = dense_bn(x, 256)
-        #print(tf.shape(x))
         x = layers.Dropout(0.3)(x)
-        #print(tf.shape(x))
         x = dense_bn(x, 128)
-        #print(tf.shape(x))
         x = layers.Dropout(0.3)(x)
-        #print(tf.shape(x))
         outputs = layers.Dense(num_classes, activation="softmax")(x)
-        #print(tf.shape(outputs))
-        exit()
-        model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
-        model.summary()
+
+    model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
+    model.summary()
         
     return model

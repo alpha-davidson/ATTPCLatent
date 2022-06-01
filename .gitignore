@@ -127,3 +127,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# log directories
+models/
+plots/
+data/
+
+# slurm files
+slurm*.out
