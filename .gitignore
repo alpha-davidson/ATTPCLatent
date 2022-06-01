@@ -132,3 +132,6 @@ dmypy.json
 models/
 plots/
 data/
+
+# slurm files
+slurm*.out
