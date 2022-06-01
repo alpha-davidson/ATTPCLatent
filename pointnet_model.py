@@ -90,6 +90,4 @@ def pnet(sem_seg_flag, num_points, num_classes):
         outputs = layers.Dense(num_classes, activation="softmax")(x)
 
     model = keras.Model(inputs=inputs, outputs=outputs, name="pointnet")
-    model.summary()
-        
     return model
