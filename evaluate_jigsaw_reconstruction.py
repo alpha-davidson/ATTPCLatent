@@ -1,75 +1,49 @@
-import cnn_functions as cnn
+import plotting
 import numpy as np
-import h5py
 import tensorflow as tf
 from sklearn.metrics import classification_report
-import sys
-from models.pointnet_model import pnet
-import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-from mpl_toolkits import mplot3d
-import random 
+from pointnet_model import pnet
+import click
 
+# 
 
+@click.command()
+@click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
+@click.option('--num-classes', default=2, type=click.INT, help='Number of classes to predict')
+@click.argument('model-file-stem')
+@click.argument('data-file-path')
+def evaluate(num_points, num_classes, model_file_stem, data_file_path):
+    """
+    Sample invocation:
+        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-06-01-16:45:13/weights \
+          voxel_data/Mg22_size512test.npy
+    """
+    # build model
+    model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
+    model.load_weights(model_file_stem)
 
-def build_model():
-    model = pnet(config['sem_seg_flag'], config['num_points'], int(config['num_classes']))
-    model.load_weights('./logs/pnet_1/model/weights')
-    return model
-
-def load_data1(points_path, label_path):
-    test_points = np.load(points_path)
-    test_features = tf.data.Dataset.from_tensor_slices(test_points[:, :, :3]).batch(config['batch_size'], drop_remainder=True)
-    test_targets = np.load(label_path)
-    return test_features, test_targets
-
-def load_data2(ds_path):
-    test_ds = np.load(ds_path)
-    test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :3]).batch(config['batch_size'], drop_remainder=True)
-    test_targets = test_ds[:, :, 3]
-    return test_features, test_targets
-
-def make_predictions1(model, features):
-    predicted_probabilities = model.predict(features)
-    predictions = np.argmax(predicted_probabilities, axis=1)
-    return predictions
-
-def make_predictions2(model, features):
-    predicted_probabilities = model.predict(features)
+    # load test data
+    BATCH_SIZE = 32
+    test_ds = np.load(data_file_path)
+    test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :3]).batch(BATCH_SIZE)
+    test_labels = test_ds[:, :, 3]
+    
+    # make predictions
+    predicted_probabilities = model.predict(test_features)
     predictions = np.argmax(predicted_probabilities, axis=2)
-    return predictions
 
-def process(real1, real2, pred1, pred2):
-    if real1.shape[0] > pred1.shape[0]:
-        diff = real1.shape[0] - pred1.shape[0]
-        real1 = real1[:-diff,:]
-        real2 = real2[:-diff,:]
-        
-    targets = np.zeros(2*real1.size)
-    targets[:real1.size] = real1.flatten()
-    targets[real1.size:] = real2.flatten()
-    
-    predictions = np.zeros(2*pred1.size)
-    predictions[:pred1.size] = pred1.flatten()
-    predictions[pred1.size:] = pred2.flatten()
-    
-    return targets, predictions
-   
-def evaluate1(targets, predictions):
-    if config['class_type'] == 'BINARY':
-        class_names = ['alpha', 'other']
-    elif config['class_type'] == 'TERTIARY':
-        class_names = ['Alpha', 'Neon', 'Proton']
-    else:
-        class_names = ['beam', 'two track', 'three track', 'four track', 'five track', 'six track']
-        
-    print(classification_report(targets, predictions, target_names=class_names))
+    # evaluate results
+    evaluate2(test_features, test_labels, predictions)
 
-    cnn.plot_confusion_matrix(targets, predictions, class_names, './ConfusionMatrix.png', title= config['class_type'] + ' Vanilla Pointnet Confusion Matrix ' + str(config['j']))
-    print('Confusion matrix made!')
-    
+
 def evaluate2(features, targets, predictions):    
-    
+    """
+        'test_ds2' : 'data3/Mg22_size512test.npy',
+    -    'original_ds' : 'data3/Mg22_size512_voxelated.npy',
+    -    'shuffled_ds' : 'data3/Mg22_size512_shuffled_voxels.npy',
+    -    'base_voxels_ds' : 'data3/Mg22_size512_base_voxels.npy',
+    -    'voxel_bounds' : 'data3/voxel_bounds.npy',
+    """
     #Event IDs within original_ds to first check if are in test then to be plotted
     rand_ints = [1752,493.0,1409.0,165.0,705.0,555.0,1507.0]
     #1752,493.0,1409.0,165.0,705.0,555.0,1507.0
@@ -204,63 +178,7 @@ def evaluate2(features, targets, predictions):
     mean_miss_rate = np.mean(event_miss_rates)
     print('Average Percent Correct: ' + str(mean_accuracy))
     print('Average Miss Rate: ' + str(mean_miss_rate))
+
     
 if __name__ == '__main__':
-    #Note the data, data2, & data3. Change to your data locations
-    config = {
-    #For Whole Event Classification
-    'test_points' : 'data/Mg22_size512test_convertXYZ.npy',
-    'test_labels' : 'data/Mg22_size512_track_labels_test_convertXYZ.npy',
-    #For Semantic Segmentation Classification
-    'test_ds1' : 'data2/Mg22_size{}test_convert{}.npy',
-    #For Voxxle Shuffle Method
-    'test_ds2' : 'data3/Mg22_size512test.npy',
-    'original_ds' : 'data3/Mg22_size512_voxelated.npy',
-    'shuffled_ds' : 'data3/Mg22_size512_shuffled_voxels.npy',
-    'base_voxels_ds' : 'data3/Mg22_size512_base_voxels.npy',
-    'voxel_bounds' : 'data3/voxel_bounds.npy',
-    #Change for your data/model specifications
-    'num_points' : 512,
-    'batch_size' : 5,
-    'projection' : 'XYZ',
-    #Command Line Arguements
-    'j' : sys.argv[1], #Default to 1234                    #Typically Slurm Job #, used for directory to save results
-    'class_type' : sys.argv[2], #Default to to 'BINARY'
-    'sem_seg_flag' : sys.argv[3], #Default to True         #True if using semantic segmentation, False for whole event classififaction
-    'num_classes' : sys.argv[4], #Default to 2
-    'voxel_shuffle_flag' : sys.argv[5] #Default to False   #True to evaluate Voxel Shuffle Method
-    }
-    
-    #Voxle Shuffle Method Evaluation using Vailla Pointnet Model
-    if config['voxel_shuffle_flag']:
-        model = build_model()
-        test_features, test_targets = load_data2(config['test_ds2'])
-        predictions = make_predictions2(model, test_features)
-        evaluate2(test_features, test_targets, predictions)
-        
-    #Just Vanilla Pointnet Evaluation
-    else:
-        #Semantic Segmentation Classification
-        if config['sem_seg_flag']:
-            model = build_model()
-            set1 = config['test_ds1'].format(config['num_points'], str(1) + config['projection'])
-            set2 = config['test_ds1'].format(config['num_points'], str(2) + config['projection'])
-
-            test_features1, test_targets1 = load_data2(set1)
-            test_features2, test_targets2 = load_data2(set2)
-            predictions1 = make_predictions2(model, test_features1)
-            predictions2 = make_predictions2(model, test_features2)
-
-            targets, predictions = process(test_targets1, test_targets2, predictions1, predictions2)
-            evaluate1(targets, predictions)
-            
-        #Whole Event Classification
-        else:
-            model = build_model()
-            test_features, test_targets = load_data1(config['test_points'], config['test_labels'])
-            predictions = make_predictions1(model, test_features)
-            evaluate1(test_targets, predictions)
-    
-    
-    
-    
+    evaluate()
