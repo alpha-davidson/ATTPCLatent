@@ -5,18 +5,17 @@ from sklearn.metrics import classification_report
 from pointnet_model import pnet
 import click
 
-# 
 
 @click.command()
 @click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
 @click.option('--num-classes', default=2, type=click.INT, help='Number of classes to predict')
 @click.argument('model-file-stem')
-@click.argument('data-file-path')
-def evaluate(num_points, num_classes, model_file_stem, data_file_path):
+@click.argument('data-file-stem')
+def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     """
     Sample invocation:
         python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-06-01-16:45:13/weights \
-          voxel_data/Mg22_size512test.npy
+          voxel_data/Mg22_size512
     """
     # build model
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
@@ -24,7 +23,7 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_path):
 
     # load test data
     BATCH_SIZE = 32
-    test_ds = np.load(data_file_path)
+    test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
     test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :3]).batch(BATCH_SIZE)
     test_labels = test_ds[:, :, 3]
     
@@ -33,7 +32,7 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_path):
     predictions = np.argmax(predicted_probabilities, axis=2)
 
     # evaluate results
-    evaluate2(test_features, test_labels, predictions)
+    # evaluate2(test_features, test_labels, predictions)
 
 
 def evaluate2(features, targets, predictions):    
