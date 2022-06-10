@@ -4,6 +4,8 @@ import tensorflow as tf
 from sklearn.metrics import classification_report
 from pointnet_model import pnet
 import click
+import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 
 
 @click.command()
@@ -32,152 +34,104 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     predictions = np.argmax(predicted_probabilities, axis=2)
 
     # evaluate results
-    # evaluate2(test_features, test_labels, predictions)
+    print('Mean accuracy: {}'.format(np.mean(test_labels == predictions)))
+    plot_events(test_labels, predictions, data_file_stem)
 
 
-def evaluate2(features, targets, predictions):    
-    """
-        'test_ds2' : 'data3/Mg22_size512test.npy',
-    -    'original_ds' : 'data3/Mg22_size512_voxelated.npy',
-    -    'shuffled_ds' : 'data3/Mg22_size512_shuffled_voxels.npy',
-    -    'base_voxels_ds' : 'data3/Mg22_size512_base_voxels.npy',
-    -    'voxel_bounds' : 'data3/voxel_bounds.npy',
-    """
-    #Event IDs within original_ds to first check if are in test then to be plotted
-    rand_ints = [1752,493.0,1409.0,165.0,705.0,555.0,1507.0]
-    #1752,493.0,1409.0,165.0,705.0,555.0,1507.0
-    #1579.0,1927.0,1122.0,1625.0,678.0,99.0,1667.0,1408.0,1812.0,1752.0,890.0,1546.0,1161.0,794.0
-#     rand_ints = []
-#     for i in range(20):
-#         rand_ints.append(random.randint(0,2425))
+VOXEL_COLORS = np.array(['chocolate','grey','ivory','wheat','olive','tan',
+                         'black','aqua','lightblue','green','yellow','red',
+                         'blue','pink','indigo','violet','chocolate','chartreuse',
+                         'cyan','fuchsia','azure','navy','goldenrod','teal',
+                         'salmon','lime','darkblue'])
+def plot_event(fig, panel, event_id, event, title):
+    ax = fig.add_subplot(1, 4, panel, projection='3d')
+    ax.axes.set_xlim3d(left=0, right=1)
+    ax.axes.set_ylim3d(bottom=0, top=1)
+    ax.axes.set_zlim3d(bottom=0, top=1)
+    colors = VOXEL_COLORS[event[:,3].astype(int)]
+    ax.scatter3D(event[:,0], event[:,2], event[:,1], color=colors, s=1)
+    ax.set_xlabel('x [mm]')
+    ax.set_ylabel('z [mm]')
+    ax.set_zlabel('y [mm]')
+    plt.title('Event {} {}'.format(event_id, title))
+
     
-    original_ds = np.load(config['original_ds'])
-    shuffled_ds = np.load(config['shuffled_ds'])
-    base_voxels = np.load(config['base_voxels_ds'])
+def plot_events(targets, predictions, data_file_stem):
+    # 'r', 'b'
+    # Event IDs within original_ds to plot, if they occur in the test set; these 
+    # were hand-picked for offering good visualization of outcomes. May later
+    # want to change to randomly picked IDs from test set. 
+    events_to_plot = {1752, 493, 1409, 165, 705, 555, 1507, 1579, 1927,
+                      1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
+                      1546, 1161, 794}
+                          
+    original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
+    shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels.npy'))
+    base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    test_event_nums = np.load(config['test_ds2'])
+    test_event_nums = np.load('{}{}'.format(data_file_stem, 'test.npy'))
     test_event_nums = test_event_nums[:,:,5]
     
-    event_accuracies = np.zeros((len(test_event_nums),))
-    event_miss_rates = np.zeros((len(test_event_nums),))
+    # todo: remove hardcoding
+    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    
     for i in range(len(test_event_nums)):
-        event_num = int(test_event_nums[i,0])
-        plot_flag = False
-        for num in rand_ints:
-            if num == event_num:
-                plot_flag = True
-                
-        hits = 0
-        misses = 0
-        
-        #If plotting events
-        if plot_flag:
-            datasets = [original_ds, shuffled_ds, base_voxels, base_voxels]
-            
-            colors = [
-            'chocolate','grey','ivory',
-            'wheat','olive','tan',
-            'black','aqua','lightblue',
-            'green','yellow','red',
-            'blue','pink','indigo',
-            'violet','chocolate','chartreuse',
-            'cyan','fuchsia','azure',
-            'navy','goldenrod','teal',
-            'salmon','lime','darkblue',
-            'r','b'
-            ]
+        event_id = int(test_event_nums[i,0])
+        if event_id in events_to_plot:            
             fig = plt.figure(figsize=(17,7.5))
-            for state in range(2):
-                ds =  datasets[state]
-                ax = fig.add_subplot(1, 4, state+1, projection='3d')
-                ax.axes.set_xlim3d(left=0, right=1)
-                ax.axes.set_ylim3d(bottom=0, top=1)
-                ax.axes.set_zlim3d(bottom=0, top=1)
-                #rand_int = random.randint(0,1999)
-                evt = ds[event_num,:,:]
-                for j,e in enumerate(evt):
-                    x = e[0] #get x value of instance
-                    y = e[1] #get y value of instance
-                    z = e[2] #get z value of instance
-                    clr = colors[int(e[3])]    #color based on real label
-                    ax.scatter3D(x,z,y, color = clr, s = 1) 
-
-                ax.set_xlabel('x [mm]')
-                ax.set_ylabel('z [mm]')
-                ax.set_zlabel('y [mm]')
-                plt.title('Event ' +str(int(event_num))+ ' State ' +str(state+1))
-                #plt.savefig('./' + str(1234) + '/' +str(int(event_num))+'/' +str(int(event_num))+ '_' +str(state+1)+ '_Voxels.png')
             
-            #Plotting original Event w/ hits and misses for each point's labels
-            voxel_bounds = np.load(config['voxel_bounds'])
-            for state in range(2):
-                ax = fig.add_subplot(1, 4, state+3, projection='3d')
-                ax.axes.set_xlim3d(left=0, right=1) 
-                ax.axes.set_ylim3d(bottom=0, top=1) 
-                ax.axes.set_zlim3d(bottom=0, top=1)
+            # plot original events + shuffled eventss
+            plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'original')
+            plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'shuffled')
+            
+            # plot predictions + hit/miss colored predictions
+            # plot_event(fig, 3, event_id, base_voxels[event_id,:,:], 'predictions')
+            
 
-                ds = datasets[state+2]
-                evt = ds[event_num,:,:]
-                for j,e in enumerate(evt):
-                    x = e[0] #get x value of instance
-                    y = e[1] #get y value of instance
-                    z = e[2] #get z value of instance
-                    pred = predictions[i,j]
-                    targ = targets[i,j]
-                    min_bounds = voxel_bounds[pred,0]
-                    x += min_bounds[0]
-                    y += min_bounds[1]
-                    z += min_bounds[2]
-                    if state == 0:
-                        if pred != targ:
-                            misses += 1
-                            clr = colors[int(targ)]
-                        else:
-                            hits += 1
-                            clr = colors[int(targ)]
-                    else:
-                        if pred != targ:
-                            misses += 1
-                            clr = colors[-2]
-                        else:
-                            hits += 1
-                            clr = colors[-1]
-                    ax.scatter3D(x,z,y, color = clr, s = 1)
-                ax.set_xlabel('x [mm]')
-                ax.set_ylabel('z [mm]')
-                ax.set_zlabel('y [mm]')
-                if state == 1:
-                    miss_patch = patches.Patch(color=colors[-2], label = 'miss')
-                    hit_patch = patches.Patch(color=colors[-1], label = 'hit')
-                    plt.legend(handles=[miss_patch,hit_patch])
-                plt.title('Event ' +str(int(event_num))+ ' State ' +str(state+3))
-                #plt.savefig('./' + str(1234) + '/' +str(int(event_num))+'/' +str(int(event_num))+ '_' +str(state+3)+ '_Voxels.png')
+#             for state in range(2):
+
+#                 ds = datasets[state+2]
+#                 evt = ds[event_num,:,:]
+#                 for j,e in enumerate(evt):
+#                     x = e[0] #get x value of instance
+#                     y = e[1] #get y value of instance
+#                     z = e[2] #get z value of instance
+#                     pred = predictions[i,j]
+#                     targ = targets[i,j]
+#                     min_bounds = voxel_bounds[pred,0]
+#                     x += min_bounds[0]
+#                     y += min_bounds[1]
+#                     z += min_bounds[2]
+#                     if state == 0:
+#                         if pred != targ:
+#                             misses += 1
+#                             clr = colors[int(targ)]
+#                         else:
+#                             hits += 1
+#                             clr = colors[int(targ)]
+#                     else:
+#                         if pred != targ:
+#                             misses += 1
+#                             clr = colors[-2]
+#                         else:
+#                             hits += 1
+#                             clr = colors[-1]
+#                     ax.scatter3D(x,z,y, color = clr, s = 1)
+#                 ax.set_xlabel('x [mm]')
+#                 ax.set_ylabel('z [mm]')
+#                 ax.set_zlabel('y [mm]')
+#                 if state == 1:
+#                     miss_patch = patches.Patch(color=colors[-2], label = 'miss')
+#                     hit_patch = patches.Patch(color=colors[-1], label = 'hit')
+#                     plt.legend(handles=[miss_patch,hit_patch])
+#                 plt.title('Event ' +str(int(event_num))+ ' State ' +str(state+3))
                 
                 
             
             plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            plt.savefig('./' + str(1234) + '/' +str(event_num)+'_Voxels.png')
+            plt.savefig(str(event_id)+'_Voxels.png')
             print('Events plotted!')
             
-        #If Not plotting Events   
-        else:
-            for j in range(512):
-                pred = predictions[i,j]
-                targ = targets[i,j]
-                if pred != targ:
-                    misses += 1
-                else:
-                    hits += 1
-                    
-        event_accuracies[i] = hits/(hits+misses)
-        event_miss_rates[i] = misses/(hits+misses)
-        
-        
-    mean_accuracy = np.mean(event_accuracies)
-    mean_miss_rate = np.mean(event_miss_rates)
-    print('Average Percent Correct: ' + str(mean_accuracy))
-    print('Average Miss Rate: ' + str(mean_miss_rate))
-
     
 if __name__ == '__main__':
     evaluate()
