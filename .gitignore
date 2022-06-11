@@ -136,3 +136,7 @@ voxel_data/
 
 # slurm files
 slurm*.out
+
+# generated plots
+*.png
+
