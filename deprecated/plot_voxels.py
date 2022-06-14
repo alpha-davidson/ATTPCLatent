@@ -37,14 +37,14 @@ def plot_events(event):
 #         plt.legend(handles=voxels)
             
     plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-    plt.savefig('./' + str(1234) + '/' +str(event)+'_Voxels.png')
+    plt.savefig(str(event)+'_Voxels.png')
     print('Events plotted!')
 
 
 if __name__ == '__main__':
     config = {
-    'ds_path1' : './data3/Mg22_size512_voxelated.npy',
-    'ds_path2' : './data3/Mg22_size512_shuffled_voxels.npy'
+    'ds_path1' : './voxel_data/Mg22_size512_voxelated.npy',
+    'ds_path2' : './voxel_data/Mg22_size512_shuffled_voxels.npy'
     }
     color = [
     'chocolate','grey','ivory',
