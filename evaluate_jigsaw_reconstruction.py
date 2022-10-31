@@ -14,7 +14,7 @@ from plotting import plot_events
 def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     """
     Sample invocation:
-        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-06-01-16:45:13/weights \
+        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-10-17-14:41:20/weights \
           voxel_data/Mg22_size512
     """
     # build model
@@ -32,7 +32,7 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     predictions = np.argmax(predicted_probabilities, axis=2)
 
     # evaluate results
-    print('Mean accuracy: {}'.format(np.mean(test_labels == predictions)))
+    print('Mean accuracy: {}'.format(np.mean(test_labels == predictions))) #point-wise accuracy
     plot_events(test_labels, predictions, data_file_stem)
 
     

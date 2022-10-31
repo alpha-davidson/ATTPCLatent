@@ -23,11 +23,12 @@ def fix_shape(points, labels):
 @click.argument('file-stem')
 def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     """
+    Sample invocation:
+        python3 pretrain_on_jigsaw_events.py --num-classes 27 --num-epochs 50 voxel_data/Mg22_size512
     """
     # load data
     train_ds = np.load('{}{}'.format(file_stem, 'train.npy'))
     val_ds = np.load('{}{}'.format(file_stem, 'val.npy'))
-
     train_features = train_ds[:, :, :3]
     train_labels = train_ds[:, :, 3]
     train_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).map(fix_shape)
