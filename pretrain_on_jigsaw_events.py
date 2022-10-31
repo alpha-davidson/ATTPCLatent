@@ -37,9 +37,6 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     val_labels = val_ds[:, :, 3]
     val_ds = tf.data.Dataset.from_tensor_slices((val_features, val_labels)).map(fix_shape)
     
-    print(train_ds)
-    print(val_ds)
-    
     train_ds = train_ds.shuffle(len(train_ds)).batch(batch_size)
     val_ds = val_ds.shuffle(len(val_ds)).batch(batch_size)
     
