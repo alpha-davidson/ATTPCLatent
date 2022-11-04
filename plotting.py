@@ -64,13 +64,15 @@ def plot_events(targets, predictions, data_file_stem):
     # Event IDs within original_ds to plot, if they occur in the test set; these 
     # were hand-picked for offering good visualization of outcomes. May later
     # want to change to randomly picked IDs from test set. 
+    
     '''
     Cherry-picked events:
     events_to_plot = {1752, 493, 1409, 165, 705, 555, 1507, 1579, 1927,
                       1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
                       1546, 1161, 794}
     '''
-    events_to_plot = np.random.randint(2427, size = (1,25))                       
+    events_to_plot = np.random.randint(2427, size = (1,25))  # Randomized event plotting         
+    
     original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
