@@ -60,7 +60,7 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     plt.title('Event {} {}'.format(event_id, title))
 
     
-def plot_events(targets, predictions, data_file_stem):
+def plot_events(targets, predictions, data_file_stem, number_of_events):
     # Event IDs within original_ds to plot, if they occur in the test set; these 
     # were hand-picked for offering good visualization of outcomes. May later
     # want to change to randomly picked IDs from test set. 
@@ -71,7 +71,7 @@ def plot_events(targets, predictions, data_file_stem):
                       1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
                       1546, 1161, 794}
     '''
-    events_to_plot = np.random.randint(2427, size = (1,25))  # Randomized event plotting         
+    events_to_plot = np.random.randint(number_of_events, size = (1,25))  # Randomized event plotting         
     
     original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels.npy'))
