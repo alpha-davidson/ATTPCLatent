@@ -26,7 +26,6 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
     test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :3]).batch(BATCH_SIZE)
     test_labels = test_ds[:, :, 3]
-    number_of_events = len(test_labels)
     
     # make predictions
     predicted_probabilities = model.predict(test_features)
@@ -34,7 +33,7 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
 
     # evaluate results
     print('Mean accuracy: {}'.format(np.mean(test_labels == predictions))) #point-wise accuracy
-    plot_events(test_labels, predictions, data_file_stem, number_of_events)
+    plot_events(test_labels, predictions, data_file_stem)
 
     
 if __name__ == '__main__':
