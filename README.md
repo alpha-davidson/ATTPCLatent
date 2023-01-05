@@ -42,7 +42,7 @@ In the repo's current version, there are 3 folders generated upon executing the 
 
 Run the Mg22 Voxel Pipeline notebook. This will generate the `voxel_data` folder, which will contain training, test, and validation datasets for later use. Running the notebook will also generate histograms of the training, test and validation datasets post voxelization and shuffling.
 
-## Training and evaluating self-supervised model
+## Training and evaluating pre-trained model
 
 Train the self-supervised model by running the `pretrain_on_jigsaw.py` script. This can be done by submitting the `unscrambling_jigsaw.sh` file as a SLURM job, using the shell command `sbatch unscrambling_jigsaw.sh`. This will generate the `models` and `plots` folders, which will contain model weights and model learning curves respectively.
 

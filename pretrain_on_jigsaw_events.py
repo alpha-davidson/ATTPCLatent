@@ -30,7 +30,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     train_ds = np.load('{}{}'.format(file_stem, 'train.npy'))
     val_ds = np.load('{}{}'.format(file_stem, 'val.npy'))
     train_features = train_ds[:, :, :3]
-    train_labels = train_ds[:, :, 3]
+    train_labels = train_ds[:, :, 3].astype(int)
     train_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).map(fix_shape)
 
     val_features = val_ds[:, :, :3]
@@ -44,7 +44,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
     model.summary()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=keras.optimizers.Adam(learning_rate=0.0005),
+                  optimizer=keras.optimizers.Adam(learning_rate=0.0005), # 0.0005 before alteration
                   metrics=["sparse_categorical_accuracy"])
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, verbose=1)
     

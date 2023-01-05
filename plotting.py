@@ -53,11 +53,22 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     ax.axes.set_zlim3d(bottom=0, top=1)
     if colors is None:
         colors = VOXEL_COLORS[event[:,3].astype(int)]
+    '''
+    Code to unscale, use as desired
+    ax.axes.set_xlim3d(left=-255, right=255)
+    ax.axes.set_ylim3d(bottom=-60, top=1000)
+    ax.axes.set_zlim3d(bottom=-255, top=255)
+    x_unscaled = (510*event[:,0])-255
+    z_unscaled = (1060*event[:,2])-60
+    y_unscaled = (510*event[:,1])-255
+    ax.scatter3D(x_unscaled, z_unscaled, y_unscaled, color=colors, s=1)
+    '''
     ax.scatter3D(event[:,0], event[:,2], event[:,1], color=colors, s=1)
     ax.set_xlabel('x [mm]')
     ax.set_ylabel('z [mm]')
     ax.set_zlabel('y [mm]')
-    plt.title('Event {} {}'.format(event_id, title))
+    # plt.title('Event {} {}'.format(event_id, title))
+    plt.title(title)
 
     
 def plot_events(targets, predictions, data_file_stem):
@@ -71,6 +82,7 @@ def plot_events(targets, predictions, data_file_stem):
                       1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
                       1546, 1161, 794}
     '''
+    
     events_to_plot = np.random.randint(2427, size = (1,25))  # Randomized event plotting         
     
     original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
@@ -90,20 +102,20 @@ def plot_events(targets, predictions, data_file_stem):
             fig = plt.figure(figsize=(17,7.5))
             
             # plot original events + shuffled events
-            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'original')
-            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'shuffled')
+            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event', colors = 'black') # Remove the hardcoded color
+            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event', colors = 'black')
             
             # plot predictions but with target colors (i.e., colored according to
             # the voxel of origin)
             translated_evt = base_voxels[event_id,:,:].copy()
             preds = predictions[i]
             translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds]
-            _plot_event(fig, 3, event_id, translated_evt, 'predictions')
+            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event', colors = 'black')
             
             # plot predictions with hit/miss colors (misses = red, hits = blue)
             MISS_HIT_COLORS = np.array(['red', 'blue'])
             colors = MISS_HIT_COLORS[(targets[i,:] == predictions[i,:]).astype(int)]
-            _plot_event(fig, 4, event_id, translated_evt, 'hits (blue)/misses (red)', colors=colors)
+            _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
-            plt.suptitle('Voxelated Event States Plotted', fontsize=25)
+            # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
             plt.savefig('{}_voxels.png'.format(event_id))
