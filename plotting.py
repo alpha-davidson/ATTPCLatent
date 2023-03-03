@@ -74,25 +74,30 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
 def plot_events(targets, predictions, data_file_stem):
     # Event IDs within original_ds to plot, if they occur in the test set; these 
     # were hand-picked for offering good visualization of outcomes. May later
-    # want to change to randomly picked IDs from test set. 
-    
-    '''
-    Cherry-picked events:
-    events_to_plot = {1752, 493, 1409, 165, 705, 555, 1507, 1579, 1927,
-                      1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
-                      1546, 1161, 794}
-    '''
-    
-    events_to_plot = np.random.randint(2427, size = (1,25))  # Randomized event plotting         
-    
+    # want to change to randomly picked IDs from test set.     
+
+    # events_to_plot = {1752, 493, 1409, 165, 705, 555, 1507, 1579, 1927,
+    #                   1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
+    #                  1546, 1161, 794}
+
     original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
     test_event_nums = np.load('{}{}'.format(data_file_stem, 'test.npy'))
     test_event_nums = test_event_nums[:,:,5]
+
+    # TODO: this is weird; should just be able to pick 25 arbitrary members
+    # of the test set, rather than sampling event IDS and then hoping that
+    # they fell in the test set.
     
-    # todo: remove hardcoding
+    # randomized event plotting. 25 events IDs randomly chosen, plotted if they occur
+    # in the test set
+    events_to_plot = np.random.randint(len(original_ds), size = (1,25))
+    
+    print("Number of events:", len(original_ds))
+    
+    # TODO: remove hardcoding
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
