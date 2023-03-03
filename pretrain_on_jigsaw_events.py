@@ -44,7 +44,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
     model.summary()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=keras.optimizers.Adam(learning_rate=0.0005), # 0.0005 before alteration
+                  optimizer=keras.optimizers.Adam(learning_rate=0.0005),
                   metrics=["sparse_categorical_accuracy"])
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, verbose=1)
     

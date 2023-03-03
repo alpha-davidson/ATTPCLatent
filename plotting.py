@@ -102,15 +102,15 @@ def plot_events(targets, predictions, data_file_stem):
             fig = plt.figure(figsize=(17,7.5))
             
             # plot original events + shuffled events
-            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event', colors = 'black') # Remove the hardcoded color
-            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event', colors = 'black')
+            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event')
+            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event')
             
             # plot predictions but with target colors (i.e., colored according to
             # the voxel of origin)
             translated_evt = base_voxels[event_id,:,:].copy()
             preds = predictions[i]
             translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds]
-            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event', colors = 'black')
+            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event')
             
             # plot predictions with hit/miss colors (misses = red, hits = blue)
             MISS_HIT_COLORS = np.array(['red', 'blue'])
