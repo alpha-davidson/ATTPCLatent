@@ -24,7 +24,7 @@ Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Vo
 
 # Pretraining on Jigsaw
 
-Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job by running the `unscrambling_jigsaw.sh` file. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder.
+Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job by running the `unscrambling_jigsaw.sh` file. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder.  hhhhhh
 
 # Evaluating Reconstruction
 
