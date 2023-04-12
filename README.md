@@ -1,7 +1,7 @@
 This repository contains code for self-supervised learning of track geometries from TPC [data](https://alphadavidson.slack.com/files/U0146JVGQEB/F025QCGNURJ/output_digi_hdf_mg22_ne20pp_8mev.h5) (in this case, Mg-22). Code is written in `python3` and uses the `tensorflow` package as the framework for the implementation.
 
 # Packages
-* [`python 3.6`](https://www.python.org/downloads/release/python-360/)
+* [`python 3.8`](https://www.python.org/downloads/release/python-380/)
 * [`tensorflow 2.10.0`](https://www.tensorflow.org/api_docs/python/tf/keras)
 * [`sklearn 1.1.2`](https://scikit-learn.org/stable/modules/preprocessing.html)
 * [`numpy 1.23.0`](https://numpy.org/)
@@ -11,6 +11,14 @@ This repository contains code for self-supervised learning of track geometries f
 # Creating Voxel Data
 
 Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The data file from the TPC is first loaded, and points are randomly sampled (NOT a completely randomized process, however - random samples are taken according to the event length desired). Points with track labels of 2,4 and 6 are filtered out and only these data points are used in the voxelation process. In this stage, points are first normalized into a unit cube, segmented into voxels (K x K x K cube), and then assigned labels. Labeled voxels are then shuffled such that each voxel is assigned an ID other than its own. Points are then moved to their new voxel, and the current version of the notebook randomly augments points for better xyz generalization (although this is optional).It is then checked that the boundaries of the unit cube have not been violated. The file of shuffled voxels are split into training, testing and validation sets, which are saved in the `voxel_data` folder. Lastly, these datasets are checked for NaNs and infs, and a histogram is created.
+
+## Voxel Orientation
+
+Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = y = z = 1/K. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K = 3. The top picture is the front view, with the origin at the front, bottom right corner. The bottom picture is the back view, with the origin being the back, bottom left corner. 
+
+![front view of voxels](voxel_orientation_front.jpg)
+![back view of voxels](voxel_orientation_back.jpg)
+
 
 # Pretraining on Jigsaw
 
