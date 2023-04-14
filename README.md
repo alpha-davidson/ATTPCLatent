@@ -16,15 +16,16 @@ Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The dat
 
 Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = y = z = 1/K. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K = 3. The top picture is the front view, with the origin at the front, bottom right corner. The bottom picture is the back view, with the origin being the back, bottom left corner. 
 
-![front view of voxels](voxel_orientation_front.jpg){align="center"}
+![front view of voxels](voxel_orientation_front.jpg)
 
 
-![back view of voxels](voxel_orientation_back.jpg){align="center}
+
+![back view of voxels](voxel_orientation_back.jpg)
 
 
 # Pretraining on Jigsaw
 
-Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job by running the `unscrambling_jigsaw.sh` file. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder.  hhhhhh
+Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job by running the `unscrambling_jigsaw.sh` file. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder. 
 
 # Evaluating Reconstruction
 
