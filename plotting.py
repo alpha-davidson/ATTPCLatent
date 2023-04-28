@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 
 def plot_histogram(model_name, percent_accuracy):
     plt.figure()
-    plt.hist(percent_accuracy, bins=20)
+    plt.hist(percent_accuracy, bins=50)
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     plt.title("Histogram of Percent Accuracy")
