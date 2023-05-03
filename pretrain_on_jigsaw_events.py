@@ -40,30 +40,6 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     train_ds = train_ds.shuffle(len(train_ds)).batch(batch_size)
     val_ds = val_ds.shuffle(len(val_ds)).batch(batch_size)
     
-    ## ---original code (doesn't save best model, i think)------------------------------------
-#     # build and fit model
-#     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
-#     model.summary()
-#     model.compile(loss="sparse_categorical_crossentropy",
-#                   optimizer=keras.optimizers.Adam(learning_rate=0.0005),
-#                   metrics=["sparse_categorical_accuracy"])
-#     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, verbose=1)
-    
-#     # save model and plot learning curve
-#     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-#     model_file_path = 'models/{}/weights'.format(timestamp)
-#     model.save_weights(filepath=model_file_path)
-    
-#     os.makedirs('plots/{}'.format(timestamp))
-#     plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
-#     plot_learning_curve(history, plot_file_path)
-    ## ------------------------------------------------------------------------------
-    
-    
-    
-    
-    
-    ## --uncomment this section to save the best model (i think)---------------------
     # build and fit model
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
     
@@ -91,7 +67,6 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     os.makedirs('plots/{}'.format(timestamp))
     plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
-    ## ------------------------------------------------------------------------------
     
     
     
