@@ -22,7 +22,7 @@ Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Vo
 
 ![back view of voxels](voxel_orientation_back.jpg)
 
-![attpc](attpc_voxel.png)
+![attpc](attpc_voxel.jpg)
 
 
 # Pretraining on Jigsaw
