@@ -14,7 +14,7 @@ Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The dat
 
 ## Voxel Orientation
 
-Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = y = z = 1/K. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K = 3. The top picture is the front view, with the origin at the front, bottom right corner. The bottom picture is the back view, with the origin being the back, bottom left corner. 
+Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = y = z = 1/K. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K = 3. The top picture is the front view, with the origin at the front, bottom right corner. The middle picture is the back view, with the origin being the back, bottom left corner. The bottom picture shows how these voxels are broken up on the actual ATTPC.
 
 ![front view of voxels](voxel_orientation_front.jpg)
 
