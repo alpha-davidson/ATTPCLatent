@@ -140,3 +140,5 @@ slurm*.out
 # generated plots
 *.png
 
+# h5 data files
+.h5
