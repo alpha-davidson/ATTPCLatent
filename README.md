@@ -1,7 +1,7 @@
 This repository contains code for self-supervised learning of track geometries from TPC [data](https://alphadavidson.slack.com/files/U0146JVGQEB/F025QCGNURJ/output_digi_hdf_mg22_ne20pp_8mev.h5) (in this case, Mg-22). Code is written in `python3` and uses the `tensorflow` package as the framework for the implementation.
 
 # Packages
-* [`python 3.6`](https://www.python.org/downloads/release/python-360/)
+* [`python 3.8`](https://www.python.org/downloads/release/python-380/)
 * [`tensorflow 2.10.0`](https://www.tensorflow.org/api_docs/python/tf/keras)
 * [`sklearn 1.1.2`](https://scikit-learn.org/stable/modules/preprocessing.html)
 * [`numpy 1.23.0`](https://numpy.org/)
@@ -12,9 +12,22 @@ This repository contains code for self-supervised learning of track geometries f
 
 Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The data file from the TPC is first loaded, and points are randomly sampled (NOT a completely randomized process, however - random samples are taken according to the event length desired). Points with track labels of 2,4 and 6 are filtered out and only these data points are used in the voxelation process. In this stage, points are first normalized into a unit cube, segmented into voxels (K x K x K cube), and then assigned labels. Labeled voxels are then shuffled such that each voxel is assigned an ID other than its own. Points are then moved to their new voxel, and the current version of the notebook randomly augments points for better xyz generalization (although this is optional).It is then checked that the boundaries of the unit cube have not been violated. The file of shuffled voxels are split into training, testing and validation sets, which are saved in the `voxel_data` folder. Lastly, these datasets are checked for NaNs and infs, and a histogram is created.
 
+## Voxel Orientation
+
+Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = y = z = 1/K. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K = 3. The top picture is the front view, with the origin at the front, bottom right corner. The middle picture is the back view, with the origin being the back, bottom left corner. The bottom picture shows how these voxels are broken up on the actual ATTPC.
+
+![front view of voxels](voxel_orientation_front.jpg)
+
+
+
+![back view of voxels](voxel_orientation_back.jpg)
+
+![attpc](attpc_voxel.jpg)
+
+
 # Pretraining on Jigsaw
 
-Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job by running the `unscrambling_jigsaw.sh` file. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder.
+Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job by running the `unscrambling_jigsaw.sh` file. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder. 
 
 # Evaluating Reconstruction
 
@@ -48,4 +61,4 @@ Train the self-supervised model by running the `pretrain_on_jigsaw.py` script. T
 
 ## Evaluating the model
 
-Evaluate the model by running the `evalute_jigsaw_reconstruction.py` script. This is easily done by submitting the `evaluating_jigsaw.sh` file as a SLURM job: `sbatch evaluating_jigsaw.sh`. Note, however, that you must adapt the contents of the file such that the models sub-folder reflects the correct (most recent) time stamp. Running the file will generate plots of the original event, its reconstruction, and hits and misses, in the overall `TPCNet` folder. Lastly, the mean accuracy of point-wise event reconstruction can be found in the SLURM output file itself by searching for "mean accuracy". This value is currently around 52%. 
+Evaluate the model by running the `evalute_jigsaw_reconstruction.py` script. This is easily done by submitting the `evaluating_jigsaw.sh` file as a SLURM job: `sbatch evaluating_jigsaw.sh`. Note, however, that you must adapt the contents of the file such that the models sub-folder reflects the correct (most recent) time stamp. Running the file will generate plots of the original event, its reconstruction, and hits and misses, in the overall `TPCNet` folder. Lastly, the mean accuracy of point-wise event reconstruction can be found in the SLURM output file itself by searching for "mean accuracy". This value is currently around 52%. The evaluating script will also plot a histogram of across all the events of the reconstructed accuracy. In other words, for each event, it will calculate the percentage of reconstructed points that match up with the original event and plot this in a histogram form for all the events.
