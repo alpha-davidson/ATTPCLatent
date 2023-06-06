@@ -3,6 +3,15 @@ import numpy as np
 from sklearn.metrics import confusion_matrix
 
 
+def plot_histogram(model_name, percent_accuracy):
+    plt.figure()
+    plt.hist(percent_accuracy, bins=100)
+    plt.xlabel("Percent accuracy")
+    plt.ylabel("Frequency")
+    plt.title("Histogram of Percent Accuracy")
+    plt.savefig("plots/{}/percent_accuracy_histogram.png".format(model_name))
+
+
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)
     plt.plot(history.history['loss'], 'o-', label='Training Loss')
@@ -11,6 +20,7 @@ def plot_learning_curve(history, filename):
     plt.title('Learning Curve')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
+    plt.ylim(1, 100)
     plt.xticks(range(0, len(history.history['loss']), 10), range(1, len(history.history['loss']) + 1, 10))
     plt.yscale('log')
     plt.savefig(filename) 

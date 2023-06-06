@@ -1,9 +1,10 @@
 import click
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from pointnet_model import pnet
-from plotting import plot_events
+from plotting import plot_events, plot_histogram
 
 
 @click.command()
@@ -34,6 +35,12 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     # evaluate results
     print('Mean accuracy: {}'.format(np.mean(test_labels == predictions))) #point-wise accuracy
     plot_events(test_labels, predictions, data_file_stem)
+    
+    # create histogram of percent accuracy
+    model_name = model_file_stem.split("/")[-2]
+    percent_accuracy = np.mean(test_labels == predictions, axis=1)
+    plot_histogram(model_name, percent_accuracy)
+    
 
     
 if __name__ == '__main__':
