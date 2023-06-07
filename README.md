@@ -22,9 +22,18 @@ This repository contains code for self-supervised learning of track geometries f
 
 `conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65.0 jupyter=1.0.0`
 
-*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
+## Git Setup
+After accessing server remotely by `ssh`, set up this Git repository for use. Ender your Git username and access token details as required.
+* Cloning the repository: `git clone https://github.com/alpha-davidson/TPCNet.git`
+* Creating your own branch: `git checkout -b [insert branchname here]`
 
-# Creating Voxel Data
+*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
+ 
+See [below](#Workflow to Reproduce Results) to reproduce results.
+
+# Explanation of Voxels
+
+## Creating Voxel Data
 
 Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The data file from the TPC is first loaded, and points are randomly sampled (NOT a completely randomized process, however - random samples are taken according to the event length desired). Points with track labels of 2,4 and 6 are filtered out and only these data points are used in the voxelation process. In this stage, points are first normalized into a unit cube, segmented into voxels (K x K x K cube), and then assigned labels. Labeled voxels are then shuffled such that each voxel is assigned an ID other than its own. Points are then moved to their new voxel, and the current version of the notebook randomly augments points for better xyz generalization (although this is optional).It is then checked that the boundaries of the unit cube have not been violated. The file of shuffled voxels are split into training, testing and validation sets, which are saved in the `voxel_data` folder. Lastly, these datasets are checked for NaNs and infs, and a histogram is created.
 
@@ -58,11 +67,11 @@ Run the Mg22 Voxel Pipeline notebook. This will generate the `voxel_data` folder
 
 ## Training and evaluating pre-trained model
 
-# Pretraining on Jigsaw
+### Pretraining on Jigsaw
 
 Pretraining is accomplished through the `pretrain_on_jigsaw_events.py` script, which can be submitted as a SLURM job  using the shell command `sbatch unscrambling_jigsaw.sh`. The `pretrain_on_jigsaw_events.py` script takes in the scrambled, voxelized  training and validation datasets from the `voxel_data` folder and unscrambles this data to generate event-wise predictions of original events. Running this script will output a model weights folder, located within `models` folder, as well as a loss curve that can be located at the `plots` folder. 
 
-# Evaluating Reconstruction by Model
+### Evaluating Reconstruction by Model
 
 Evaluation of event reconstruction is accomplished by running the `evaluate_jigsaw_reconstruction.py` script, which can be submitted as a SLURM job using the shell command `sbatch evaluating_jigsaw.sh`. **Note, however, that you must adapt the contents of the file such that the models sub-folder reflects the correct (most recent) time stamp.** 
 
@@ -72,6 +81,6 @@ This script evalutes the quality of jigsaw reconstruction, invoking the `plottin
 * the reconstructed event, and 
 * a proportion of hits to misses. 
 
-These visualizations will be found in the `evaluations` subfolder in `plots`. Additionally, a point-wise mean accuracy metric can also be found in the SLURM output file.
+These visualizations will be found in the `evaluations` subfolder in `plots`. Additionally, a point-wise mean accuracy metric can also be found in the `SLURM output file`.
 
-The evaluating script will also plot a histogram of across all the events of the reconstructed accuracy. In other words, for each event, it will calculate the percentage of reconstructed points that match up with the original event and plot this in a histogram form for all the events.
+The evaluating script will also plot a histogram of across all the events of the reconstructed accuracy, found in the `plots` folder. In other words, for each event, it will calculate the percentage of reconstructed points that match up with the original event and plot this in a histogram form for all the events.
