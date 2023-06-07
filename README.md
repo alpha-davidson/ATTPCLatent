@@ -19,9 +19,10 @@ This repository contains code for self-supervised learning of track geometries f
 ## Installing packages
 
 `conda activate tpcnet`
-`conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65 jupyter=1.0.0`
 
-*Ensure versions match those listed above under [Packages](#Packages). If incompatible with conda due to updates, install default versions (ex. conda install numpy click...) and **update README**.*
+`conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65.0 jupyter=1.0.0`
+
+*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
 
 # Creating Voxel Data
 
