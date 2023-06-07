@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
+import os
 
 
 def plot_histogram(model_name, percent_accuracy):
@@ -24,7 +25,6 @@ def plot_learning_curve(history, filename):
     plt.xticks(range(0, len(history.history['loss']), 10), range(1, len(history.history['loss']) + 1, 10))
     plt.yscale('log')
     plt.savefig(filename) 
-    
     
 def plot_confusion_matrix(y_true, y_pred, classes, filename, title='Confusion Matrix', cmap=plt.cm.Blues):
     cm = confusion_matrix(y_true, y_pred)
@@ -79,7 +79,6 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     ax.set_zlabel('y [mm]')
     # plt.title('Event {} {}'.format(event_id, title))
     plt.title(title)
-
     
 def plot_events(targets, predictions, data_file_stem):
     # Event IDs within original_ds to plot, if they occur in the test set; these 
@@ -106,8 +105,9 @@ def plot_events(targets, predictions, data_file_stem):
     events_to_plot = np.random.randint(len(original_ds), size = (1,25))
     
     print("Number of events:", len(original_ds))
+    os.makedirs('plots/evaluations')
     
-    # TODO: remove hardcoding
+    # TODO: remove hardcoding 
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
@@ -133,4 +133,5 @@ def plot_events(targets, predictions, data_file_stem):
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            plt.savefig('{}_voxels.png'.format(event_id))
+            
+            plt.savefig('plots/evaluations/{}_voxels.png'.format(event_id))
