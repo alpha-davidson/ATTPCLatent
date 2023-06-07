@@ -22,12 +22,12 @@ This repository contains code for self-supervised learning of track geometries f
 
 `conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65.0 jupyter=1.0.0`
 
+*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
+
 ## Git Setup
 After accessing server remotely by `ssh`, set up this Git repository for use. Ender your Git username and access token details as required.
 * Cloning the repository: `git clone https://github.com/alpha-davidson/TPCNet.git`
 * Creating your own branch: `git checkout -b [insert branchname here]`
-
-*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
  
 See [below](#Workflow to Reproduce Results) to reproduce results.
 
