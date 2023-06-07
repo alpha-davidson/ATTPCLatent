@@ -11,6 +11,10 @@ This repository contains code for self-supervised learning of track geometries f
 * matplotlib 3.7.1
 * tqdm 4.65.0
 * jupyter 1.0.0
+## Git Setup
+After accessing server remotely by `ssh`, set up this Git repository for use. Ender your Git username and access token details as required.
+* Cloning the repository: `git clone https://github.com/alpha-davidson/TPCNet.git`
+* Creating your own branch: `git checkout -b [insert branchname here]`
 
 ## Setting up conda environment
 
@@ -24,12 +28,7 @@ This repository contains code for self-supervised learning of track geometries f
 
 *Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
 
-## Git Setup
-After accessing server remotely by `ssh`, set up this Git repository for use. Ender your Git username and access token details as required.
-* Cloning the repository: `git clone https://github.com/alpha-davidson/TPCNet.git`
-* Creating your own branch: `git checkout -b [insert branchname here]`
- 
-See [below](# Workflow to Reproduce Results) to reproduce results.
+See workflow guide below to reproduce results.
 
 # Explanation of Voxels
 
