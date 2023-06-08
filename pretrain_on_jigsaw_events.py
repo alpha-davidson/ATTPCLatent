@@ -55,21 +55,31 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
         mode = 'max',
         save_best_only = True)
     
+    #reduce LR checkpoint to adjust LR upon no improvement
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.5,
+        patience=5,
+        mode='auto',
+        min_delta=0.001,
+        min_lr=0.00001)
+        # verbose=0,
+        # cooldown=0,
+        # min_lr=0
+    
     # build model and fit model
     model.summary()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=keras.optimizers.Adam(learning_rate=0.0005),
+                  optimizer=keras.optimizers.Adam(learning_rate=0.005), #prev LR: 0.0005
                   metrics=["sparse_categorical_accuracy", "accuracy"])
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
-                        callbacks=[checkpoint_callback], verbose=1)
+                        callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
     
     os.makedirs('plots/{}'.format(timestamp))
     plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
-    
-    
-    
+
     
 if __name__ == '__main__':
     train()
