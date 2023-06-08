@@ -80,7 +80,7 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     # plt.title('Event {} {}'.format(event_id, title))
     plt.title(title)
     
-def plot_events(targets, predictions, data_file_stem):
+def plot_events(targets, predictions, data_file_stem, model_name):
     # Event IDs within original_ds to plot, if they occur in the test set; these 
     # were hand-picked for offering good visualization of outcomes. May later
     # want to change to randomly picked IDs from test set.     
@@ -105,7 +105,7 @@ def plot_events(targets, predictions, data_file_stem):
     events_to_plot = np.random.randint(len(original_ds), size = (1,25))
     
     print("Number of events:", len(original_ds))
-    os.makedirs('plots/evaluations')
+    os.makedirs('plots/evaluations/{}'.format(model_name))
     
     # TODO: remove hardcoding 
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
@@ -134,4 +134,4 @@ def plot_events(targets, predictions, data_file_stem):
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
             
-            plt.savefig('plots/evaluations/{}_voxels.png'.format(event_id))
+            plt.savefig('plots/evaluations/{}/{}_voxels.png'.format(model_name, event_id))
