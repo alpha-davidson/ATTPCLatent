@@ -25,7 +25,7 @@ def plot_overlay(path1, path2): #currently set to plot overlay for two histogram
     
     #saving image in plots/evaluations
     #title string designed for checkpoint version. 
-    title = path1.split("/")[1] + path1.split("/")[2] + " vs " + path2.split("/")[1] + path1.split("/")[2]
+    title = path1.split("/")[1] + path1.split("/")[2] + " vs " + path2.split("/")[1] + path2.split("/")[2]
     img1.save("plots/evaluations/comparison_{}.png".format(title)) #save as png
      
     #TODO: improve this function for better visibility of frequency axis in overlapped image
