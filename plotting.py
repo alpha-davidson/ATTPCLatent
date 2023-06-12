@@ -10,7 +10,7 @@ def plot_histogram(model_name, model_time, percent_accuracy):
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     plt.title("Histogram of Percent Accuracy")
-    os.mkdir("plots/{}/{}".format(model_time, model_name))
+    #os.mkdir("plots/{}/{}".format(model_time, model_name))
     plt.savefig("plots/{}/{}_percent_accuracy_histogram.png".format(model_time, model_name))
 
 def plot_overlay(path1, path2): #currently set to plot overlay for two histograms
@@ -28,7 +28,7 @@ def plot_overlay(path1, path2): #currently set to plot overlay for two histogram
     title = path1.split("/")[1] + path1.split("/")[2] + " vs " + path2.split("/")[1] + path1.split("/")[2]
     img1.save("plots/evaluations/comparison_{}.png".format(title)) #save as png
      
-    #TODO: improve this function for a better frequency axis in overlapped image
+    #TODO: improve this function for better visibility of frequency axis in overlapped image
 
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)  
