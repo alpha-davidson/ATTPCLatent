@@ -1,20 +1,37 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
+from PIL import Image
 import os
 
-
-def plot_histogram(model_name, percent_accuracy):
+def plot_histogram(model_name, model_time, percent_accuracy):
     plt.figure()
     plt.hist(percent_accuracy, bins=100)
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     plt.title("Histogram of Percent Accuracy")
-    plt.savefig("plots/{}/percent_accuracy_histogram.png".format(model_name))
+    os.mkdir("plots/{}/{}".format(model_time, model_name))
+    plt.savefig("plots/{}/{}_percent_accuracy_histogram.png".format(model_time, model_name))
 
+def plot_overlay(path1, path2): #currently set to plot overlay for two histograms
+    #load images (modify path in evaluate_jigsaw.py)
+    img1= Image.open(path1)
+    img2= Image.open(path2)
+    
+    # Pasting img2 image on top of img1 after adding transparency to img2 
+    # starting at coordinates (0, 0)
+    new_img2 = img2.convert("L")
+    img1.paste(new_img2, (0,0), mask = new_img2)
+    
+    #saving image in plots/evaluations
+    #title string designed for checkpoint version. 
+    title = path1.split("/")[1] + path1.split("/")[2] + " vs " + path2.split("/")[1] + path1.split("/")[2]
+    img1.save("plots/evaluations/comparison_{}.png".format(title)) #save as png
+     
+    #TODO: improve this function for a better frequency axis in overlapped image
 
 def plot_learning_curve(history, filename):
-    plt.figure(figsize=(11, 6), dpi=100)
+    plt.figure(figsize=(11, 6), dpi=100)  
     plt.plot(history.history['loss'], 'o-', label='Training Loss')
     plt.plot(history.history['val_loss'], 'o:', color='r', label='Validation Loss')
     plt.legend(loc='best')
@@ -80,7 +97,7 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     # plt.title('Event {} {}'.format(event_id, title))
     plt.title(title)
     
-def plot_events(targets, predictions, data_file_stem, model_name):
+def plot_events(targets, predictions, data_file_stem, model_name, model_time):
     # Event IDs within original_ds to plot, if they occur in the test set; these 
     # were hand-picked for offering good visualization of outcomes. May later
     # want to change to randomly picked IDs from test set.     
@@ -105,7 +122,7 @@ def plot_events(targets, predictions, data_file_stem, model_name):
     events_to_plot = np.random.randint(len(original_ds), size = (1,25))
     
     print("Number of events:", len(original_ds))
-    os.makedirs('plots/evaluations/{}'.format(model_name))
+    os.makedirs('plots/evaluations/{}/{}'.format(model_time, model_name))
     
     # TODO: remove hardcoding 
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
@@ -134,4 +151,4 @@ def plot_events(targets, predictions, data_file_stem, model_name):
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
             
-            plt.savefig('plots/evaluations/{}/{}_voxels.png'.format(model_name, event_id))
+            plt.savefig('plots/evaluations/{}/{}/{}_voxels.png'.format(model_time, model_name, event_id))
