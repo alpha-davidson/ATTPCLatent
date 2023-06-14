@@ -33,11 +33,12 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     predictions = np.argmax(predicted_probabilities, axis=2)
 
     # evaluate results
+    model_name = model_file_stem.split("/")[-3]
     print('Mean accuracy: {}'.format(np.mean(test_labels == predictions))) #point-wise accuracy
-    plot_events(test_labels, predictions, data_file_stem)
+    plot_events(test_labels, predictions, data_file_stem, model_name)
     
     # create histogram of percent accuracy
-    model_name = model_file_stem.split("/")[-2]
+    model_name = model_file_stem.split("/")[-3]
     percent_accuracy = np.mean(test_labels == predictions, axis=1)
     plot_histogram(model_name, percent_accuracy)
     
