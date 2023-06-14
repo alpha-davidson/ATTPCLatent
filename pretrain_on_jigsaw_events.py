@@ -8,7 +8,6 @@ from datetime import datetime
 import click
 import os
 
-
 def fix_shape(points, labels):
     # points already have the correct shape, so only reshape labels
     labels = tf.reshape(labels, (512, 1))
@@ -47,7 +46,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     #model_file_path = 'models/weights/{}'.format(timestamp)
     
-    checkpoint_path = "models/{}/weights/cp".format(timestamp)
+    checkpoint_path = "models/{}/weights/cp".format(timestamp) 
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -59,7 +58,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
         monitor = 'val_accuracy',
         mode = 'max',
         save_best_only = False,
-        save_freq = (7*batch_size)) #determines frequency of saving model
+        save_freq = 'epoch') #(7*batch_size)) #determines frequency of saving model
     
     model.save_weights(checkpoint_path.format(epoch=0))
     
@@ -83,11 +82,9 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
-    
     os.makedirs('plots/{}'.format(timestamp))
     plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
-
     
 if __name__ == '__main__':
     train()
