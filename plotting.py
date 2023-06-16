@@ -8,6 +8,8 @@ def plot_histogram(model_name, percent_accuracy):
     plt.hist(percent_accuracy, bins=100)
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
+    #plt.ylim(1,150)
+    plt.axvline(percent_accuracy.mean(), color='k', linestyle='dashed', linewidth=1)
     plt.title("Histogram of Percent Accuracy")
     plt.savefig("plots/{}/percent_accuracy_histogram.png".format(model_name))
 
@@ -50,11 +52,14 @@ def plot_confusion_matrix(y_true, y_pred, classes, filename, title='Confusion Ma
     plt.savefig(filename)
     
 
-VOXEL_COLORS = np.array(['chocolate','grey','ivory','wheat','olive','tan',
-                         'black','aqua','lightblue','green','yellow','red',
-                         'blue','pink','indigo','violet','chocolate','chartreuse',
-                         'cyan','fuchsia','azure','navy','goldenrod','teal',
-                         'salmon','lime','darkblue'])
+VOXEL_COLORS = np.array(['brown','salmon','coral','midnightblue','olive',
+                         'greenyellow','forestgreen','aquamarine', 
+                         'mediumturquoise','teal','darkolivegreen','saddlebrown',
+                         'dodgerblue','fuchsia','royalblue','darkorange',
+                         'deeppink','blueviolet','plum','slategray',
+                         'deeppink','black','navy','mediumslateblue','tomato',
+                         'orangered','green'])
+
 def _plot_event(fig, panel, event_id, event, title, colors=None):
     """ Only for internal use by plot_events """
     ax = fig.add_subplot(1, 4, panel, projection='3d')
@@ -81,56 +86,48 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     plt.title(title)
 
     
-def plot_events(targets, predictions, data_file_stem):
-    # Event IDs within original_ds to plot, if they occur in the test set; these 
-    # were hand-picked for offering good visualization of outcomes. May later
-    # want to change to randomly picked IDs from test set.     
+def plot_events(targets, predictions, data_file_stem, model_name):
+    """
+    Plots the original, shuffled, and unshuffled events along with the unshuffled
+    events' accuracy. Plots random events from the test dataset. 
+    """
 
-    # events_to_plot = {1752, 493, 1409, 165, 705, 555, 1507, 1579, 1927,
-    #                   1122, 1625, 678, 99, 1667, 1408, 1812, 1752, 890, 
-    #                  1546, 1161, 794}
-
+    # loading in data
     original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
-    shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels.npy'))
+    shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
-    
-    test_event_nums = np.load('{}{}'.format(data_file_stem, 'test.npy'))
-    test_event_nums = test_event_nums[:,:,5]
 
-    # TODO: this is weird; should just be able to pick 25 arbitrary members
-    # of the test set, rather than sampling event IDS and then hoping that
-    # they fell in the test set.
-    
-    # randomized event plotting. 25 events IDs randomly chosen, plotted if they occur
-    # in the test set
-    events_to_plot = np.random.randint(len(original_ds), size = (1,25))
+    test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
+    test_event_nums = test_ds[:,:,5]
     
     print("Number of events:", len(original_ds))
-    
+    print("Number of events in test set:", len(test_event_nums))
+
     # TODO: remove hardcoding
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
-    
-    for i in range(len(test_event_nums)):
-        event_id = int(test_event_nums[i,0])
-        if event_id in events_to_plot:            
-            fig = plt.figure(figsize=(17,7.5))
-            
-            # plot original events + shuffled events
-            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event')
-            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event')
-            
-            # plot predictions but with target colors (i.e., colored according to
-            # the voxel of origin)
-            translated_evt = base_voxels[event_id,:,:].copy()
-            preds = predictions[i]
-            translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds]
-            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event')
-            
-            # plot predictions with hit/miss colors (misses = red, hits = blue)
-            MISS_HIT_COLORS = np.array(['red', 'blue'])
-            colors = MISS_HIT_COLORS[(targets[i,:] == predictions[i,:]).astype(int)]
-            _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
-            # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            plt.savefig('{}_voxels.png'.format(event_id))
+    # plots 5 random events from the test data
+    for j in range(5):
+        i = np.random.randint(len(test_event_nums[:,0]))
+        event_id = int(test_event_nums[i,0])
+        fig = plt.figure(figsize=(17,7.5))
+
+        # plot original events + shuffled events
+        _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event')
+        _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event')
+
+        # plot predictions but with target colors (i.e., colored according to
+        # the voxel of origin)
+        translated_evt = base_voxels[event_id,:,:].copy()
+        preds = predictions[i]
+        translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds]
+        _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event')
+
+        # plot predictions with hit/miss colors (misses = red, hits = blue)
+        MISS_HIT_COLORS = np.array(['red', 'blue'])
+        colors = MISS_HIT_COLORS[(targets[i,:] == predictions[i,:]).astype(int)]
+        _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
+
+        # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
+        plt.savefig('plots/{}/{}_voxels.png'.format(model_name, event_id))
