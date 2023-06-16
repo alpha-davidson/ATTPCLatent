@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from pointnet_model import pnet
 from plotting import plot_events, plot_histogram
-import os
+
 
 @click.command()
 @click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
@@ -15,7 +15,7 @@ import os
 def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     """
     Sample invocation:
-        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-10-17-14:41:20/weights/cp-035.ckpt \
+        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-10-17-14:41:20/weights \
           voxel_data/Mg22_size512
     """
     # build model
@@ -33,16 +33,14 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     predictions = np.argmax(predicted_probabilities, axis=2)
 
     # evaluate results
-    model_name = model_file_stem.split("/")[-1] #modified to save model/ckpt name
-    model_time =  model_file_stem.split("/")[-3] #added to save timestamp
+    model_name = model_file_stem.split("/")[-3]
     print('Mean accuracy: {}'.format(np.mean(test_labels == predictions))) #point-wise accuracy
-    plot_events(test_labels, predictions, data_file_stem, model_name, model_time) 
-#    plot_events("voxel_data2/Mg22_size512") #to plot only original data 
+    plot_events(test_labels, predictions, data_file_stem, model_name)
     
     # create histogram of percent accuracy
-    percent_accuracy = np.mean(test_labels == predictions, axis=1) #along X axis
-    plot_histogram(model_name, model_time, percent_accuracy) 
-
+    model_name = model_file_stem.split("/")[-3]
+    percent_accuracy = np.mean(test_labels == predictions, axis=1)
+    plot_histogram(model_name, percent_accuracy)
     
 if __name__ == '__main__':
     evaluate()
