@@ -22,7 +22,7 @@ def plot_learning_curve(history, filename):
     plt.title('Learning Curve')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.ylim(1, 100)
+    #plt.ylim(1, 100)
     plt.xticks(range(0, len(history.history['loss']), 10), range(1, len(history.history['loss']) + 1, 10))
     plt.yscale('log')
     plt.savefig(filename) 
@@ -85,11 +85,11 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     # plt.title('Event {} {}'.format(event_id, title))
     plt.title(title)
 
-    
 def plot_events(targets, predictions, data_file_stem, model_name):
     """
     Plots the original, shuffled, and unshuffled events along with the unshuffled
-    events' accuracy. Plots random events from the test dataset. 
+    events' accuracy. This needs to be randomized to plot some number of random 
+    events. 
     """
 
     # loading in data
@@ -107,7 +107,6 @@ def plot_events(targets, predictions, data_file_stem, model_name):
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
 
-    # plots 5 random events from the test data
     for j in range(5):
         i = np.random.randint(len(test_event_nums[:,0]))
         event_id = int(test_event_nums[i,0])
@@ -131,3 +130,133 @@ def plot_events(targets, predictions, data_file_stem, model_name):
 
         # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
         plt.savefig('plots/{}/{}_voxels.png'.format(model_name, event_id))
+            
+    
+def identity_events(targets, predictions, data_file_stem, model_name):
+    """ only plots the identity events """
+    
+    # loading in data
+    original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
+    shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
+    base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
+    
+    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    min_bounds = voxel_bounds[:, 0, :]
+    
+    test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
+    test_event_nums = test_ds[:,:,5]
+    
+    print("Number of events:", len(original_ds))
+    print("Number of events in test set:", len(test_event_nums))
+    
+    # finding the identity events
+    for i in range(len(targets)):
+        event_id = int(test_event_nums[i,0])
+        OG_test = original_ds[event_id,:,:]
+        shuffled_test = shuffled_ds[event_id,:,:]
+        for j in range(len(OG_test[0])):
+            for k in range(len(OG_test[1])):
+                if OG_test[j,k] == shuffled_test[j,k]:
+                    plot = True
+                else:
+                    plot = False
+        if plot:
+            fig = plt.figure(figsize=(17,7.5))
+            
+            # plot OG and shuffled events
+            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event')
+            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event')
+
+            # plot predictions but with target colors (i.e., colored according to
+            # the voxel of origin)
+            translated_evt = base_voxels[event_id,:,:].copy()
+            preds = predictions[i]
+            translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds] 
+            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event')
+
+            # plot predictions with hit/miss colors (misses = red, hits = blue)
+            MISS_HIT_COLORS = np.array(['red', 'blue'])
+            colors = MISS_HIT_COLORS[(targets[i,:] == predictions[i,:]).astype(int)]
+            _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
+
+            # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
+            os.makedirs('plots/{}/identity_events'.format(timestamp))
+            plt.savefig('plots/{}/identity_events/{}_voxels.png'.format(model_name, event_id))
+    
+    
+def zero_one_bins(targets, predictions, data_file_stem, model_name):
+    """ only plots the graphs that had 0% accuracy and 100% accuracy. """
+
+    # loading in data
+    original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
+    shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
+    base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
+    
+    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    min_bounds = voxel_bounds[:, 0, :]
+    
+    test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
+    test_event_nums = test_ds[:,:,5]
+    
+    count = 0
+    zero_bin = []
+    one_bin = []
+    
+    for i in range(len(targets)):
+        
+        # finds the events from the zero bin
+        if np.mean(targets[i,:] == predictions[i]) == 0.0:
+            event_id = int(test_event_nums[i,0])          
+            fig = plt.figure(figsize=(17,7.5))
+            zero_bin.append(original_ds[event_id,:,:])
+
+            # plot original events + shuffled events
+            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event')
+            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event')
+
+            # plot predictions but with target colors (i.e., colored according to
+            # the voxel of origin)
+            translated_evt = base_voxels[event_id,:,:].copy()
+            preds = predictions[i]
+            translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds] 
+            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event')
+
+            # plot predictions with hit/miss colors (misses = red, hits = blue)
+            MISS_HIT_COLORS = np.array(['red', 'blue'])
+            colors = MISS_HIT_COLORS[(targets[i,:] == predictions[i,:]).astype(int)]
+            _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
+
+            # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
+            os.makedirs('plots/{}/0_bin'.format(timestamp))
+            plt.savefig('plots/{}/0_bin/{}_voxels.png'.format(model_name,event_id))
+            
+        # finds the events from the one bin
+        elif np.mean(targets[i,:] == predictions[i]) == 1.0:    # 100% accuracy
+            event_id = int(test_event_nums[i,0])          
+            fig = plt.figure(figsize=(17,7.5))
+            one_bin.append(original_ds[event_id,:,:])
+
+            # plot original events + shuffled events
+            _plot_event(fig, 1, event_id, original_ds[event_id,:,:], 'Original Event')
+            _plot_event(fig, 2, event_id, shuffled_ds[event_id,:,:], 'Shuffled Event')
+
+            # plot predictions but with target colors (i.e., colored according to
+            # the voxel of origin)
+            translated_evt = base_voxels[event_id,:,:].copy()
+            preds = predictions[i]
+            translated_evt[:,:3] = translated_evt[:,:3] + min_bounds[preds] 
+            _plot_event(fig, 3, event_id, translated_evt, 'Reconstructed Event')
+
+            # plot predictions with hit/miss colors (misses = red, hits = blue)
+            MISS_HIT_COLORS = np.array(['red', 'blue'])
+            colors = MISS_HIT_COLORS[(targets[i,:] == predictions[i,:]).astype(int)]
+            _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
+
+            # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
+            os.makedirs('plots/{}/1_bin'.format(timestamp))
+            plt.savefig('plots/{}/1_bin/{}_voxels.png'.format(model_name,event_id))
+    np.save('plots/{}/0_bin/0_data', zero_bin)
+    np.save('plots/{}/1_bin/1_data', one_bin)
+   
+
+
