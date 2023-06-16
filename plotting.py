@@ -6,13 +6,16 @@ from sklearn.metrics import confusion_matrix
 def plot_histogram(model_name, percent_accuracy):
     plt.figure()
     plt.hist(percent_accuracy, bins=100)
+    #adding mean line and value to histogram
+    plt.axvline(percent_accuracy.mean(), color='black', linestyle='dashed', linewidth=1)
+    min_ylim, max_ylim = plt.ylim()
+    plt.text(percent_accuracy.mean()*1.1, max_ylim*0.9, 'Mean: {:.2f}'.format(percent_accuracy.mean()))
+    #adding histogram labels
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     #plt.ylim(1,150)
-    plt.axvline(percent_accuracy.mean(), color='k', linestyle='dashed', linewidth=1)
     plt.title("Histogram of Percent Accuracy")
     plt.savefig("plots/{}/percent_accuracy_histogram.png".format(model_name))
-
 
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)
