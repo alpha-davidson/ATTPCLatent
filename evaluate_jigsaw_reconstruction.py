@@ -4,7 +4,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from pointnet_model import pnet
-from plotting import plot_events, plot_histogram
+from plotting import plot_events, plot_histogram, plot_identity_events, plot_zero_one_bins, plot_original_events
 
 
 @click.command()
@@ -15,7 +15,7 @@ from plotting import plot_events, plot_histogram
 def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     """
     Sample invocation:
-        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2022-10-17-14:41:20/weights \
+        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2023-06-16-16:26:23/weights/cp-043.ckpt \
           voxel_data/Mg22_size512
     """
     # build model
@@ -34,13 +34,18 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
 
     # evaluate results
     model_name = model_file_stem.split("/")[-3]
+    ckpt_name = model_file_stem.split("/")[-1]
     print('Mean accuracy: {}'.format(np.mean(test_labels == predictions))) #point-wise accuracy
-    plot_events(test_labels, predictions, data_file_stem, model_name)
+    plot_events(test_labels, predictions, data_file_stem, model_name, ckpt_name)
     
     # create histogram of percent accuracy
-    model_name = model_file_stem.split("/")[-3]
     percent_accuracy = np.mean(test_labels == predictions, axis=1)
-    plot_histogram(model_name, percent_accuracy)
+    plot_histogram(model_name, percent_accuracy, ckpt_name)
+    
+    #for analyzing histogram peaks
+    plot_zero_one_bins(test_labels, predictions, data_file_stem, model_name, ckpt_name)
+
+    #plot_original_events(data_file_stem)
     
 if __name__ == '__main__':
     evaluate()
