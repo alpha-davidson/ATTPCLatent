@@ -8,7 +8,6 @@ from datetime import datetime
 import click
 import os
 
-
 def fix_shape(points, labels):
     # points already have the correct shape, so only reshape labels
     labels = tf.reshape(labels, (512, 1))
@@ -45,31 +44,47 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-    model_file_path = 'models/{}/weights'.format(timestamp)
+    #model_file_path = 'models/weights/{}'.format(timestamp)
     
+    checkpoint_path = "models/{}/weights/cp".format(timestamp) 
+    checkpoint_dir = os.path.dirname(checkpoint_path)
+    checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
+        
     # callback checkpoint to save best model
+    # modified to save model every [save_freq] epochs
     checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=model_file_path,
+        filepath=checkpoint_path, #model_file_path,
         save_weights_only = True,
         monitor = 'val_accuracy',
         mode = 'max',
-        save_best_only = True)
+        save_best_only = False,
+        save_freq = 'epoch') #(7*batch_size)) #determines frequency of saving model
+    
+    model.save_weights(checkpoint_path.format(epoch=0))
+    
+    #reduce LR checkpoint to adjust LR upon no improvement
+    reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.5,
+        patience=5,
+        mode='auto',
+        verbose=1,
+        min_delta=0.001,
+        min_lr=0.00001)
+        # cooldown=0,
+        # min_lr=0
     
     # build model and fit model
     model.summary()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=keras.optimizers.Adam(learning_rate=0.0005),
+                  optimizer=keras.optimizers.Adam(learning_rate=0.005), #prev LR: 0.0005, performs better with new. 
                   metrics=["sparse_categorical_accuracy", "accuracy"])
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
-                        callbacks=[checkpoint_callback], verbose=1)
-    
+                        callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
     os.makedirs('plots/{}'.format(timestamp))
     plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
-    
-    
-    
     
 if __name__ == '__main__':
     train()

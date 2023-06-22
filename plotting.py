@@ -1,18 +1,22 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import confusion_matrix
+import os
 
 
-def plot_histogram(model_name, percent_accuracy):
+def plot_histogram(model_name, percent_accuracy, ckpt_name):
     plt.figure()
     plt.hist(percent_accuracy, bins=100)
+    #adding mean line and value to histogram
+    plt.axvline(percent_accuracy.mean(), color='black', linestyle='dashed', linewidth=1)
+    min_ylim, max_ylim = plt.ylim()
+    plt.text(percent_accuracy.mean()*1.1, max_ylim*0.9, 'Mean: {:.2f}'.format(percent_accuracy.mean()))
+    #adding histogram labels
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     #plt.ylim(1,150)
-    plt.axvline(percent_accuracy.mean(), color='k', linestyle='dashed', linewidth=1)
     plt.title("Histogram of Percent Accuracy")
-    plt.savefig("plots/{}/percent_accuracy_histogram.png".format(model_name))
-
+    plt.savefig("plots/{}/{}/percent_accuracy_histogram.png".format(model_name,ckpt_name))
 
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)
@@ -84,11 +88,11 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     # plt.title('Event {} {}'.format(event_id, title))
     plt.title(title)
 
-    
-def plot_events(targets, predictions, data_file_stem, model_name):
+def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
     """
     Plots the original, shuffled, and unshuffled events along with the unshuffled
-    events' accuracy. Plots random events from the test dataset. 
+    events' accuracy. This needs to be randomized to plot some number of random 
+    events. 
     """
 
     # loading in data
@@ -105,8 +109,8 @@ def plot_events(targets, predictions, data_file_stem, model_name):
     # TODO: remove hardcoding
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
-
-    # plots 5 random events from the test data
+    
+    os.mkdir('plots/{}/{}/'.format(model_name, ckpt_name))
     for j in range(5):
         i = np.random.randint(len(test_event_nums[:,0]))
         event_id = int(test_event_nums[i,0])
@@ -129,14 +133,12 @@ def plot_events(targets, predictions, data_file_stem, model_name):
         _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
         # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-        plt.savefig('plots/{}/{}_voxels.png'.format(model_name, event_id))
-        
-        
-def identity_events(targets, predictions, data_file_stem, model_name):
-    """ 
-    When called, this function only plots the events that were left "unshuffled". 
-    The first two graphs should be the same. These are called identity events 
-    """
+        plt.savefig('plots/{}/{}/{}_voxels.png'.format(model_name,ckpt_name, event_id))
+            
+    
+def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_name):
+    '''When called, this function only plots the events that were left "unshuffled". 
+    The first two graphs should be the same. These are called identity events. '''
     
     # loading in data
     original_ds = np.load('{}{}'.format(data_file_stem, '_voxelated.npy'))
@@ -152,6 +154,8 @@ def identity_events(targets, predictions, data_file_stem, model_name):
     print("Number of events:", len(original_ds))
     print("Number of events in test set:", len(test_event_nums))
     
+    os.makedirs('plots/{}/{}/identity_events'.format(timestamp, ckpt_name)) 
+
     # finding the identity events
     for i in range(len(targets)):
         event_id = int(test_event_nums[i,0])
@@ -183,12 +187,12 @@ def identity_events(targets, predictions, data_file_stem, model_name):
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            os.makedirs('plots/{}/identity_events'.format(timestamp))
-            plt.savefig('plots/{}/identity_events/{}_voxels.png'.format(model_name, event_id))
+
+            plt.savefig('plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
     
     
-def zero_one_bins(targets, predictions, data_file_stem, model_name):
-    """ 
+def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_name):
+     """ 
     When run, this function only plots the graphs that had 0% accuracy and 100% 
     accuracy, or the events that went into the '0 bin' and '1 bin' on the histogram. 
     """
@@ -207,7 +211,10 @@ def zero_one_bins(targets, predictions, data_file_stem, model_name):
     count = 0
     zero_bin = []
     one_bin = []
-    
+
+    os.makedirs('plots/{}/{}/0_bin'.format(model_name, ckpt_name))
+    os.makedirs('plots/{}/{}/1_bin'.format(model_name, ckpt_name))
+
     for i in range(len(targets)):
         
         # finds the events from the zero bin
@@ -233,9 +240,9 @@ def zero_one_bins(targets, predictions, data_file_stem, model_name):
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            os.makedirs('plots/{}/0_bin'.format(timestamp))
-            plt.savefig('plots/{}/0_bin/{}_voxels.png'.format(model_name,event_id))
             
+            plt.savefig('plots/{}/{}/0_bin/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+
         # finds the events from the one bin
         elif np.mean(targets[i,:] == predictions[i]) == 1.0:    # 100% accuracy
             event_id = int(test_event_nums[i,0])          
@@ -259,9 +266,6 @@ def zero_one_bins(targets, predictions, data_file_stem, model_name):
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            os.makedirs('plots/{}/1_bin'.format(timestamp))
-            plt.savefig('plots/{}/1_bin/{}_voxels.png'.format(model_name,event_id))
-    
-    # saves the data from these events
-    np.save('plots/{}/0_bin/0_data', zero_bin)
-    np.save('plots/{}/1_bin/1_data', one_bin)
+            plt.savefig('plots/{}/{}/1_bin/{}_voxels.png'.format(model_name,ckpt_name,event_id))
+    np.save('plots/{}/{}/0_bin/0_data'.format(model_name, ckpt_name), zero_bin)
+    np.save('plots/{}/{}/1_bin/1_data'.format(model_name, ckpt_name), one_bin)
