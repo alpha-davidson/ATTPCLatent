@@ -17,6 +17,8 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     Sample invocation:
         python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2023-06-16-16:26:23/weights/cp-043.ckpt \
           voxel_data/Mg22_size512
+          
+        user changes: models/<date>/weights/<chosen weight>
     """
     # build model
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
@@ -42,10 +44,9 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     percent_accuracy = np.mean(test_labels == predictions, axis=1)
     plot_histogram(model_name, percent_accuracy, ckpt_name)
     
-    #for analyzing histogram peaks
+    #for analyzing histogram peaks at 0 and 1
     plot_zero_one_bins(test_labels, predictions, data_file_stem, model_name, ckpt_name)
 
-    #plot_original_events(data_file_stem)
     
 if __name__ == '__main__':
     evaluate()
