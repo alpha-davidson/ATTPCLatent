@@ -1,7 +1,7 @@
 This repository contains code for self-supervised learning of track geometries from TPC [data](https://alphadavidson.slack.com/files/U0146JVGQEB/F025QCGNURJ/output_digi_hdf_mg22_ne20pp_8mev.h5) (in this case, Mg-22). Code is written in `python3` and uses the `tensorflow` package as the framework for the implementation.
 
 # Packages
-*Runs seamlessly using these versions as of June 7, 2023. Subject to change according to conda compatibility.*
+*Runs seamlessly using these versions as of July 12, 2023. Subject to change according to conda compatibility.*
 
 * python 3.11.3
 * tensorflow 2.12.0
@@ -11,8 +11,9 @@ This repository contains code for self-supervised learning of track geometries f
 * matplotlib 3.7.1
 * tqdm 4.65.0
 * jupyter 1.0.0
+* seaborn 0.12.2
 ## Git Setup
-After accessing server remotely by `ssh`, set up this Git repository for use. Ender your Git username and access token details as required.
+After accessing server remotely by `ssh`, set up this Git repository for use. Enter your Git username and access token details as required.
 * Cloning the repository: `git clone https://github.com/alpha-davidson/TPCNet.git`
 * Creating your own branch: `git checkout -b [insert branchname here]`
 
@@ -24,9 +25,9 @@ After accessing server remotely by `ssh`, set up this Git repository for use. En
 
 `conda activate tpcnet`
 
-`conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65.0 jupyter=1.0.0`
+`conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65.0 jupyter=1.0.0 seaborn=0.12.2`
 
-*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. conda install numpy click tqdm...) and **update README** accordingly.*
+*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. `conda install numpy click tqdm ...`) and **update README** accordingly.*
 
 See workflow guide below to reproduce results.
 
@@ -82,4 +83,6 @@ This script evalutes the quality of jigsaw reconstruction, invoking the `plottin
 
 These visualizations will be found in the `evaluations` subfolder in `plots`. Additionally, a point-wise mean accuracy metric can also be found in the `SLURM output file`.
 
-The evaluating script will also plot a histogram of across all the events of the reconstructed accuracy, found in the `plots` folder. In other words, for each event, it will calculate the percentage of reconstructed points that match up with the original event and plot this in a histogram form for all the events.
+The evaluating script will also plot a histogram of across all the events of the reconstructed accuracy, found in the `plots` folder. In other words, for each event, it will calculate the percentage of reconstructed points that match up with the original event and plot this in a histogram (percent accuracy histogram) form for all the events.
+
+The `model_analysis.ipynb` Jupyter notebook contains functionality to analyze info relevant to the percent accuracy histogram. This is used to confirm observations and results are used to consider next steps for project improvement.
