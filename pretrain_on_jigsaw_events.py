@@ -13,6 +13,19 @@ def fix_shape(points, labels):
     labels = tf.reshape(labels, (512, 1))
     return points, labels
 
+def get_latest_checkpoint(checkpoint_dir):
+    """
+    Additional function to get the latest checkpoint file
+    """
+    try:
+        paths = [os.path.join(checkpoint_dir, name) for name in os.listdir(checkpoint_dir)]
+        return max(paths, key=os.path.getctime)
+    except FileNotFoundError as error:
+        print(f"No checkpoint found in {checkpoint_dir}!!!!!")
+        raise error
+    except ValueError as error:
+        print(f"No valid checkpoint found in {checkpoint_dir}!!!!!")
+        raise error
 
 @click.command()
 @click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
@@ -41,11 +54,11 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     
     # build and fit model
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
-    
+
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     
-    checkpoint_path = "models/{}/weights/cp".format(timestamp) 
+    checkpoint_path = f"/home/DAVIDSON/dmkurdydyk/TPCNet/models/{timestamp}/weights/cp"
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -58,6 +71,8 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
         save_best_only = False,
         save_freq = 'epoch')
     
+    # Ensure directory exists before saving initial weights
+    os.makedirs(checkpoint_dir, exist_ok=True)
     model.save_weights(checkpoint_path.format(epoch=0))
     
     #reduce LR checkpoint to adjust LR upon no improvement
@@ -78,8 +93,8 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
-    os.makedirs('plots/{}'.format(timestamp))
-    plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
+    os.makedirs('/home/DAVIDSON/dmkurdydyk/TPCNet/plots/{}'.format(timestamp))
+    plot_file_path = '/home/DAVIDSON/dmkurdydyk/TPCNet/plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
