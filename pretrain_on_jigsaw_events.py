@@ -93,6 +93,9 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
+    model_path = f"/home/DAVIDSON/dmkurdydyk/TPCNet/models/{timestamp}/full_model"
+    model.save(model_path)
+    
     os.makedirs('/home/DAVIDSON/dmkurdydyk/TPCNet/plots/{}'.format(timestamp))
     plot_file_path = '/home/DAVIDSON/dmkurdydyk/TPCNet/plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
