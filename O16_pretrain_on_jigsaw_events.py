@@ -67,7 +67,7 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     
-    checkpoint_path = f"/home/DAVIDSON/dmkurdydyk/TPCNet/O16_models/{timestamp}/weights/cp"
+    checkpoint_path = f"TPCNet/O16_models/{timestamp}/weights/cp"
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -102,8 +102,8 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
-    os.makedirs('/home/DAVIDSON/dmkurdydyk/TPCNet/O16_plots/{}'.format(timestamp))
-    plot_file_path = '/home/DAVIDSON/dmkurdydyk/TPCNet/O16_plots/{}/learning_curve.png'.format(timestamp)
+    os.makedirs('TPCNet/O16_plots/{}'.format(timestamp))
+    plot_file_path = 'TPCNet/O16_plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
