@@ -5,8 +5,8 @@
 
 # Adapt the models sub-folder as needed to the correct file name. Also, to plot the histogram, make sure the name
 # of the sub-folder matches up between the models and plots folder
-python3 evaluate_jigsaw_reconstruction.py --num-classes 27 /home/DAVIDSON/dmkurdydyk/TPCNet/O16_models/2023-11-24-23:24:05/weights/cp-050.ckpt \
-          /home/DAVIDSON/dmkurdydyk/TPCNet/O16_expt_downstream/voxel_data/O16_size512
+python3 evaluate_jigsaw_reconstruction.py --num-classes 27 TPCNet/O16_models/2023-11-24-23:24:05/weights/cp-050.ckpt \
+          TPCNet/O16_expt_downstream/voxel_data/O16_size512
 
 
 
