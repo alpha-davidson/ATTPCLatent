@@ -87,4 +87,4 @@ The evaluating script will also plot a histogram of across all the events of the
 
 The `model_analysis.ipynb` Jupyter notebook contains functionality to analyze info relevant to the percent accuracy histogram. This is used to confirm observations and results are used to consider next steps for project improvement.
 
-Lorraine.
+Lorraine 2.
