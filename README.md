@@ -86,5 +86,3 @@ These visualizations will be found in the `evaluations` subfolder in `plots`. Ad
 The evaluating script will also plot a histogram of across all the events of the reconstructed accuracy, found in the `plots` folder. In other words, for each event, it will calculate the percentage of reconstructed points that match up with the original event and plot this in a histogram (percent accuracy histogram) form for all the events.
 
 The `model_analysis.ipynb` Jupyter notebook contains functionality to analyze info relevant to the percent accuracy histogram. This is used to confirm observations and results are used to consider next steps for project improvement.
-
-Lorraine 2.
