@@ -8,6 +8,7 @@ from datetime import datetime
 import click
 import os
 
+
 def fix_shape(points, labels):
     # points already have the correct shape, so only reshape labels
     labels = tf.reshape(labels, (512, 1))
