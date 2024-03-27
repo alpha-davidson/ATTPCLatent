@@ -148,4 +148,5 @@ slurm*.out
 #
 *checkpoint
 
-*npy
+*.npy
+

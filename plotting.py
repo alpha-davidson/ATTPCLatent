@@ -108,6 +108,9 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
     voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
+
+    #os.mkdir('TPCNet/plots/{}/{}/'.format(model_name, ckpt_name))
+
     for j in range(5):
         i = np.random.randint(len(test_event_nums[:,0]))
         event_id = int(test_event_nums[i,0])
