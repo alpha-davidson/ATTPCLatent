@@ -14,7 +14,7 @@ def plot_histogram(model_name, percent_accuracy, ckpt_name):
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     plt.title("Histogram of Percent Accuracy")
-    plt.savefig("TPCNet/plots/{}/{}/percent_accuracy_histogram.png".format(model_name,ckpt_name))
+    plt.savefig("TPCNet/O16_plots/{}/{}/percent_accuracy_histogram.png".format(model_name,ckpt_name))
 
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)
@@ -103,14 +103,11 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
     
     print("Number of events:", len(original_ds))
     print("Number of events in test set:", len(test_event_nums))
-
+    
     # TODO: remove hardcoding
-    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('TPCNet/O16_expt_downstream/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
-
-    #os.mkdir('TPCNet/plots/{}/{}/'.format(model_name, ckpt_name))
-
     for j in range(5):
         i = np.random.randint(len(test_event_nums[:,0]))
         event_id = int(test_event_nums[i,0])
@@ -133,8 +130,10 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
         _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
         # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-        plt.savefig('TPCNet/plots/{}/{}/{}_voxels.png'.format(model_name,ckpt_name, event_id))
-            
+        save_dir = f'TPCNet/O16_plots/{model_name}/{ckpt_name}'
+        os.makedirs(save_dir, exist_ok=True) 
+        plt.savefig(f'{save_dir}/{event_id}_voxels.png')
+                
     
 def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_name):
     """
@@ -147,7 +146,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('TPCNet/O16_expt_downstream/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -158,7 +157,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     
     timestamp = timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
-    os.makedirs('TPCNet/plots/{}/{}/identity_events'.format(timestamp, ckpt_name)) 
+    os.makedirs('TPCNet/O16_plots/{}/{}/identity_events'.format(timestamp, ckpt_name)) 
 
     # finding the identity events
     for i in range(len(targets)):
@@ -192,7 +191,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
 
-            plt.savefig('TPCNet/plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('TPCNet/O16_plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
     
     
 def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_name):
@@ -206,7 +205,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('TPCNet/O16_expt_downstream/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -216,8 +215,8 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     zero_bin = []
     one_bin = []
 
-    os.makedirs('TPCNet/plots/{}/{}/0_bin'.format(model_name, ckpt_name))
-    os.makedirs('TPCNet/plots/{}/{}/1_bin'.format(model_name, ckpt_name))
+    os.makedirs('TPCNet/O16_plots/{}/{}/0_bin'.format(model_name, ckpt_name))
+    os.makedirs('TPCNet/O16_plots/{}/{}/1_bin'.format(model_name, ckpt_name))
 
     for i in range(len(targets)):
         
@@ -245,7 +244,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
             
-            plt.savefig('TPCNet/plots/{}/{}/0_bin/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('TPCNet/O16_plots/{}/{}/0_bin/{}_voxels.png'.format(model_name, ckpt_name, event_id))
 
         # finds the events from the one bin
         elif np.mean(targets[i,:] == predictions[i]) == 1.0:    # 100% accuracy
@@ -270,8 +269,8 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            plt.savefig('TPCNet/plots/{}/{}/1_bin/{}_voxels.png'.format(model_name,ckpt_name,event_id))
+            plt.savefig('TPCNet/O16_plots/{}/{}/1_bin/{}_voxels.png'.format(model_name,ckpt_name,event_id))
             
     # saving the data for the 0% and 100% accuracy events        
-    np.save('TPCNet/plots/{}/{}/0_bin/0_data'.format(model_name, ckpt_name), zero_bin)
-    np.save('TPCNet/plots/{}/{}/1_bin/1_data'.format(model_name, ckpt_name), one_bin)
+    np.save('TPCNet/O16_plots/{}/{}/0_bin/0_data'.format(model_name, ckpt_name), zero_bin)
+    np.save('TPCNet/O16_plots/{}/{}/1_bin/1_data'.format(model_name, ckpt_name), one_bin)

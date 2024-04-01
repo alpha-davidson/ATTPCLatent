@@ -8,7 +8,6 @@ from datetime import datetime
 import click
 import os
 
-
 def fix_shape(points, labels):
     # points already have the correct shape, so only reshape labels
     labels = tf.reshape(labels, (512, 1))
@@ -33,8 +32,9 @@ def get_latest_checkpoint(checkpoint_dir):
 @click.option('--batch-size', default=32, type=click.INT, help='Batch size for SGD')
 @click.option('--num-classes', default=2, type=click.INT, help='Number of classes to predict')
 @click.option('--num-epochs', default=10, type=click.INT, help='Number of epochs of training')
+@click.option('--fine-tune', default=None, type=click.STRING, help='Path to a specific checkpoint file for fine-tuning')
 @click.argument('file-stem')
-def train(num_points, batch_size, num_classes, num_epochs, file_stem):
+def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem):
     """
     Sample invocation:
         python3 pretrain_on_jigsaw_events.py --num-classes 27 --num-epochs 50 voxel_data/Mg22_size512
@@ -53,13 +53,21 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     train_ds = train_ds.shuffle(len(train_ds)).batch(batch_size)
     val_ds = val_ds.shuffle(len(val_ds)).batch(batch_size)
     
+    # Build model
+    model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
+
+    # Load specific checkpoint if fine-tuning
+    if fine_tune:
+        model.load_weights(fine_tune)
+        print(f"Loaded weights from {fine_tune} for fine-tuning.")
+    
     # build and fit model
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
 
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     
-    checkpoint_path = f"TPCNet/models/{timestamp}/weights/cp"
+    checkpoint_path = f"TPCNet/O16_models/{timestamp}/weights/cp"
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -94,13 +102,8 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
-
-    model_path = f"TPCNet/models/{timestamp}/full_model"
-    model.save(model_path)
-    
-
-    os.makedirs('TPCNet/plots/{}'.format(timestamp))
-    plot_file_path = 'TPCNet/plots/{}/learning_curve.png'.format(timestamp)
+    os.makedirs('TPCNet/O16_plots/{}'.format(timestamp))
+    plot_file_path = 'TPCNet/O16_plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
