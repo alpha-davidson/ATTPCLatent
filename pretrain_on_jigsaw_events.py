@@ -59,7 +59,7 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     
-    checkpoint_path = f"TPCNet/models/{timestamp}/weights/cp"
+    checkpoint_path = f"models/{timestamp}/weights/cp"
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -95,12 +95,12 @@ def train(num_points, batch_size, num_classes, num_epochs, file_stem):
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
 
-    model_path = f"TPCNet/models/{timestamp}/full_model"
+    model_path = f"models/{timestamp}/full_model"
     model.save(model_path)
     
 
-    os.makedirs('TPCNet/plots/{}'.format(timestamp))
-    plot_file_path = 'TPCNet/plots/{}/learning_curve.png'.format(timestamp)
+    os.makedirs('plots/{}'.format(timestamp))
+    plot_file_path = 'plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
