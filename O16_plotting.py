@@ -130,7 +130,7 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
         _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
         # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-        save_dir = f'TPCNet/O16_plots/{model_name}/{ckpt_name}'
+        save_dir = f'O16_plots/{model_name}/{ckpt_name}'
         os.makedirs(save_dir, exist_ok=True) 
         plt.savefig(f'{save_dir}/{event_id}_voxels.png')
                 
@@ -191,7 +191,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
 
-            plt.savefig('TPCNet/O16_plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('O16_plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
     
     
 def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_name):
@@ -205,7 +205,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('TPCNet/O16_expt_downstream/voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('O16_expt_downstream/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
