@@ -27,11 +27,9 @@ After accessing server remotely by `ssh`, set up this Git repository for use. En
 
 `conda create -n tpcnet python=3.11 nodejs=16`
 
-`python3 -m pip install tensorflow[and-cuda]==2.11 scikit-learn==1.2.2 numpy==1.23.5 click==8.0.4 matplotlib==3.7.1 tqdm==4.65.0 jupyter==1.0.0 seaborn==0.12.2`
+`python3 -m pip install tensorflow[and-cuda]==2.12 scikit-learn==1.2.2 numpy==1.23.5 click==8.0.4 matplotlib==3.7.1 tqdm==4.65.0 jupyter==1.0.0 seaborn==0.12.2`
 
 *Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. `conda install numpy click tqdm ...`) and **update README** accordingly.*
-
-The `tensorflow[and-cuda]` command is needed to run the GPU successfully.
 
 See workflow guide below to reproduce results.
 
