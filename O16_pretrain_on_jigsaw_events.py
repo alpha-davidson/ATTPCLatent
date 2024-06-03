@@ -37,7 +37,7 @@ def get_latest_checkpoint(checkpoint_dir):
 def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem):
     """
     Sample invocation:
-        python3 pretrain_on_jigsaw_events.py --num-classes 27 --num-epochs 50 voxel_data/Mg22_size512
+        python3 O16_pretrain_on_jigsaw_events.py --num-classes 27 --num-epochs 50 O16_expt_downstream/voxel_data/O16_size512
     """
     # load data
     train_ds = np.load('{}{}'.format(file_stem, 'train.npy'))
@@ -67,7 +67,7 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     
-    checkpoint_path = f"TPCNet/O16_models/{timestamp}/weights/cp"
+    checkpoint_path = f"O16_models/{timestamp}/weights/cp"
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -102,8 +102,8 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
     
-    os.makedirs('TPCNet/O16_plots/{}'.format(timestamp))
-    plot_file_path = 'TPCNet/O16_plots/{}/learning_curve.png'.format(timestamp)
+    os.makedirs('O16_plots/{}'.format(timestamp))
+    plot_file_path = 'O16_plots/{}/learning_curve.png'.format(timestamp)
     plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
