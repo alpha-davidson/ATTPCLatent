@@ -4,9 +4,7 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
 from pointnet_model import pnet
-
 from plotting import plot_events, plot_histogram, plot_zero_one_bins
-
 
 
 @click.command()
