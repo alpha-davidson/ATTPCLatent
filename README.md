@@ -25,7 +25,9 @@ After accessing server remotely by `ssh`, set up this Git repository for use. En
 
 `conda activate tpcnet`
 
-`conda install tensorflow=2.12.0 scikit-learn=1.2.2 numpy=1.23.5 click=8.0.4 matplotlib=3.7.1 tqdm=4.65.0 jupyter=1.0.0 seaborn=0.12.2`
+`conda create -n tpcnet python=3.11 nodejs=16`
+
+`python3 -m pip install tensorflow[and-cuda]==2.12 scikit-learn==1.2.2 numpy==1.23.5 click==8.0.4 matplotlib==3.7.1 tqdm==4.65.0 jupyter==1.0.0 seaborn==0.12.2`
 
 *Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. `conda install numpy click tqdm ...`) and **update README** accordingly.*
 
@@ -35,11 +37,11 @@ See workflow guide below to reproduce results.
 
 ## Creating Voxel Data
 
-Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The data file from the TPC is first loaded, and points are randomly sampled (NOT a completely randomized process, however - random samples are taken according to the event length desired). Points with track labels of 2,4 and 6 are filtered out and only these data points are used in the voxelation process. In this stage, points are first normalized into a unit cube, segmented into voxels (K x K x K cube), and then assigned labels. Labeled voxels are then shuffled such that each voxel is assigned an ID other than its own. Points are then moved to their new voxel, and the current version of the notebook randomly augments points for better xyz generalization (although this is optional).It is then checked that the boundaries of the unit cube have not been violated. The file of shuffled voxels are split into training, testing and validation sets, which are saved in the `voxel_data` folder. Lastly, these datasets are checked for NaNs and infs, and a histogram is created.
+Voxel datasets are compiled using the `Mg_22_Voxel_pipeline.ipynb` file. The data file from the TPC is first loaded, and points are randomly sampled (NOT a completely randomized process, however - random samples are taken according to the event length desired). Points with track labels of 2,4 and 6 are filtered out and only these data points are used in the voxelation process. In this stage, points are first normalized into a unit cube, segmented into voxels (K_x x K_y x K_z cube), and then assigned labels. Labeled voxels are then shuffled such that each voxel is assigned an ID other than its own. Points are then moved to their new voxel, and the current version of the notebook randomly augments points for better xyz generalization (although this is optional).It is then checked that the boundaries of the unit cube have not been violated. The file of shuffled voxels are split into training, testing and validation sets, which are saved in the `voxel_data` folder. Lastly, these datasets are checked for NaNs and infs, and a histogram is created.
 
 ## Voxel Orientation
 
-Each voxel will be assigned an integer starting from 0 up to (K x K x K) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = y = z = 1/K. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K = 3. The top picture is the front view, with the origin at the front, bottom right corner. The middle picture is the back view, with the origin being the back, bottom left corner. The bottom picture shows how these voxels are broken up on the actual ATTPC.
+Each voxel will be assigned an integer starting from 0 up to (K_x x K_y x K_z) - 1. Voxel number 0 has a bottom corner at the origin and the top, opposite corner at x = 1/K_x, y = 1/K_y, z = 1/K_z. The next voxel, voxel 1, has the same y and z coordinates as voxel 0 while the x coordinate moves forward. Below are examples of the voxel numbers if K_x = K_y = K_z = 3. The top picture is the front view, with the origin at the front, bottom right corner. The middle picture is the back view, with the origin being the back, bottom left corner. The bottom picture shows how these voxels are broken up on the actual ATTPC. In the current state of the repository, K_x = 2, K_y = 2, and K_z = 6.
 
 ![front view of voxels](voxel_orientation_front.jpg)
 
