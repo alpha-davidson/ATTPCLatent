@@ -8,7 +8,6 @@ from datetime import datetime
 import click
 import os
 
-from tensorflow import keras
 from tensorflow.keras.models import load_model, Model
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.utils import to_categorical
@@ -38,14 +37,8 @@ model = keras.models.load_model(saved_model_path, custom_objects={'OrthogonalReg
 # Check if the model has been loaded correctly
 print(model.summary())
 
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-import numpy as np
-from datetime import datetime
-import os
-from sklearn.model_selection import train_test_split
-from plotting import plot_learning_curve
 from tensorflow.keras.layers import GlobalAveragePooling1D
+from sklearn.metrics import classification_report
 
 # Load the saved model using Keras API
 saved_model_path = 'models/2024-07-01-11:30:16/full_model' 
@@ -64,14 +57,26 @@ new_output = tf.keras.layers.Dense(num_classes, activation='softmax', name='reco
 model = tf.keras.models.Model(inputs=model.input, outputs=new_output)
 
 # Load data and labels for the new task
-train_data = np.load('ready/tpcnet_Mg22_expt_data_512.npy')
-val_data = np.load('ready/tpcnet_Mg22_expt_labels_512.npy')
+#train_data = np.load('ready/tpcnet_Mg22_expt_data_512.npy')
+#val_data = np.load('ready/tpcnet_Mg22_expt_labels_512.npy')
 
-train_data, test_data, train_labels, test_labels = train_test_split(train_data, val_data, test_size=0.2, random_state=42)
+train_data = np.load('Mg22_dw_data/Mg22_size512_175train_features.npy')
+train_labels = np.load('Mg22_dw_data/Mg22_size512_175train_labels.npy')
+val_data = np.load('Mg22_dw_data/Mg22_size512_val_features.npy')
+val_labels = np.load('Mg22_dw_data/Mg22_size512_val_labels.npy')
+test_data = np.load('Mg22_dw_data/Mg22_size512_test_features.npy')
+test_labels = np.load('Mg22_dw_data/Mg22_size512_test_labels.npy')
+
+train_data = train_data[:, :, :3]
+val_data = val_data[:, :, :3]
+test_data = test_data[:, :, :3]
+
+#train_data, test_data, train_labels, test_labels = train_test_split(train_data, val_data, test_size=0.2, random_state=42)
 
 # Create TensorFlow datasets
 train_ds = tf.data.Dataset.from_tensor_slices((train_data, train_labels)).batch(batch_size, drop_remainder=True)
-val_ds = tf.data.Dataset.from_tensor_slices((test_data, test_labels)).batch(batch_size, drop_remainder=True)
+val_ds = tf.data.Dataset.from_tensor_slices((val_data, val_labels)).batch(batch_size, drop_remainder=True)
+test_ds = tf.data.Dataset.from_tensor_slices((test_data, test_labels)).batch(batch_size, drop_remainder=True)
 
 # Prepare for saving model checkpoints
 timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
@@ -123,6 +128,7 @@ f1 = f1_score(y_true, y_pred, average='weighted')
 
 print(f"Mean Accuracy for Selected Event: {mean_accuracy}")
 print(f"F1-Score for Selected Event: {f1}")
+print(classification_report(y_true, y_pred))
 
 # Save metrics for the selected event to a text file
 with open(f'Mg22_dw_plots/{timestamp}/metrics_event.txt', 'w') as f:
