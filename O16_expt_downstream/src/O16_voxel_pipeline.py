@@ -8,7 +8,7 @@ designed for data in the following format:
 x[0] ,y[1] ,z[2] ,time[3], Amplitude[4]
 
 date created: Jul 22, 2024
-date edited: Jul 22, 2024
+date edited: Jul 24, 2024
 
 """
 
@@ -29,6 +29,18 @@ import json
 # user defined functions...
 
 def convert_data(data):
+    """
+    Takes in point cloud data as an .h5 file and converts it into a numpy array.
+    
+    Parameters
+    ----------
+    data : h5
+        Raw point cloud data.
+    
+    Returns
+    ----------
+    None.
+    """
     
     keys = list(data.keys())
     
@@ -59,7 +71,25 @@ def _filter_point_clouds(data):
     
     return filtered_data
 
-def filter_data(ISOTOPE, min_points_threshold):
+def filter_data(ISOTOPE, min_points_threshold, min_charge_threshold):
+    """
+    Filters out all events that don't have at least 70 points.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+    
+    min_points_threshold : int
+        Minimum points to be safe.
+
+    min_charge_threshold : int
+        Minimum charge value to be safe.
+    
+    Returns
+    ----------
+    None.
+    """
     
     data = np.load('../voxel_data/' + ISOTOPE + '_w_event_keys.npy')
     event_lens = np.load('../voxel_data/' + ISOTOPE + '_event_lens.npy')
@@ -69,10 +99,10 @@ def filter_data(ISOTOPE, min_points_threshold):
     filtered_data = _filter_point_clouds(data)
     
     # Apply additional filtering based on the charge value
-    filtered_data[:,:,0] = np.where(filtered_data[:,:,3] < 90, 0, filtered_data[:,:,0])
-    filtered_data[:,:,1] = np.where(filtered_data[:,:,3] < 90, 0, filtered_data[:,:,1])
-    filtered_data[:,:,2] = np.where(filtered_data[:,:,3] < 90, 0, filtered_data[:,:,2])
-    filtered_data[:,:,3] = np.where(filtered_data[:,:,3] < 90, 0, filtered_data[:,:,3])
+    filtered_data[:,:,0] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,0])
+    filtered_data[:,:,1] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,1])
+    filtered_data[:,:,2] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,2])
+    filtered_data[:,:,3] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,3])
         
     # Filter out events with too few non-zero points
     filtered_events = []
@@ -89,6 +119,24 @@ def filter_data(ISOTOPE, min_points_threshold):
     np.save('../voxel_data/O16_valid_event_indices', valid_event_indices)
 
 def random_sample(ISOTOPE, sample_size, dimension):
+    """
+    Each event might have any number of points over the min_point_threshold. This function condenses/expands each event to contain 512 instances.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+
+    dimension : int
+        Desired dimension of data for input.
+    
+    Returns
+    ----------
+    None.
+    """
 
     data = np.load('../voxel_data/' + ISOTOPE + '_w_event_keys.npy')
     filtered_data = np.load('../voxel_data/O16_filtered_data.npy')
@@ -161,6 +209,21 @@ def random_sample(ISOTOPE, sample_size, dimension):
     np.save('../voxel_data/' + ISOTOPE + '_size' + str(sample_size), dataset)
 
 def scale_and_split(ISOTOPE, sample_size):
+    """
+    Scale the data to fit in a 1x1x1 cube.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+    
+    Returns
+    ----------
+    None.
+    """
 
     dataset = np.load('../voxel_data/' + ISOTOPE + '_size' + str(sample_size) + '.npy')
 
@@ -207,6 +270,21 @@ def scale_and_split(ISOTOPE, sample_size):
     assert len(np.unique(np.isnan(test[:,:,4]))) == 1, 'NaNs in dataset'
 
 def voxelize(ISOTOPE, sample_size):
+    """
+    Begins the voxelization process.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+    
+    Returns
+    ----------
+    None.
+    """
     
     name = ISOTOPE + '_size' + str(sample_size)
     data = np.load('../voxel_data/' + name + '.npy')
@@ -226,7 +304,7 @@ def voxelize(ISOTOPE, sample_size):
     print(np.amax(data[:,:,0]), np.amax(data[:,:,1]), np.amax(data[:,:,2]))
     print(np.amin(data[:,:,0]), np.amin(data[:,:,1]), np.amin(data[:,:,2]))
     
-    data[:,:,0] = data[:,:,0]+ abs(RANGES['MIN_X']) # WORKINGGGGBDFGDF ON IT 
+    data[:,:,0] = data[:,:,0]+ abs(RANGES['MIN_X']) # WORKING ON IT 
     data[:,:,0] = data[:,:,0]/ (RANGES['MAX_X'] + abs(RANGES['MIN_X'])) 
     data[:,:,1] = data[:,:,1]+ abs(RANGES['MIN_Y'])
     data[:,:,1] = data[:,:,1]/ (RANGES['MAX_Y'] + abs(RANGES['MIN_Y']))
@@ -242,6 +320,24 @@ def voxelize(ISOTOPE, sample_size):
     np.save('../voxel_data/' + new_array_name, data)
 
 def label(ISOTOPE, sample_size, K_x, K_y, K_z):
+    """
+    Saves the data along with the voxels each instance belongs to.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+
+    K_x, K_y, K_z : ints
+        Number of splits along each axis.
+    
+    Returns
+    ----------
+    None.
+    """
     
     name = ISOTOPE + '_size' + str(sample_size) + '_sampled_normal' # Using normalized data
     data = np.load('../voxel_data/' + name + '.npy')
@@ -355,8 +451,6 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z):
     with open('../voxel_data/voxels.json', 'w') as file:
         json.dump(voxels, file)
 
-    ##########
-
     voxels_np = np.zeros((K_x * K_y * K_z,2,3))
     for i in range(K_x * K_y * K_z):
         min_bounds = voxels[i][0]
@@ -367,8 +461,6 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z):
     # print(voxels)
     # print(voxels_np)
     np.save('../voxel_data/voxel_bounds.npy', voxels_np)
-
-    ##########
 
     name1 = 'O16' + '_size' + str(512) + '_voxelated'
     name2 = 'O16' + '_size' + str(512) + '_base_voxels'
@@ -381,6 +473,24 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z):
     # assert next_step_data.shape == (count, sample_size, 6), 'Base Voxels Shape is incorrect'
 
 def shuffle(ISOTOPE, sample_size, K_x, K_y, K_z):
+    """
+    Responsible for shuffling the voxels of each individual event.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+
+    K_x, K_y, K_z : ints
+        Number of splits along each axis.
+    
+    Returns
+    ----------
+    None.
+    """
     
     name = ISOTOPE + '_size' + str(sample_size) + '_base_voxels'
     name_unshuffled = ISOTOPE + '_size' + str(sample_size) + '_voxelated'
@@ -462,8 +572,22 @@ def shuffle(ISOTOPE, sample_size, K_x, K_y, K_z):
     np.save('../voxel_data/' + new_array_name, final_data)
 
 def test_train_and_val(ISOTOPE, sample_size):
+    """
+    Performs a 20-test 20-val 60-train split on all 4-track events.
     
-    # performs a 20-test 20-val 60-train split on all 4-track events
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+    
+    Returns
+    ----------
+    None.
+    """
+    
     # generates an array of numbers as long as the length of the data to randomize the events 
     name = ISOTOPE + '_size' + str(sample_size)
     all_events = np.load('../voxel_data/' + name + '_shuffled_voxels.npy')
@@ -493,6 +617,7 @@ def main():
     dimension = 4 # desired dimension of data to be input
     ISOTOPE = 'O16'
     min_points_threshold = 70 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function)
+    min_charge_threshold = 90 # ^ same but for charge value
 
     K_x = 2
     K_y = 2
@@ -503,7 +628,7 @@ def main():
 
     # calling the functions
     convert_data(data)
-    filter_data(ISOTOPE, min_points_threshold)
+    filter_data(ISOTOPE, min_points_threshold, min_charge_threshold)
     random_sample(ISOTOPE, sample_size, dimension)
     scale_and_split(ISOTOPE, sample_size)
     voxelize(ISOTOPE, sample_size)
