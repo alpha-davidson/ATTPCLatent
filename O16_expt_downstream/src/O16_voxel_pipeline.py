@@ -502,13 +502,13 @@ def main():
     data = h5py.File('../voxel_data/O16_run160.h5','r')
 
     # calling the functions
-    '''convert_data(data)
+    convert_data(data)
     filter_data(ISOTOPE, min_points_threshold)
     random_sample(ISOTOPE, sample_size, dimension)
     scale_and_split(ISOTOPE, sample_size)
     voxelize(ISOTOPE, sample_size)
     label(ISOTOPE, sample_size, K_x, K_y, K_z)
-    shuffle(ISOTOPE, sample_size, K_x, K_y, K_z)'''
+    shuffle(ISOTOPE, sample_size, K_x, K_y, K_z)
     test_train_and_val(ISOTOPE, sample_size)
 
 if __name__ == "__main__":
