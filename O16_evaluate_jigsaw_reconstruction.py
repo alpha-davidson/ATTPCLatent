@@ -2,7 +2,7 @@ import click
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, f1_score
 from pointnet_model import pnet
 from O16_plotting import plot_events, plot_histogram, plot_zero_one_bins
 
@@ -46,6 +46,10 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     
     #for analyzing histogram peaks at 0 and 1
     plot_zero_one_bins(test_labels, predictions, data_file_stem, model_name, ckpt_name)
+
+    # f1 for evaluation
+    f1 = f1_score(test_labels.flatten(), predictions.flatten(), average='weighted')
+    print('F1 Score: {}'.format(f1))
 
     
 if __name__ == '__main__':
