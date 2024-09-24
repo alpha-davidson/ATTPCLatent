@@ -103,7 +103,7 @@ The `model_analysis.ipynb` Jupyter notebook contains functionality to analyze in
 
 To improve the models by training the models with more than one experiment, we will use similar code and methods to load simulated data, train corresponding models, and evaluate the models for O16, another rare isotope that we have data on. Currently, we have separate pretraining and evaluating files for O16 and Mg22 as we are still in the experimentation stage, but the future direction will be using the same pretraining and evaluating files for both isotopes such that the same models are trained by data from both experiments. In this way, the upstream models we generate will learn more general physics properties that will be helpful for downstream tasks.
 
-To start reproducing O16 code, run the `O16_convert_data.ipynb` notebook under `O16_expt_downstream/src` folder. This converts the desired .h5 data file into a NumPy array that will be used henceforth. Then run the `O16_voxel_pipeline.ipynb` notebook under the same folder. This will generate the `O16_expt_downstream/voxel_data` folder, which will contain training, test, and validation datasets for later use. The notebook also generates various histograms, types of which match the ones in the Mg22 Voxel Pipeline notebook.
+To start reproducing O16 code, run the `O16_voxel_pipeline.py` file using `run_O16_voxel_pipeline.sh`, all found within the `O16_pretrain/src` folder. This converts the desired .h5 data file into a NumPy array that will be used henceforth. This will generate the `O16_pretrain/voxel_data` folder, which will contain training, test, and validation datasets for later use.
 
 ## Training and evaluating pre-trained model (O16)
 
