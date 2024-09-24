@@ -5,4 +5,4 @@
 
 # Adapt the models sub-folder as needed to the correct file name. Also, to plot the histogram, make sure the name
 # of the sub-folder matches up between the models and plots folder
-python3 evaluate_jigsaw_reconstruction.py --num-classes 24 models/2024-04-27-22:46:06/weights/cp-507.ckpt voxel_data/Mg22_size512
+python3 Mg22_evaluate_jigsaw_reconstruction.py --num-classes 24 Mg22_models/2024-06-12-11:29:56/weights/cp-082.ckpt Mg22_voxel_data/Mg22_size512

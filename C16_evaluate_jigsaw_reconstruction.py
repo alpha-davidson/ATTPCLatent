@@ -2,9 +2,9 @@ import click
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, f1_score
 from pointnet_model import pnet
-from plotting import plot_events, plot_histogram, plot_zero_one_bins
+from C16_plotting import plot_events, plot_histogram, plot_zero_one_bins
 
 
 @click.command()
@@ -15,8 +15,8 @@ from plotting import plot_events, plot_histogram, plot_zero_one_bins
 def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     """
     Sample invocation:
-        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2023-06-16-16:26:23/weights/cp-043.ckpt \
-          voxel_data/Mg22_size512
+        python3 O16_evaluate_jigsaw_reconstruction.py --num-classes 27 models/2023-06-16-16:26:23/weights/cp-043.ckpt \
+          O16_expt_downstream/voxel_data/Mg22_size512
           
         user changes: models/<date>/weights/<chosen weight>
     """
@@ -28,7 +28,7 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     BATCH_SIZE = 32
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
     test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :3]).batch(BATCH_SIZE)
-    test_labels = test_ds[:, :, 3]
+    test_labels = test_ds[:, :, 4]
     
     # make predictions
     predicted_probabilities = model.predict(test_features)
@@ -46,6 +46,10 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
     
     #for analyzing histogram peaks at 0 and 1
     plot_zero_one_bins(test_labels, predictions, data_file_stem, model_name, ckpt_name)
+
+    # f1 for evaluation
+    f1 = f1_score(test_labels.flatten(), predictions.flatten(), average='weighted')
+    print('F1 Score: {}'.format(f1))
 
     
 if __name__ == '__main__':

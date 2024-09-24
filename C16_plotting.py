@@ -14,7 +14,7 @@ def plot_histogram(model_name, percent_accuracy, ckpt_name):
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     plt.title("Histogram of Percent Accuracy")
-    plt.savefig("plots/{}/{}/percent_accuracy_histogram.png".format(model_name,ckpt_name))
+    plt.savefig("C16_plots/{}/{}/percent_accuracy_histogram.png".format(model_name,ckpt_name))
 
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)
@@ -68,7 +68,7 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     ax.axes.set_ylim3d(bottom=0, top=1)
     ax.axes.set_zlim3d(bottom=0, top=1)
     if colors is None:
-        colors = VOXEL_COLORS[event[:,3].astype(int)]
+        colors = VOXEL_COLORS[event[:,4].astype(int)]
     '''
     Code to unscale, use as desired
     ax.axes.set_xlim3d(left=-255, right=255)
@@ -103,14 +103,11 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
     
     print("Number of events:", len(original_ds))
     print("Number of events in test set:", len(test_event_nums))
-
+    
     # TODO: remove hardcoding
-    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('C16_pretrain/data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
-
-    os.mkdir('plots/{}/{}/'.format(model_name, ckpt_name))
-
     for j in range(5):
         i = np.random.randint(len(test_event_nums[:,0]))
         event_id = int(test_event_nums[i,0])
@@ -133,8 +130,10 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
         _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
         # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-        plt.savefig('plots/{}/{}/{}_voxels.png'.format(model_name,ckpt_name, event_id))
-            
+        save_dir = f'C16_plots/{model_name}/{ckpt_name}'
+        os.makedirs(save_dir, exist_ok=True) 
+        plt.savefig(f'{save_dir}/{event_id}_voxels.png')
+                
     
 def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_name):
     """
@@ -147,7 +146,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('C16_pretrain/data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -158,7 +157,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     
     timestamp = timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
-    os.makedirs('plots/{}/{}/identity_events'.format(timestamp, ckpt_name)) 
+    os.makedirs('C16_plots/{}/{}/identity_events'.format(timestamp, ckpt_name)) 
 
     # finding the identity events
     for i in range(len(targets)):
@@ -192,7 +191,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
 
-            plt.savefig('plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('C16_plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
     
     
 def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_name):
@@ -206,7 +205,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('C16_pretrain/data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -216,8 +215,8 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     zero_bin = []
     one_bin = []
 
-    os.makedirs('plots/{}/{}/0_bin'.format(model_name, ckpt_name))
-    os.makedirs('plots/{}/{}/1_bin'.format(model_name, ckpt_name))
+    os.makedirs('C16_plots/{}/{}/0_bin'.format(model_name, ckpt_name))
+    os.makedirs('C16_plots/{}/{}/1_bin'.format(model_name, ckpt_name))
 
     for i in range(len(targets)):
         
@@ -245,7 +244,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
             
-            plt.savefig('plots/{}/{}/0_bin/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('C16_plots/{}/{}/0_bin/{}_voxels.png'.format(model_name, ckpt_name, event_id))
 
         # finds the events from the one bin
         elif np.mean(targets[i,:] == predictions[i]) == 1.0:    # 100% accuracy
@@ -270,8 +269,8 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            plt.savefig('plots/{}/{}/1_bin/{}_voxels.png'.format(model_name,ckpt_name,event_id))
+            plt.savefig('C16_plots/{}/{}/1_bin/{}_voxels.png'.format(model_name,ckpt_name,event_id))
             
     # saving the data for the 0% and 100% accuracy events        
-    np.save('plots/{}/{}/0_bin/0_data'.format(model_name, ckpt_name), zero_bin)
-    np.save('plots/{}/{}/1_bin/1_data'.format(model_name, ckpt_name), one_bin)
+    np.save('C16_plots/{}/{}/0_bin/0_data'.format(model_name, ckpt_name), zero_bin)
+    np.save('C16_plots/{}/{}/1_bin/1_data'.format(model_name, ckpt_name), one_bin)
