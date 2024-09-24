@@ -20,6 +20,7 @@ def evaluate(num_points, num_classes, model_file_stem, data_file_stem):
           
         user changes: models/<date>/weights/<chosen weight>
     """
+    
     # build model
     model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
     model.load_weights(model_file_stem)
