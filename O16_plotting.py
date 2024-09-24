@@ -105,7 +105,7 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
     print("Number of events in test set:", len(test_event_nums))
     
     # TODO: remove hardcoding
-    voxel_bounds = np.load('O16_expt_downstream/voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('O16_pretrain/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     for j in range(5):
@@ -146,7 +146,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('O16_expt_downstream/voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('O16_pretrain/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -205,7 +205,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('O16_expt_downstream/voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load('O16_pretrain/voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))

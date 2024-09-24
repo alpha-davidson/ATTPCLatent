@@ -101,6 +101,9 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
                   metrics=["sparse_categorical_accuracy", "accuracy"])
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
+
+    model_path = f"O16_models/{timestamp}/full_model"
+    model.save(model_path)
     
     os.makedirs('O16_plots/{}'.format(timestamp))
     plot_file_path = 'O16_plots/{}/learning_curve.png'.format(timestamp)
