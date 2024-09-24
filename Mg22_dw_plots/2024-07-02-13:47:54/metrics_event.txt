@@ -1,2 +1,0 @@
-Mean Accuracy for Selected Event: 0.8850671140939598
-F1-Score for Selected Event: 0.8776821309196425
