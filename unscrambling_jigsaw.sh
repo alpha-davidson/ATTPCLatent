@@ -3,4 +3,4 @@
 #SBATCH --mem 32G
 #SBATCH --gpus 1
 
-python pretrain_on_jigsaw_events.py --beam Mg22 --num-classes 24 --num-epochs 100 Mg22_voxel_data/Mg22_size512
+python pretrain_on_jigsaw_events.py --beam O16 --num-classes 24 --num-epochs 100 O16_pretrain/voxel_data/O16_size512
