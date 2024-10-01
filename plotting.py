@@ -4,7 +4,7 @@ from sklearn.metrics import confusion_matrix
 import os
 import datetime
 
-def plot_histogram(model_name, percent_accuracy, ckpt_name):
+def plot_histogram(beam_name, model_name, percent_accuracy, ckpt_name):
     plt.figure()
     plt.hist(percent_accuracy, bins=100)
     plt.axvline(percent_accuracy.mean(), color='black', linestyle='dashed', linewidth=1)  # adding mean line and value to histogram
@@ -14,7 +14,7 @@ def plot_histogram(model_name, percent_accuracy, ckpt_name):
     plt.xlabel("Percent accuracy")
     plt.ylabel("Frequency")
     plt.title("Histogram of Percent Accuracy")
-    plt.savefig("Mg22_plots/{}/{}/percent_accuracy_histogram.png".format(model_name,ckpt_name))
+    plt.savefig("{}_plots/{}/{}/percent_accuracy_histogram.png".format(beam_name,model_name,ckpt_name))
 
 def plot_learning_curve(history, filename):
     plt.figure(figsize=(11, 6), dpi=100)
@@ -86,7 +86,7 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     # plt.title('Event {} {}'.format(event_id, title))
     plt.title(title)
 
-def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
+def plot_events(beam_name, targets, predictions, data_file_stem, model_name, ckpt_name):
     """
     Plots the original, shuffled, and unshuffled events along with the unshuffled
     events' accuracy. This function currently randomly plots 5 events from the 
@@ -105,11 +105,11 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
     print("Number of events in test set:", len(test_event_nums))
 
     # TODO: remove hardcoding
-    voxel_bounds = np.load('Mg22_voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load(f'{beam_name}_voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
 
-    os.mkdir('Mg22_plots/{}/{}/'.format(model_name, ckpt_name))
+    os.mkdir('{}_plots/{}/{}/'.format(beam_name, model_name, ckpt_name))
 
     for j in range(5):
         i = np.random.randint(len(test_event_nums[:,0]))
@@ -133,10 +133,10 @@ def plot_events(targets, predictions, data_file_stem, model_name, ckpt_name):
         _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
         # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-        plt.savefig('Mg22_plots/{}/{}/{}_voxels.png'.format(model_name,ckpt_name, event_id))
+        plt.savefig('{}_plots/{}/{}/{}_voxels.png'.format(beam_name,model_name,ckpt_name, event_id))
             
     
-def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_name):
+def plot_identity_events(beam_name, targets, predictions, data_file_stem, model_name,ckpt_name):
     """
     When called, this function only plots the events that were left "unshuffled". 
     The first two graphs should be the same. These are called identity events. 
@@ -147,7 +147,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('Mg22_voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load(f'{beam_name}_voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -158,7 +158,7 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
     
     timestamp = timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     
-    os.makedirs('Mg22_plots/{}/{}/identity_events'.format(timestamp, ckpt_name)) 
+    os.makedirs('{}_plots/{}/{}/identity_events'.format(beam_name, timestamp, ckpt_name)) 
 
     # finding the identity events
     for i in range(len(targets)):
@@ -192,10 +192,10 @@ def plot_identity_events(targets, predictions, data_file_stem, model_name,ckpt_n
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
 
-            plt.savefig('Mg22_plots/{}/{}/identity_events/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('{}_plots/{}/{}/identity_events/{}_voxels.png'.format(beam_name, model_name, ckpt_name, event_id))
     
     
-def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_name):
+def plot_zero_one_bins(beam_name, targets, predictions, data_file_stem, model_name, ckpt_name):
     """ 
     This function only plots the graphs that had 0% accuracy and 100% 
     accuracy, or the events that went into the '0 bin' and '1 bin' on the histogram. 
@@ -206,7 +206,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     shuffled_ds = np.load('{}{}'.format(data_file_stem, '_shuffled_voxels_only.npy'))
     base_voxels = np.load('{}{}'.format(data_file_stem, '_base_voxels.npy'))
     
-    voxel_bounds = np.load('Mg22_voxel_data/voxel_bounds.npy')
+    voxel_bounds = np.load(f'{beam_name}_voxel_data/voxel_bounds.npy')
     min_bounds = voxel_bounds[:, 0, :]
     
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
@@ -216,8 +216,8 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
     zero_bin = []
     one_bin = []
 
-    os.makedirs('Mg22_plots/{}/{}/0_bin'.format(model_name, ckpt_name))
-    os.makedirs('Mg22_plots/{}/{}/1_bin'.format(model_name, ckpt_name))
+    os.makedirs('{}_plots/{}/{}/0_bin'.format(beam_name, model_name, ckpt_name))
+    os.makedirs('{}_plots/{}/{}/1_bin'.format(beam_name, model_name, ckpt_name))
 
     for i in range(len(targets)):
         
@@ -245,7 +245,7 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
             
-            plt.savefig('Mg22_plots/{}/{}/0_bin/{}_voxels.png'.format(model_name, ckpt_name, event_id))
+            plt.savefig('{}_plots/{}/{}/0_bin/{}_voxels.png'.format(beam_name, model_name, ckpt_name, event_id))
 
         # finds the events from the one bin
         elif np.mean(targets[i,:] == predictions[i]) == 1.0:    # 100% accuracy
@@ -270,8 +270,8 @@ def plot_zero_one_bins(targets, predictions, data_file_stem, model_name, ckpt_na
             _plot_event(fig, 4, event_id, translated_evt, 'Reconstruction Accuracy', colors=colors)
 
             # plt.suptitle('Voxelated Event States Plotted', fontsize=25)
-            plt.savefig('Mg22_plots/{}/{}/1_bin/{}_voxels.png'.format(model_name,ckpt_name,event_id))
+            plt.savefig('{}_plots/{}/{}/1_bin/{}_voxels.png'.format(beam_name,model_name,ckpt_name,event_id))
             
     # saving the data for the 0% and 100% accuracy events        
-    np.save('Mg22_plots/{}/{}/0_bin/0_data'.format(model_name, ckpt_name), zero_bin)
-    np.save('Mg22_plots/{}/{}/1_bin/1_data'.format(model_name, ckpt_name), one_bin)
+    np.save('{}_plots/{}/{}/0_bin/0_data'.format(beam_name, model_name, ckpt_name), zero_bin)
+    np.save('{}_plots/{}/{}/1_bin/1_data'.format(beam_name, model_name, ckpt_name), one_bin)
