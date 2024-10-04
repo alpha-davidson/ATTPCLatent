@@ -31,7 +31,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
         return {'l2reg': self.l2reg, 'num_features': self.num_features}
 
 # Load the saved model using Keras API
-saved_model_path = 'models/2024-07-01-11:30:16/full_model' 
+saved_model_path = 'C16+O16_models/2024-10-04-01:07:54/full_model' 
 model = keras.models.load_model(saved_model_path, custom_objects={'OrthogonalRegularizer': OrthogonalRegularizer})
 
 # Check if the model has been loaded correctly
@@ -41,7 +41,7 @@ from tensorflow.keras.layers import GlobalAveragePooling1D
 from sklearn.metrics import classification_report
 
 # Load the saved model using Keras API
-saved_model_path = 'models/2024-07-01-11:30:16/full_model' 
+saved_model_path = 'C16+O16_models/2024-10-04-01:07:54/full_model' 
 model = load_model(saved_model_path, custom_objects={'OrthogonalRegularizer': OrthogonalRegularizer})
 
 num_classes = 6  # Number of classes for the new task
@@ -60,8 +60,8 @@ model = tf.keras.models.Model(inputs=model.input, outputs=new_output)
 #train_data = np.load('ready/tpcnet_Mg22_expt_data_512.npy')
 #val_data = np.load('ready/tpcnet_Mg22_expt_labels_512.npy')
 
-train_data = np.load('Mg22_dw_data/Mg22_size512_175train_features.npy')
-train_labels = np.load('Mg22_dw_data/Mg22_size512_175train_labels.npy')
+train_data = np.load('Mg22_dw_data/Mg22_size512_2171train_features.npy')
+train_labels = np.load('Mg22_dw_data/Mg22_size512_2171train_labels.npy')
 val_data = np.load('Mg22_dw_data/Mg22_size512_val_features.npy')
 val_labels = np.load('Mg22_dw_data/Mg22_size512_val_labels.npy')
 test_data = np.load('Mg22_dw_data/Mg22_size512_test_features.npy')
