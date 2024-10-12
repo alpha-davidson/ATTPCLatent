@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name "O16_DOWNSTREAM"
+#SBATCH --job-name "Mg22_DOWNSTREAM"
 #SBATCH --mem 32G
 #SBATCH --gpus 1
 
