@@ -28,26 +28,27 @@ def get_latest_checkpoint(checkpoint_dir):
         raise error
 
 @click.command()
+@click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22, C16)')
 @click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
 @click.option('--batch-size', default=32, type=click.INT, help='Batch size for SGD')
 @click.option('--num-classes', default=2, type=click.INT, help='Number of classes to predict')
 @click.option('--num-epochs', default=10, type=click.INT, help='Number of epochs of training')
 @click.option('--fine-tune', default=None, type=click.STRING, help='Path to a specific checkpoint file for fine-tuning')
 @click.argument('file-stem')
-def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem):
+def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem):
     """
     Sample invocation:
-        python3 O16_pretrain_on_jigsaw_events.py --num-classes 27 --num-epochs 50 O16_expt_downstream/voxel_data/O16_size512
+        python3 pretrain_on_jigsaw_events.py --beam O16 --num-classes 24 --num-epochs 50 O16_pretrain/voxel_data/O16_size512
     """
     # load data
     train_ds = np.load('{}{}'.format(file_stem, 'train.npy'))
     val_ds = np.load('{}{}'.format(file_stem, 'val.npy'))
     train_features = train_ds[:, :, :3]
-    train_labels = train_ds[:, :, 4].astype(int)
+    train_labels = train_ds[:, :, 3].astype(int)
     train_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels)).map(fix_shape)
 
     val_features = val_ds[:, :, :3]
-    val_labels = val_ds[:, :, 4].astype(int)
+    val_labels = val_ds[:, :, 3].astype(int)
     val_ds = tf.data.Dataset.from_tensor_slices((val_features, val_labels)).map(fix_shape)
     
     train_ds = train_ds.shuffle(len(train_ds)).batch(batch_size)
@@ -67,7 +68,7 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
     
-    checkpoint_path = f"C16_models/{timestamp}/weights/cp"
+    checkpoint_path = f"{beam}_models/{timestamp}/weights/cp"
     checkpoint_dir = os.path.dirname(checkpoint_path)
     checkpoint_path = checkpoint_path + "-{epoch:03d}.ckpt"
         
@@ -102,17 +103,12 @@ def train(num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem)
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
 
-    model_path = f"C16_models/{timestamp}/full_model"
+    model_path = f"{beam}_models/{timestamp}/full_model"
     model.save(model_path)
     
-    try:
-        plot_dir = f'C16_plots/{timestamp}'
-        os.makedirs(plot_dir, exist_ok=True)
-        plot_file_path = f'{plot_dir}/learning_curve.png'
-        plot_learning_curve(history, plot_file_path)
-        print(f"Learning curve plot saved at {plot_file_path}")
-    except Exception as e:
-        print(f"Failed to save learning curve plot: {e}")
+    os.makedirs('{}_plots/{}'.format(beam,timestamp))
+    plot_file_path = '{}_plots/{}/learning_curve.png'.format(beam,timestamp)
+    plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
     train()
