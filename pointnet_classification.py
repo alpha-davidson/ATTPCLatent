@@ -123,11 +123,11 @@ def train_classification_pointnet_model(model_num, data_folder, file_extension):
 
     data_path = f"{data_folder}/{file_extension}"
 
-    train_event_wise_classification_model(model_num, path=data_path)
+    #train_event_wise_classification_model(model_num, path=data_path)
 
-    #model = keras.models.load_model(f"model_class/{model_num}/best_model.keras")
+    model = keras.models.load_model(f"Mg22_dw_benchmark/{model_num}/best_model.keras")
     #model = keras.models.load_model(f"model_class/{model_num}/model_checkpoint_046.keras")
-    #make_predictions(model_num, data_path, file_extension, model)
+    make_predictions(model_num, data_path, file_extension, model)
     
 if __name__ == '__main__':
     train_classification_pointnet_model()
