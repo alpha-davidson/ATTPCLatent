@@ -3,4 +3,4 @@
 #SBATCH --mem 32G
 #SBATCH --gpus 1
 
-python3 Mg22_dw_task.py --model-num 63
+python3 pretrain_model.py --model-num 2174

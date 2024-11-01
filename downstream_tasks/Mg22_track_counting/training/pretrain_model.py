@@ -2,11 +2,10 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
-from plotting import plot_learning_curve
-from pointnet_model import pnet
 from datetime import datetime
 import click
 import os
+import sys
 
 from tensorflow.keras.models import load_model, Model
 from tensorflow.keras.layers import Dense
@@ -15,6 +14,10 @@ from sklearn.model_selection import train_test_split
 
 import seaborn as sns
 from sklearn.metrics import classification_report, f1_score, confusion_matrix
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
+from plotting import plot_learning_curve
+from pointnet_model import pnet
 from plotting import plot_events, plot_histogram, plot_zero_one_bins
 
 class OrthogonalRegularizer(keras.regularizers.Regularizer):
@@ -34,7 +37,7 @@ class OrthogonalRegularizer(keras.regularizers.Regularizer):
 @click.option("--model-num", required=True, help="Model number")
 def main(model_num):
     # Load the saved model using Keras API
-    saved_model_path = 'O16_models/2024-10-01-11:57:25/full_model' 
+    saved_model_path = '../../../O16_models/2024-10-01-11:57:25/full_model' 
     model = keras.models.load_model(saved_model_path, custom_objects={'OrthogonalRegularizer': OrthogonalRegularizer})
     
     # Check if the model has been loaded correctly
@@ -44,7 +47,7 @@ def main(model_num):
     from sklearn.metrics import classification_report
     
     # Load the saved model using Keras API
-    saved_model_path = 'O16_models/2024-10-01-11:57:25/full_model' 
+    saved_model_path = '../../../O16_models/2024-10-01-11:57:25/full_model' 
     model = load_model(saved_model_path, custom_objects={'OrthogonalRegularizer': OrthogonalRegularizer})
     
     num_classes = 6  # Number of classes for the new task
@@ -67,12 +70,12 @@ def main(model_num):
         new_output = tf.keras.layers.Dense(num_classes, activation='softmax', name='reconstruction')(x)
         model = tf.keras.models.Model(inputs=model.input, outputs=new_output)
     
-        train_data = np.load(f'Mg22_dw_data/Mg22_size512_{model_num}train_features/{iteration}.npy')
-        train_labels = np.load(f'Mg22_dw_data/Mg22_size512_{model_num}train_labels/{iteration}.npy')
-        val_data = np.load('Mg22_dw_data/Mg22_size512_val_features.npy')
-        val_labels = np.load('Mg22_dw_data/Mg22_size512_val_labels.npy')
-        test_data = np.load('Mg22_dw_data/Mg22_size512_test_features.npy')
-        test_labels = np.load('Mg22_dw_data/Mg22_size512_test_labels.npy')
+        train_data = np.load(f'../data_processing/data/Mg22_size512_{model_num}train_features/{iteration}.npy')
+        train_labels = np.load(f'../data_processing/data/Mg22_size512_{model_num}train_labels/{iteration}.npy')
+        val_data = np.load('../data_processing/data/Mg22_size512_val_features.npy')
+        val_labels = np.load('../data_processing/data/Mg22_size512_val_labels.npy')
+        test_data = np.load('../data_processing/data/Mg22_size512_test_features.npy')
+        test_labels = np.load('../data_processing/data/Mg22_size512_test_labels.npy')
         
         train_data = train_data[:, :, :3]
         val_data = val_data[:, :, :3]
@@ -87,7 +90,7 @@ def main(model_num):
         
         # Prepare for saving model checkpoints
         timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
-        checkpoint_dir = f"Mg22_dw_models/{model_num}/{iteration}/weights"
+        checkpoint_dir = f"pretrain_models/{model_num}/{iteration}/weights"
         checkpoint_path = f"{checkpoint_dir}/cp-{{epoch:03d}}.ckpt"
         os.makedirs(checkpoint_dir, exist_ok=True)
         
@@ -101,8 +104,8 @@ def main(model_num):
         history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, callbacks=[checkpoint_callback, reduce_lr], verbose=1)
         
         # Optional: Save learning curve plot
-        os.makedirs('Mg22_dw_plots/{}/{}'.format(model_num, iteration), exist_ok=True)
-        plot_learning_curve(history, 'Mg22_dw_plots/{}/{}/learning_curve.png'.format(model_num, iteration))
+        os.makedirs('../evaluation_and_plotting/pretrain_plots/{}/{}'.format(model_num, iteration), exist_ok=True)
+        plot_learning_curve(history, '../evaluation_and_plotting/pretrain_plots/{}/{}/learning_curve.png'.format(model_num, iteration))
         
         # Select specific event based on the lowest validation loss
         best_epoch = np.argmin(history.history['val_loss'])
@@ -126,7 +129,7 @@ def main(model_num):
         plt.xlabel("Predicted Labels")
         plt.ylabel("True Labels")
         plt.title("Confusion Matrix for Selected Event")
-        plt.savefig(f'Mg22_dw_plots/{model_num}/{iteration}/confusion_matrix_event.png')
+        plt.savefig(f'../evaluation_and_plotting/pretrain_plots/{model_num}/{iteration}/confusion_matrix_event.png')
         plt.show()
         
         # Calculate mean accuracy and F1-score for the selected event
@@ -138,7 +141,7 @@ def main(model_num):
         print(classification_report(y_true, y_pred))
         
         # Save metrics for the selected event to a text file
-        with open(f'Mg22_dw_plots/{model_num}/{iteration}/metrics_event.txt', 'w') as f:
+        with open(f'../evaluation_and_plotting/pretrain_plots/{model_num}/{iteration}/metrics_event.txt', 'w') as f:
             f.write(f"Mean Accuracy for Selected Event: {mean_accuracy}\n")
             f.write(f"F1-Score for Selected Event: {f1}\n")
 
