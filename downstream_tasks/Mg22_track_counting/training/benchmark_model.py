@@ -2,9 +2,9 @@ import h5py
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-from pointnet.pointnet import create_pointnet_model
-from pointnet.plotting import plot_learning_curves, point_clouds, squared_error_point_clouds
-from pointnet.data_norm import data_scale
+from benchmark_helper.pointnet import create_pointnet_model
+from benchmark_helper.plotting import plot_learning_curves, point_clouds, squared_error_point_clouds
+from benchmark_helper.data_norm import data_scale
 from sklearn.metrics import r2_score
 import os
 import pandas as pd
@@ -17,11 +17,11 @@ def train_and_predict(model_num, path, file_extension, iteration):
     model = train_event_wise_classification_model(model_num, path, file_extension, iteration)
 
     # Load test data for predictions
-    X_test = np.load(f'{path}/{file_extension}test_features.npy')
-    y_true = np.load(f'{path}/{file_extension}test_labels.npy')
+    X_test = np.load(f'../data_processing/{path}/{file_extension}test_features.npy')
+    y_true = np.load(f'../data_processing/{path}/{file_extension}test_labels.npy')
 
     # Create predictions folder if it doesn't exist
-    preds_path = f"predictions/{model_num}/{iteration}"
+    preds_path = f"benchmark_predictions/{model_num}/{iteration}"
     if not os.path.exists(preds_path):
         os.makedirs(preds_path)
 
@@ -35,14 +35,14 @@ def train_and_predict(model_num, path, file_extension, iteration):
 # Function to train the model
 def train_event_wise_classification_model(model_num, path, file_extension, iteration):
     # Load training data for the current iteration
-    train_features = np.load(f'{path}/{file_extension}{model_num}train_features/{iteration}.npy') 
-    train_labels = np.load(f'{path}/{file_extension}{model_num}train_labels/{iteration}.npy')
+    train_features = np.load(f'../data_processing/{path}/{file_extension}{model_num}train_features/{iteration}.npy') 
+    train_labels = np.load(f'../data_processing/{path}/{file_extension}{model_num}train_labels/{iteration}.npy')
     train_ds = tf.data.Dataset.from_tensor_slices((train_features, train_labels))
     train_ds = train_ds.batch(batch_size=32, drop_remainder=True)
 
     # Load validation data
-    val_features = np.load(f'{path}/{file_extension}val_features.npy')
-    val_labels = np.load(f'{path}/{file_extension}val_labels.npy')
+    val_features = np.load(f'../data_processing/{path}/{file_extension}val_features.npy')
+    val_labels = np.load(f'../data_processing/{path}/{file_extension}val_labels.npy')
     val_ds = tf.data.Dataset.from_tensor_slices((val_features, val_labels))
     val_ds = val_ds.batch(batch_size=32, drop_remainder=True)
 
@@ -62,11 +62,11 @@ def train_event_wise_classification_model(model_num, path, file_extension, itera
                   metrics=["sparse_categorical_accuracy"])
         
     # Save the best model during training
-    checkpoint_filepath = f'Mg22_dw_benchmark/{model_num}/{iteration}/model_checkpoint_{{epoch:03d}}.keras'
-    best_model_filepath = f'Mg22_dw_benchmark/{model_num}/{iteration}/best_model.keras'
+    checkpoint_filepath = f'benchmark_model/{model_num}/{iteration}/model_checkpoint_{{epoch:03d}}.keras'
+    best_model_filepath = f'benchmark_model/{model_num}/{iteration}/best_model.keras'
 
-    if not os.path.exists(f'Mg22_dw_benchmark/{model_num}/{iteration}'):
-        os.makedirs(f'Mg22_dw_benchmark/{model_num}/{iteration}')
+    if not os.path.exists(f'benchmark_model/{model_num}/{iteration}'):
+        os.makedirs(f'benchmark_model/{model_num}/{iteration}')
 
     # Callbacks for saving models and reducing learning rate on plateau
     periodic_save_callback = tf.keras.callbacks.ModelCheckpoint(filepath=checkpoint_filepath, save_weights_only=False, save_freq='epoch')
@@ -75,17 +75,17 @@ def train_event_wise_classification_model(model_num, path, file_extension, itera
     
     # Train the model and save the learning curve
     history = model.fit(train_ds, validation_data=val_ds, epochs=150, verbose=1, callbacks=[periodic_save_callback, best_model_callback, reduce_lr])
-    plot_learning_curves(history, f'Mg22_dw_benchmark/{model_num}/{iteration}/learning-curve.png')
+    plot_learning_curves(history, f'benchmark_model/{model_num}/{iteration}/learning-curve.png')
 
     # Save training history
     hist_df = pd.DataFrame(history.history)
-    hist_json_file = f'Mg22_dw_benchmark/{model_num}/{iteration}/history.json'
+    hist_json_file = f'benchmark_model/{model_num}/{iteration}/history.json'
     with open(hist_json_file, mode='w') as f:
         hist_df.to_json(f)
     
     # Save and reload the model to ensure it was saved correctly
-    model.save(filepath=f'Mg22_dw_benchmark/{model_num}/{iteration}/model{model_num}.keras')
-    reloaded_model = keras.models.load_model(f'Mg22_dw_benchmark/{model_num}/{iteration}/model{model_num}.keras')
+    model.save(filepath=f'benchmark_model/{model_num}/{iteration}/model{model_num}.keras')
+    reloaded_model = keras.models.load_model(f'benchmark_model/{model_num}/{iteration}/model{model_num}.keras')
     print(f'Successfully saved and reloaded the model for iteration {iteration}!')
 
     return reloaded_model
