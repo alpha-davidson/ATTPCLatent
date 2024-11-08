@@ -12,7 +12,7 @@ DATA_PREFIX = "C16_size256_"
 def merge_data(sample_size=768):
     rng = np.random.default_rng()
     
-    VOXEL_PATH = "../data/"
+    VOXEL_PATH = "../voxel_data/"
     CLUSTER_PATH = f"{VOXEL_PATH}example_run_0017_clusters.h5"
     DATAFRAME_PATH = f"{VOXEL_PATH}example_run_0017_fit_2H.parquet"
     cluster_file = h5.File(CLUSTER_PATH, 'r')
