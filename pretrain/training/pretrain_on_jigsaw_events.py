@@ -106,8 +106,8 @@ def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file
     model_path = f"{beam}_models/{timestamp}/full_model"
     model.save(model_path)
     
-    os.makedirs('{}_plots/{}'.format(beam,timestamp))
-    plot_file_path = '{}_plots/{}/learning_curve.png'.format(beam,timestamp)
+    os.makedirs('../evaluation_and_plotting/{}_plots/{}'.format(beam,timestamp))
+    plot_file_path = '../evaluation_and_plotting/{}_plots/{}/learning_curve.png'.format(beam,timestamp)
     plot_learning_curve(history, plot_file_path)
     
 if __name__ == '__main__':
