@@ -1,0 +1,1 @@
+Run the `Mg22_Voxel_Pipeline` notebook. Following the instructions inside closely, you will create a `voxel_data` folder, which will contain training, test, and validation datasets for later use. Running the notebook will also generate histograms of the training, test, and validation datasets post-voxelization and shuffling.
