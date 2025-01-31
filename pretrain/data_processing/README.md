@@ -1,0 +1,1 @@
+This folder currently contains data pipelines for four different datasets and an event-wise voxel data exploration notebook. Choose the dataset and the corresponding workflow guide is inside its folder.
