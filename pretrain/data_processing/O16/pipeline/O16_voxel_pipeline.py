@@ -412,10 +412,12 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z):
             new_data[i,j,0] = new_x
             new_data[i,j,1] = new_y
             new_data[i,j,2] = new_z
-            data[i,j,3] = voxel_num
-            new_data[i,j,3] = voxel_num
-            data[i,j,4] = data[i,j,5]
-            new_data[i,j,4] = data[i,j,4]
+
+            new_data[i,j,3] = data[i,j,3]
+            
+            data[i,j,4] = voxel_num
+            new_data[i,j,4] = voxel_num
+            
             data[i,j,5] = str(i)
             new_data[i,j,5] = str(i)
             
@@ -534,8 +536,8 @@ def shuffle(ISOTOPE, sample_size, K_x, K_y, K_z):
                 #if (rand%2) == 0:
                     #augment = augment*-1
                       
-            old_id = data[i,j,3]
-            num_tracks = data[i,j,4]
+            charge = data[i,j,3]
+            old_id = data[i,j,4]
             event_num = data[i,j,5]
             
             new_id = permutations[int(old_id)]
@@ -555,8 +557,8 @@ def shuffle(ISOTOPE, sample_size, K_x, K_y, K_z):
             new_data[i,j,0] = new_x
             new_data[i,j,1] = new_y
             new_data[i,j,2] = new_z
-            new_data[i,j,3] = old_id
-            new_data[i,j,4] = num_tracks # zeroed out
+            new_data[i,j,3] = charge
+            new_data[i,j,4] = old_id
             new_data[i,j,5] = event_num
             
     final_data = np.concatenate((data_unshuffled[:1000],new_data),axis=0) 
@@ -627,11 +629,11 @@ def main():
     data = h5py.File('../voxel_data/O16_run160.h5','r')
 
     # calling the functions
-    convert_data(data)
-    filter_data(ISOTOPE, min_points_threshold, min_charge_threshold)
-    random_sample(ISOTOPE, sample_size, dimension)
-    scale_and_split(ISOTOPE, sample_size)
-    voxelize(ISOTOPE, sample_size)
+    #convert_data(data)
+    #filter_data(ISOTOPE, min_points_threshold, min_charge_threshold)
+    #random_sample(ISOTOPE, sample_size, dimension)
+    #scale_and_split(ISOTOPE, sample_size)
+    #voxelize(ISOTOPE, sample_size)
     label(ISOTOPE, sample_size, K_x, K_y, K_z)
     shuffle(ISOTOPE, sample_size, K_x, K_y, K_z)
     test_train_and_val(ISOTOPE, sample_size)

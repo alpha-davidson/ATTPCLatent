@@ -4,4 +4,4 @@
 #SBATCH --gpus 1
 
 # Calling this in the terminal will run the file 'O16_convert_add_data.py'
-python3 O16_voxel_pipeline.py O16_expt_downstream/src O16_expt_downstream/voxel_data
+python3 O16_voxel_pipeline.py
