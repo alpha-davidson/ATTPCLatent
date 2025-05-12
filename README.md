@@ -1,4 +1,5 @@
-This repository contains code for self-supervised learning of track geometries from TPC [data](https://alphadavidson.slack.com/files/U0146JVGQEB/F025QCGNURJ/output_digi_hdf_mg22_ne20pp_8mev.h5) (in this case, Mg-22, O-16, and C-16). Code is written in `python3` and uses the `tensorflow` package as the framework for the implementation.
+This repository implements a self-supervised pretraining strategy for 3D point cloud data using the PointNet architecture. The core idea is to partition each event (represented as a 4D point set with spatial coordinates and charge) into fixed spatial voxels, shuffle the voxel order, and train PointNet to reconstruct the original arrangement. By learning to reverse the shuffling process, the model captures meaningful spatial structures without requiring labeled data. The pretrained model can then be fine-tuned for downstream tasks such as track counting in nuclear physics experiments.
+
 
 # Packages
 *Runs seamlessly using these versions as of July 12, 2023. Subject to change according to conda compatibility.*
@@ -34,9 +35,19 @@ After accessing server remotely by `ssh`, set up this Git repository for use. En
 
 # Folders
 
-The repository currently contains two main folders: `pretrain` and `downstream_tasks`. By the final version, `downstream_tasks` will be moved to a separate repository.
+The repository currently contains three main folders: `data_processing`, `training`, and `evaluation and plotting`. To reproduce results, visit these folders in order.
+* `data_processing`: Contains data pipelines for different experimental data, including Mg22, O16, C16, and C16+O16. It also includes a python notebook for event-wise voxel data exploration.
+* `training`: Contains scripts for pretraining a PointNet-based model on jigsaw event data. It includes model architecture definitions and the training pipeline.
+* `evaluation and plotting`: Contains scripts for evaluating a pre-trained model.
 
-* `pretrain`: Contains the complete workflow for building a pre-training model, including data processing, training, and evaluation/plotting.
-* `downstream_tasks`: Implements various downstream tasks, including both workflows using the pre-trained model and benchmark workflows without pre-training for comparison.
+# Workflow to Reproduce Results
+Start by collecting the relevant data from the data folder (which is above the DAVIDSON directory), and copying it (cp command) to the data_pipeline folder. 
 
-See specific workflow guides inside corresponding folders to reproduce results.
+## Data Pipelines
+Each experiment has a data_pipeline folder that will generate numpy files with data that the model creation pipeline can understand. For example, there is a python script for preprocessing the raw data from the O16 experiment (originally an h5 file). Currently, this repo contains four data pipelines for O16, Mg22, C16, and O16+C16. See data pipeline README for more information.
+
+## Training on Dataset
+To train a pre-trained model after preprocessing the data, use `unscrambling_jigsaw.sh` to run the `pretrain_on_jigsaw_events.py` training pipeline. `{experiment}_model` folder will be created with weights after running the pipeline.
+
+## Evaluation of Models' Performance
+To evaluate a pre-trained model, use `evaluating_jigsaw.sh` to run the `evaluate_jigsaw_reconstruction.py` file. `{experiment}_plots` folder will be created with learning curve, histogram of reconstruction accuracy, and sample reconstructed events.
