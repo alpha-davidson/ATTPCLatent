@@ -68,7 +68,7 @@ def _plot_event(fig, panel, event_id, event, title, colors=None):
     ax.axes.set_ylim3d(bottom=0, top=1)
     ax.axes.set_zlim3d(bottom=0, top=1)
     if colors is None:
-        colors = VOXEL_COLORS[event[:,3].astype(int)]
+        colors = VOXEL_COLORS[event[:,4].astype(int)]
     '''
     Code to unscale, use as desired
     ax.axes.set_xlim3d(left=-255, right=255)

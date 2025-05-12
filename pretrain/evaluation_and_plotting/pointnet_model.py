@@ -57,8 +57,8 @@ def tnet(inputs, num_features):
 def pnet(sem_seg_flag, num_points, num_classes):
     # Since current number of classes is about 1/4 of pointnet, used 1/4 of size 
     # for all layers except initial 3 for input (x,y,z)    
-    inputs = keras.Input(shape=(num_points, 3))
-    a = tnet(inputs, 3)
+    inputs = keras.Input(shape=(num_points, 4))
+    a = tnet(inputs, 4)
     b = conv_bn(a, 32)
     c = conv_bn(b, 32)
     d = tnet(c, 32)

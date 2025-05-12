@@ -29,8 +29,8 @@ def evaluate(beam, num_points, num_classes, model_file_stem, data_file_stem):
     # load test data
     BATCH_SIZE = 32
     test_ds = np.load('{}{}'.format(data_file_stem, 'test.npy'))
-    test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :3]).batch(BATCH_SIZE)
-    test_labels = test_ds[:, :, 3]
+    test_features = tf.data.Dataset.from_tensor_slices(test_ds[:, :, :4]).batch(BATCH_SIZE)
+    test_labels = test_ds[:, :, 4]
     
     # make predictions
     predicted_probabilities = model.predict(test_features)
