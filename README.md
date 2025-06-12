@@ -1,3 +1,23 @@
+To clone this repo and set up your remote and upstream correctly, do:
+```
+git clone https://github.com/alpha-davidson/ATTPCLatent
+cd ATTPCLatent
+git remote add upstream https://github.com/alpha-davidson/TPCNet
+git remote set-url --push upstream DISABLED
+```
+
+To verify everything worked as it's supposed to, type: `git remote -v`. This should produce the
+following output:
+```
+origin	https://github.com/alpha-davidson/ATTPCLatent (fetch)
+origin	https://github.com/alpha-davidson/ATTPCLatent (push)
+upstream	https://github.com/alpha-davidson/TPCNet (fetch)
+upstream	DISABLED (push)
+```
+
+
+
+
 This repository implements a self-supervised pretraining strategy for 3D point cloud data using the PointNet architecture. The core idea is to partition each event (represented as a 4D point set with spatial coordinates and charge) into fixed spatial voxels, shuffle the voxel order, and train PointNet to reconstruct the original arrangement. By learning to reverse the shuffling process, the model captures meaningful spatial structures without requiring labeled data. The pretrained model can then be fine-tuned for downstream tasks such as track counting in nuclear physics experiments.
 
 
