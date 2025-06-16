@@ -1,25 +1,4 @@
-To clone this repo and set up your remote and upstream correctly, do:
-```
-git clone https://github.com/alpha-davidson/ATTPCLatent
-cd ATTPCLatent
-git remote add upstream https://github.com/alpha-davidson/TPCNet
-git remote set-url --push upstream DISABLED
-```
-
-To verify everything worked as it's supposed to, type: `git remote -v`. This should produce the
-following output:
-```
-origin	https://github.com/alpha-davidson/ATTPCLatent (fetch)
-origin	https://github.com/alpha-davidson/ATTPCLatent (push)
-upstream	https://github.com/alpha-davidson/TPCNet (fetch)
-upstream	DISABLED (push)
-```
-
-
-
-
 This repository implements a self-supervised pretraining strategy for 3D point cloud data using the PointNet architecture. The core idea is to partition each event (represented as a 4D point set with spatial coordinates and charge) into fixed spatial voxels, shuffle the voxel order, and train PointNet to reconstruct the original arrangement. By learning to reverse the shuffling process, the model captures meaningful spatial structures without requiring labeled data. The pretrained model can then be fine-tuned for downstream tasks such as track counting in nuclear physics experiments.
-
 
 # Packages
 *Runs seamlessly using these versions as of July 12, 2023. Subject to change according to conda compatibility.*
@@ -33,10 +12,26 @@ This repository implements a self-supervised pretraining strategy for 3D point c
 * tqdm 4.65.0
 * jupyter 1.0.0
 * seaborn 0.12.2
-## Git Setup
+
+# Git Setup
 After accessing server remotely by `ssh`, set up this Git repository for use. Enter your Git username and access token details as required.
-* Cloning the repository: `git clone https://github.com/alpha-davidson/TPCNet.git`
-* Creating your own branch: `git checkout -b [insert branchname here]`
+
+* To clone this repo and set up your remote and upstream correctly, do:
+```
+git clone https://github.com/alpha-davidson/ATTPCLatent
+cd ATTPCLatent
+git remote add upstream https://github.com/alpha-davidson/TPCNet
+git remote set-url --push upstream DISABLED
+```
+
+* To verify everything worked as it's supposed to, type: `git remote -v`. This should produce the
+following output:
+```
+origin	https://github.com/alpha-davidson/ATTPCLatent (fetch)
+origin	https://github.com/alpha-davidson/ATTPCLatent (push)
+upstream	https://github.com/alpha-davidson/TPCNet (fetch)
+upstream	DISABLED (push)
+```
 
 ## Setting up conda environment
 
@@ -52,13 +47,19 @@ After accessing server remotely by `ssh`, set up this Git repository for use. En
 
 *Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. `conda install numpy click tqdm ...`) and **update README** accordingly.*
 
-
 # Folders
 
 The repository currently contains three main folders: `data_processing`, `training`, and `evaluation and plotting`. To reproduce results, visit these folders in order.
 * `data_processing`: Contains data pipelines for different experimental data, including Mg22, O16, C16, and C16+O16. It also includes a python notebook for event-wise voxel data exploration.
 * `training`: Contains scripts for pretraining a PointNet-based model on jigsaw event data. It includes model architecture definitions and the training pipeline.
 * `evaluation and plotting`: Contains scripts for evaluating a pre-trained model.
+* `latent_layer_processing`: Contains scripts for extracting global features and plotting them. 
+
+# Files
+
+The `ATTPCLatent` folder currently containts two Python files:
+* `plotting.py`: Used for plotting purposes
+* `pointnet.py`: PointNet implementation for ATTPC
 
 # Workflow to Reproduce Results
 Start by collecting the relevant data from the data folder (which is above the DAVIDSON directory), and copying it (cp command) to the data_pipeline folder. 
@@ -71,3 +72,6 @@ To train a pre-trained model after preprocessing the data, use `unscrambling_jig
 
 ## Evaluation of Models' Performance
 To evaluate a pre-trained model, use `evaluating_jigsaw.sh` to run the `evaluate_jigsaw_reconstruction.py` file. `{experiment}_plots` folder will be created with learning curve, histogram of reconstruction accuracy, and sample reconstructed events.
+
+## Extraction of Models' Latent Representation
+To exract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. `clustering_plots` folder will be created with the called clusterings.
