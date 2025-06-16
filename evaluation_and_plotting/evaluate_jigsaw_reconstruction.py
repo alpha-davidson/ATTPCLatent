@@ -3,7 +3,7 @@ import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report
-from pointnet_model import pnet
+from pointnet import create_pointnet_model
 from plotting import plot_events, plot_histogram, plot_zero_one_bins
 
 
@@ -11,20 +11,19 @@ from plotting import plot_events, plot_histogram, plot_zero_one_bins
 @click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22, C16)')
 @click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
 @click.option('--num-classes', default=2, type=click.INT, help='Number of classes to predict')
+@click.argument('model-folder')
 @click.argument('model-file-stem')
 @click.argument('data-file-stem')
-def evaluate(beam, num_points, num_classes, model_file_stem, data_file_stem):
+def evaluate(beam, num_points, num_classes, model_folder, model_file_stem, data_file_stem):
     """
     Sample invocation:
-        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2023-06-16-16:26:23/weights/cp-043.ckpt \
+        python3 evaluate_jigsaw_reconstruction.py --num-classes 27 models/2023-06-16-16:26:23/full_model models/2023-06-16-16:26:23/weights/cp-043.ckpt 
           voxel_data/Mg22_size512
           
         user changes: models/<date>/weights/<chosen weight>
     """
-    
-    # build model
-    model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
-    model.load_weights(model_file_stem)
+    # load model
+    model = tf.keras.models.load_model(model_folder)
 
     # load test data
     BATCH_SIZE = 32

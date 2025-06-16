@@ -5,4 +5,4 @@
 
 # Adapt the models sub-folder as needed to the correct file name. Also, to plot the histogram, make sure the name
 # of the sub-folder matches up between the models and plots folder
-python3 evaluate_jigsaw_reconstruction.py --beam O16 --num-classes 24 ../training/O16_models/2025-04-16-13:05:03/weights/cp-097.ckpt ../data_processing/O16/voxel_data/O16_size512
+python3 evaluate_jigsaw_reconstruction.py --beam O16 --num-classes 24 ../training/O16_models/2025-06-16-13:18:32/full_model ../training/O16_models/2025-06-16-13:18:32/weights/cp-010.ckpt ../data_processing/O16/voxel_data/O16_size512
