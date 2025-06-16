@@ -82,7 +82,7 @@ def create_shared_layers(inputs, num_dimensions):
     x = conv_bn(local_features, 64)
     x = conv_bn(x, 128)
     x = conv_bn(x, 1024)
-    global_features = layers.GlobalMaxPooling1D()(x)
+    global_features = layers.GlobalMaxPooling1D(name="latent_space")(x)
     
     return local_features, global_features
 
