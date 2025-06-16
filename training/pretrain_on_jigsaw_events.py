@@ -1,7 +1,9 @@
+import sys
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
+sys.path.append('..')
 from plotting import plot_learning_curve
 from pointnet import create_pointnet_model
 from datetime import datetime
@@ -93,7 +95,7 @@ def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file
         mode='auto',
         verbose=1,
         min_delta=0.001,
-        min_lr=0.00001)
+        min_lr=0.000001)
     
     # build model and fit model
     model.summary()

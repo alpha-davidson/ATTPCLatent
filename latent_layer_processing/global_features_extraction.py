@@ -1,12 +1,13 @@
+import os
+import sys
 import click
 import numpy as np
 import tensorflow as tf
-import os
-import matplotlib.pyplot as plt
+from tensorflow import keras
+sys.path.append('..')
 from pointnet import create_pointnet_model
 from clustering import t_SNE_clustering
 from clustering import k_means_clustering
-from tensorflow import keras
 
 @click.command()
 @click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22, C16)')
@@ -15,8 +16,11 @@ from tensorflow import keras
 @click.argument('model-folder')
 @click.argument('data-file-stem')
 
-
 def extract_global_features(beam, num_points, num_classes, model_folder, data_file_stem):
+    """
+    Sample invocation:
+        python3 global_features_extraction.py --beam O16 --num-classes 24 ../training/O16_models/2025-06-16-14:16:04/full_model ../data_processing/O16/voxel_data/O16_size512
+    """
     # load model
     model = tf.keras.models.load_model(model_folder)    
     

@@ -1,13 +1,11 @@
+import os
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
-from pointnet_model import pnet
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import os
+
 
 def t_SNE_clustering(features, labels, data_file_stem, dimension):
     # initialize properties for t-SNE clustering
