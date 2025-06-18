@@ -59,7 +59,7 @@ The repository currently contains three main folders: `data_processing`, `traini
 
 The `ATTPCLatent` folder currently containts two Python files:
 * `plotting.py`: Used for plotting purposes
-* `pointnet.py`: PointNet implementation for ATTPC
+* `pointnet.py`: PointNet implementation
 
 # Workflow to Reproduce Results
 Start by collecting the relevant data from the data folder (which is above the DAVIDSON directory), and copying it (cp command) to the data_pipeline folder. 
@@ -74,4 +74,4 @@ To train a pre-trained model after preprocessing the data, use `unscrambling_jig
 To evaluate a pre-trained model, use `evaluating_jigsaw.sh` to run the `evaluate_jigsaw_reconstruction.py` file. `{experiment}_plots` folder will be created with learning curve, histogram of reconstruction accuracy, and sample reconstructed events.
 
 ## Extraction of Models' Latent Representation
-To exract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. `clustering_plots` folder will be created with the called clusterings.
+To extract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. `clustering_plots` folder will be created, containing the specified clustering results, such as t-SNE or k-means.

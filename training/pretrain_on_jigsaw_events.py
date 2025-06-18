@@ -3,9 +3,8 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
-sys.path.append('..')
-from plotting import plot_learning_curve
-from pointnet import create_pointnet_model
+from ..plotting import plot_learning_curve
+from ..pointnet import create_pointnet_model
 from datetime import datetime
 import click
 import os
@@ -40,7 +39,7 @@ def get_latest_checkpoint(checkpoint_dir):
 def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem):
     """
     Sample invocation:
-        python3 pretrain_on_jigsaw_events.py --beam O16 --num-classes 24 --num-epochs 50 O16_pretrain/voxel_data/O16_size512
+PYTHONPATH=../.. python3 -m ATTPCLatent.training.pretrain_on_jigsaw_events.py --beam O16 --batch-size 256 --num-classes 24 --num-epochs 100 ../data_processing/O16/voxel_data/O16_size512
     """
     # load data
     train_ds = np.load('{}{}'.format(file_stem, 'train.npy'))

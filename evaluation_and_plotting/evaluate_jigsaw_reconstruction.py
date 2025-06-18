@@ -3,9 +3,8 @@ import click
 import numpy as np
 import tensorflow as tf
 from sklearn.metrics import classification_report
-sys.path.append('..')
-from pointnet import create_pointnet_model
-from plotting import plot_events, plot_histogram, plot_zero_one_bins
+from ..pointnet import create_pointnet_model
+from ..plotting import plot_events, plot_histogram, plot_zero_one_bins
 
 @click.command()
 @click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22, C16)')
