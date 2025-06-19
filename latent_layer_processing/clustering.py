@@ -1,18 +1,15 @@
+import os
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 import matplotlib.pyplot as plt
 from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
-from pointnet_model import pnet
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-import os
 
 
 def t_SNE_clustering(features, labels, data_file_stem, dimension):
     # initialize properties for t-SNE clustering
-    PERPLEXITY = 40
+    PERPLEXITY = 100
     CLUSTER_DIMENSIONALITY = dimension
 
     # create a folder for t-SNE clustering
@@ -57,10 +54,11 @@ def t_SNE_clustering(features, labels, data_file_stem, dimension):
 
     plt.close()
 
+
 def k_means_clustering(features, labels, data_file_stem, dimension):    
     # initialize properties for k-means clustering
     CLUSTER_DIMENSIONALITY = dimension
-    k = 3
+    k = 4
 
     # create a folder for k-means clustering
     folder_path = f'./clustering_plots/k_means'

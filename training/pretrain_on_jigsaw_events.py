@@ -1,9 +1,10 @@
+import sys
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
-from plotting import plot_learning_curve
-from pointnet_model import pnet
+from ..plotting import plot_learning_curve
+from ..pointnet import create_pointnet_model
 from datetime import datetime
 import click
 import os
@@ -38,7 +39,7 @@ def get_latest_checkpoint(checkpoint_dir):
 def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file_stem):
     """
     Sample invocation:
-        python3 pretrain_on_jigsaw_events.py --beam O16 --num-classes 24 --num-epochs 50 O16_pretrain/voxel_data/O16_size512
+PYTHONPATH=../.. python3 -m ATTPCLatent.training.pretrain_on_jigsaw_events.py --beam O16 --batch-size 256 --num-classes 24 --num-epochs 100 ../data_processing/O16/voxel_data/O16_size512
     """
     # load data
     train_ds = np.load('{}{}'.format(file_stem, 'train.npy'))
@@ -55,7 +56,7 @@ def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file
     val_ds = val_ds.shuffle(len(val_ds)).batch(batch_size)
     
     # Build model
-    model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
+    model = create_pointnet_model(num_points=num_points, num_classes=num_classes, is_pointwise_prediction=True)
 
     # Load specific checkpoint if fine-tuning
     if fine_tune:
@@ -63,7 +64,7 @@ def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file
         print(f"Loaded weights from {fine_tune} for fine-tuning.")
     
     # build and fit model
-    model = pnet(sem_seg_flag=True, num_points=num_points, num_classes=num_classes)
+    model = create_pointnet_model(num_points=num_points, num_classes=num_classes, is_pointwise_prediction=True)
 
     # save model and plot learning curve
     timestamp = datetime.now().strftime('%Y-%m-%d-%H:%M:%S')
@@ -93,12 +94,12 @@ def train(beam, num_points, batch_size, num_classes, num_epochs, fine_tune, file
         mode='auto',
         verbose=1,
         min_delta=0.001,
-        min_lr=0.00001)
+        min_lr=0.000001)
     
     # build model and fit model
     model.summary()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=keras.optimizers.Adam(learning_rate=0.005), 
+                  optimizer=keras.optimizers.Adam(learning_rate=0.0005), 
                   metrics=["sparse_categorical_accuracy", "accuracy"])
     history = model.fit(train_ds, validation_data=val_ds, epochs=num_epochs, 
                         callbacks=[checkpoint_callback, reduce_lr], verbose=1)
