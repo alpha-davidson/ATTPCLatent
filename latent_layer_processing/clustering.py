@@ -7,9 +7,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
 
-def t_SNE_clustering(features, labels, data_file_stem, dimension):
+def t_SNE_clustering(features, labels, data_file_stem, dimension, ax, color, label, alpha):
     # initialize properties for t-SNE clustering
-    PERPLEXITY = 100
+    PERPLEXITY = 40
     CLUSTER_DIMENSIONALITY = dimension
 
     # create a folder for t-SNE clustering
@@ -25,34 +25,26 @@ def t_SNE_clustering(features, labels, data_file_stem, dimension):
     model = TSNE(n_components = CLUSTER_DIMENSIONALITY, perplexity = PERPLEXITY)
     tsne_data = model.fit_transform(features)
     
-    fig = plt.figure()
-    
     # plot the clusters in 2D
     if (dimension == 2):
-        ax = fig.add_subplot(111)
+        # ax = fig.add_subplot(111)
         
         # extract x- and y-axis values
         x = np.array(tsne_data[:, 0])
         y = np.array(tsne_data[:, 1])
     
         # # visualize the data on a 2D scatter plot
-        ax.scatter(x, y)
-        plt.savefig('./clustering_plots/t_sne/2d_plots/plot_perplexity_{}'.format(PERPLEXITY))
+        ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
 
     # plot the clusters in 3D
     if (dimension == 3):
-        ax = fig.add_subplot(111, projection='3d')
-
         # extract x-, y-, and z-axis values
         x = np.array(tsne_data[:, 0])
         y = np.array(tsne_data[:, 1])
         z = np.array(tsne_data[:, 2])
     
         # visualize the data on a 3D plot        
-        ax.scatter(x, y, z)
-        plt.savefig('./clustering_plots/t_sne/3d_plots/plot_perplexity_{}'.format(PERPLEXITY))
-
-    plt.close()
+        ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
 
 
 def k_means_clustering(features, labels, data_file_stem, dimension):    
@@ -90,11 +82,11 @@ def k_means_clustering(features, labels, data_file_stem, dimension):
         for i in unique_labels:
             plt.scatter(features[label == i, 0],
                         features[label == i, 1],
-                        label=f'Cluster {i}')
+                        label=f'Cluster {i}', s=5)
             
         # scatter plot for centroids
         plt.scatter(centroids[:, 0], centroids[:, 1],
-                    marker='x', s=169, linewidths=3,
+                    marker='x', s=5, linewidths=3,
                     color='k', zorder=10)
         plt.legend()
         plt.savefig(f'clustering_plots/k_means/2d_plots/plot_k_{k}.png')
@@ -109,11 +101,11 @@ def k_means_clustering(features, labels, data_file_stem, dimension):
             ax.scatter(features[label == i, 0],
                        features[label == i, 1],
                        features[label == i, 2],
-                       label=f'Cluster {i}')
+                       label=f'Cluster {i}', s=5)
         
         # scatter plot for centroids
         ax.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2],
-                   marker='x', s=169, linewidths=3,
+                   marker='x', s=5, linewidths=3,
                    color='k', zorder=10, label='Centroids')
         ax.legend()
         plt.savefig(f'clustering_plots/k_means/3d_plots/plot_k_{k}.png')
