@@ -47,28 +47,29 @@ def plot_event(fig, sampled_data, event_num):
                 spacing='proportional')
 
 @click.command()
+@click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22)')
 @click.argument('file')
 
-def plot_data(file):
-    ISOTOPE = 'O16'
+def plot_data(beam, file):
+    ISOTOPE = beam
     sample_size = '512'
     name = ISOTOPE + '_size' + str(sample_size)
 
-    sampled_data = np.load(f'./voxel_data/{file}/O16_size512_sampled.npy')
+    sampled_data = np.load(f'{ISOTOPE}/voxel_data/{file}/O16_size512_sampled.npy')
     
     event_num = random.randint(1, len(sampled_data))
 
     for i in range (5):
         # create a folder for plots
-        folder_path = './plots'
+        folder_path = f'{ISOTOPE}/plots'
         if not os.path.exists(folder_path):
-            os.makedirs(folder_path)    
+            os.makedirs(folder_path)
         # create a folder for an isotope
-        folder_path = f'./plots/{name}/'
+        folder_path = f'{ISOTOPE}/plots/{name}/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         # create a folder for a particular file
-        folder_path = f'./plots/{name}/{file}'
+        folder_path = f'{ISOTOPE}/plots/{name}/{file}'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path) 
         
@@ -76,7 +77,7 @@ def plot_data(file):
         plot_event(fig, sampled_data, event_num)
         
         # Saving the plot
-        plt.savefig(f'plots/{name}/{file}/event_{event_num}.png')
+        plt.savefig(f'{ISOTOPE}/plots/{name}/{file}/event_{event_num}.png')
         event_num = random.randint(1, len(sampled_data))
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@ import json
 
 # user defined functions...
 
-def convert_data(data, folder_path):
+def convert_data(ISOTOPE, data, folder_path):
     """
     Takes in point cloud data as an .h5 file and converts it into a numpy array.
     
@@ -50,7 +50,7 @@ def convert_data(data, folder_path):
     for i in range(len(keys)):
         event = keys[i]
         event_lens[i] = len(data[event])
-    np.save(f'../voxel_data/{folder_path}/O16_event_lens.npy', event_lens)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/{ISOTOPE}_event_lens.npy', event_lens)
     
     # making a numpy array of data
     event_data = np.zeros((len(keys), np.max(event_lens), 6), float)
@@ -63,7 +63,7 @@ def convert_data(data, folder_path):
             event_data[n,i,:5] = instant[:5]
             event_data[n,i,5] = float(n) # storing the event index
 
-    np.save(f'../voxel_data/{folder_path}/O16_w_event_keys.npy', event_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/{ISOTOPE}_w_event_keys.npy', event_data)
     
 def _filter_point_clouds(data):
     
@@ -92,8 +92,8 @@ def filter_data(ISOTOPE, min_points_threshold, min_charge_threshold, folder_path
     None.
     """
     
-    data = np.load(f'../voxel_data/{folder_path}/' + ISOTOPE + '_w_event_keys.npy')
-    event_lens = np.load(f'../voxel_data/{folder_path}/' + ISOTOPE + '_event_lens.npy')
+    data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_w_event_keys.npy')
+    event_lens = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_event_lens.npy')
 
     # Apply the filter function to the data
     filtered_data = _filter_point_clouds(data)
@@ -116,8 +116,8 @@ def filter_data(ISOTOPE, min_points_threshold, min_charge_threshold, folder_path
     filtered_data = np.array(filtered_events)
     valid_event_indices = np.array(valid_event_indices)
     
-    np.save(f'../voxel_data/{folder_path}/O16_filtered_data', filtered_data)
-    np.save(f'../voxel_data/{folder_path}/O16_valid_event_indices', valid_event_indices)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/{ISOTOPE}_filtered_data', filtered_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/{ISOTOPE}_valid_event_indices', valid_event_indices)
 
 def random_sample(ISOTOPE, sample_size, dimension, folder_path):
     """
@@ -139,9 +139,9 @@ def random_sample(ISOTOPE, sample_size, dimension, folder_path):
     None.
     """
 
-    data = np.load(f'../voxel_data/{folder_path}/' + ISOTOPE + '_w_event_keys.npy')
-    filtered_data = np.load(f'../voxel_data/{folder_path}/O16_filtered_data.npy')
-    valid_event_indices = np.load(f'../voxel_data/{folder_path}/O16_valid_event_indices.npy')
+    data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_w_event_keys.npy')
+    filtered_data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/{ISOTOPE}_filtered_data.npy')
+    valid_event_indices = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/{ISOTOPE}_valid_event_indices.npy')
     
     new_array_name = ISOTOPE + '_size' + str(sample_size) + '_sampled'
     new_data = np.zeros((filtered_data.shape[0], sample_size, 6), float)
@@ -185,7 +185,7 @@ def random_sample(ISOTOPE, sample_size, dimension, folder_path):
     
     assert np.all(new_data[:, :, :4] != 0), 'new_data contains zero values in the x, y, z, or charge columns'
     
-    np.save(f'../voxel_data/{folder_path}/' + new_array_name, new_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + new_array_name, new_data)
     
     assert new_data.shape == (filtered_data.shape[0], sample_size, 6), 'Array has incorrect shape'
     assert len(np.unique(new_data[:, :, 5])) == filtered_data.shape[0], 'Array has incorrect number of events'
@@ -203,7 +203,7 @@ def random_sample(ISOTOPE, sample_size, dimension, folder_path):
         dataset[count,0,-1] = np.count_nonzero(new_data[count,:,0])# length of event 
         count += 1
     
-    np.save(f'../voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size), dataset)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size), dataset)
 
 def scale_and_split(ISOTOPE, sample_size, folder_path):
     """
@@ -222,7 +222,7 @@ def scale_and_split(ISOTOPE, sample_size, folder_path):
     None.
     """
 
-    dataset = np.load(f'../voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + '.npy')
+    dataset = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + '.npy')
 
     # scale
 
@@ -259,15 +259,15 @@ def scale_and_split(ISOTOPE, sample_size, folder_path):
     print(test.shape, val.shape, train.shape)
 
     # create a folder for data splits
-    if not os.path.exists('../data_splits/'):
-        os.makedirs('../data_splits/')
+    if not os.path.exists(f'{ISOTOPE}/data_splits/'):
+        os.makedirs(f'{ISOTOPE}/data_splits/')
 
-    if not os.path.exists(f'../data_splits/{folder_path}/'):
-        os.makedirs(f'../data_splits/{folder_path}/')
+    if not os.path.exists(f'{ISOTOPE}/data_splits/{folder_path}/'):
+        os.makedirs(f'{ISOTOPE}/data_splits/{folder_path}/')
     
-    np.save(f'../data_splits/{folder_path}/' + ISOTOPE + '_size' + str(sample_size)+'_test', test)
-    np.save(f'../data_splits/{folder_path}/' + ISOTOPE + '_size' + str(sample_size)+'_val', val)
-    np.save(f'../data_splits/{folder_path}/' + ISOTOPE + '_size' + str(sample_size)+'_train', train)
+    np.save(f'{ISOTOPE}/data_splits/{folder_path}/' + ISOTOPE + '_size' + str(sample_size)+'_test', test)
+    np.save(f'{ISOTOPE}/data_splits/{folder_path}/' + ISOTOPE + '_size' + str(sample_size)+'_val', val)
+    np.save(f'{ISOTOPE}/data_splits/{folder_path}/' + ISOTOPE + '_size' + str(sample_size)+'_train', train)
     assert len(np.unique(np.isnan(train[:,:,4]))) == 1, 'NaNs in dataset'
     assert len(np.unique(np.isnan(val[:,:,4]))) == 1, 'NaNs in dataset'
     assert len(np.unique(np.isnan(test[:,:,4]))) == 1, 'NaNs in dataset'
@@ -290,7 +290,7 @@ def voxelize(ISOTOPE, sample_size, folder_path):
     """
     
     name = ISOTOPE + '_size' + str(sample_size)
-    data = np.load(f'../voxel_data/{folder_path}/' + name + '.npy')
+    data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name + '.npy')
     
     RANGES = {
                 'MIN_X': -270.0,
@@ -320,7 +320,7 @@ def voxelize(ISOTOPE, sample_size, folder_path):
     print(np.amin(data[:,:,0]), np.amin(data[:,:,1]), np.amin(data[:,:,2]))
     
     new_array_name = ISOTOPE + '_size' + str(sample_size) + '_sampled_normal'
-    np.save(f'../voxel_data/{folder_path}/' + new_array_name, data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + new_array_name, data)
 
 def label(ISOTOPE, sample_size, K_x, K_y, K_z, folder_path):
     """
@@ -343,7 +343,7 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z, folder_path):
     """
     
     name = ISOTOPE + '_size' + str(sample_size) + '_sampled_normal' # Using normalized data
-    data = np.load(f'../voxel_data/{folder_path}/' + name + '.npy')
+    data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name + '.npy')
 
     new_data = np.zeros((len(data), sample_size, 6), float)
     
@@ -449,11 +449,11 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z, folder_path):
     new_array_name1 = ISOTOPE + '_size' + str(sample_size) + '_base_voxels.npy'
     new_array_name2 = ISOTOPE + '_size' + str(sample_size) + '_voxelated.npy'
     
-    np.save(f'../voxel_data/{folder_path}/' + new_array_name1, new_data)
-    np.save(f'../voxel_data/{folder_path}/' + new_array_name2, data[:,:,:6]) # THIS is the file to use for incorporating unshuffled data in training set.
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + new_array_name1, new_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + new_array_name2, data[:,:,:6]) # THIS is the file to use for incorporating unshuffled data in training set.
 
     # adding this to save the voxels dictionary
-    with open(f'../voxel_data/{folder_path}/voxels.json', 'w') as file:
+    with open(f'{ISOTOPE}/voxel_data/{folder_path}/voxels.json', 'w') as file:
         json.dump(voxels, file)
 
     voxels_np = np.zeros((K_x * K_y * K_z,2,3))
@@ -465,12 +465,12 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z, folder_path):
     
     # print(voxels)
     # print(voxels_np)
-    np.save(f'../voxel_data/{folder_path}/voxel_bounds.npy', voxels_np)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/voxel_bounds.npy', voxels_np)
 
-    name1 = 'O16' + '_size' + str(512) + '_voxelated'
-    name2 = 'O16' + '_size' + str(512) + '_base_voxels'
-    voxel_data = np.load(f'../voxel_data/{folder_path}/' + name1 + '.npy')
-    next_step_data = np.load(f'../voxel_data/{folder_path}/' + name2 + '.npy')
+    name1 = f'{ISOTOPE}' + '_size' + str(512) + '_voxelated'
+    name2 = f'{ISOTOPE}' + '_size' + str(512) + '_base_voxels'
+    voxel_data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name1 + '.npy')
+    next_step_data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name2 + '.npy')
     
     print(voxel_data.shape, next_step_data.shape)
     
@@ -499,11 +499,11 @@ def shuffle(ISOTOPE, sample_size, K_x, K_y, K_z, folder_path):
     
     name = ISOTOPE + '_size' + str(sample_size) + '_base_voxels'
     name_unshuffled = ISOTOPE + '_size' + str(sample_size) + '_voxelated'
-    data = np.load(f'../voxel_data/{folder_path}/' + name + '.npy')           # This is the data file with all of the voxels plotted on each other in one voxel. This makes the shuffling process easier
-    data_unshuffled = np.load(f'../voxel_data/{folder_path}/' + name_unshuffled + '.npy')           # This is the original data with the normalized, voxelized event
+    data = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name + '.npy')           # This is the data file with all of the voxels plotted on each other in one voxel. This makes the shuffling process easier
+    data_unshuffled = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name_unshuffled + '.npy')           # This is the original data with the normalized, voxelized event
 
     # loading in voxels dictionary
-    with open(f'../voxel_data/{folder_path}/voxels.json', 'r') as file:
+    with open(f'{ISOTOPE}/voxel_data/{folder_path}/voxels.json', 'r') as file:
         voxels = json.load(file)
     
     new_data = np.zeros((len(data), sample_size, 6), float)
@@ -571,10 +571,10 @@ def shuffle(ISOTOPE, sample_size, K_x, K_y, K_z, folder_path):
     # to confirm concatenation occured correctly
     
     shuffled_data = ISOTOPE + '_size' + str(sample_size) + '_shuffled_voxels_only' # Only shuffled
-    np.save(f'../voxel_data/{folder_path}/' + shuffled_data, new_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + shuffled_data, new_data)
     
     new_array_name = ISOTOPE + '_size' + str(sample_size) + '_shuffled_voxels' # Includes unshuffled
-    np.save(f'../voxel_data/{folder_path}/' + new_array_name, final_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + new_array_name, final_data)
 
 def test_train_and_val(ISOTOPE, sample_size, folder_path):
     """
@@ -595,7 +595,7 @@ def test_train_and_val(ISOTOPE, sample_size, folder_path):
     
     # generates an array of numbers as long as the length of the data to randomize the events 
     name = ISOTOPE + '_size' + str(sample_size)
-    all_events = np.load(f'../voxel_data/{folder_path}/' + name + '_shuffled_voxels.npy')
+    all_events = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/' + name + '_shuffled_voxels.npy')
     rand_shuffle = np.random.choice(len(all_events), len(all_events), replace = False)
     
     
@@ -610,39 +610,45 @@ def test_train_and_val(ISOTOPE, sample_size, folder_path):
     
     
     print(test_data.shape, val_data.shape, train_data.shape)
-    np.save(f'../voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'test', test_data)
-    np.save(f'../voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'train', train_data)
-    np.save(f'../voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'val', val_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'test', test_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'train', train_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'val', val_data)
 
 @click.command()
+@click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22)')
 @click.argument('file')
 
-def extract_data(file):
+def extract_data(beam, file):
     
     # user inputs
     sample_size = 512 # enter the size to which events will be up/downsampled
     TRACK_CLASS = False
     dimension = 4 # desired dimension of data to be input
-    ISOTOPE = 'O16'
-    min_points_threshold = 70 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function).  
-    min_charge_threshold = 90 # ^ same but for charge value
+    ISOTOPE = beam
+    min_points_threshold = 20 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function).  
+    min_charge_threshold = 10 # ^ same but for charge value
 
     K_x = 2
     K_y = 2
     K_z = 6
 
     # open a file whose data from which the data will be extracted
-    data = h5py.File(f'../voxel_data/{file}.h5','r')
+    data = h5py.File(f'{ISOTOPE}/voxel_data/{file}.h5','r')
 
     # create a folder for data
-    folder_path = f'../voxel_data/{file}'
+    folder_path = f'{ISOTOPE}/voxel_data/{file}'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     
     # calling the functions
-    convert_data(data, file)
+    convert_data(ISOTOPE, data, file)
     filter_data(ISOTOPE, min_points_threshold, min_charge_threshold, file)
     random_sample(ISOTOPE, sample_size, dimension, file)
+    scale_and_split(ISOTOPE, sample_size, file)
+    voxelize(ISOTOPE, sample_size, file)
+    label(ISOTOPE, sample_size, K_x, K_y, K_z, file)
+    shuffle(ISOTOPE, sample_size, K_x, K_y, K_z, file)
+    test_train_and_val(ISOTOPE, sample_size, file)
 
 if __name__ == "__main__":
     extract_data()

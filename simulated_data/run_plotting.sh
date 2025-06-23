@@ -4,4 +4,4 @@
 #SBATCH --gpus 1
 
 # Calling this in the terminal will run the file 'plot_data.py.' Also, update the name of the file from which events will be plotted.
-python3 plot_data.py name_of_the_file
+python3 plot_data.py --beam O16 output_digi_HDF_3Body
