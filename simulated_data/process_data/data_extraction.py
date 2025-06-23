@@ -625,8 +625,8 @@ def extract_data(beam, file):
     TRACK_CLASS = False
     dimension = 4 # desired dimension of data to be input
     ISOTOPE = beam
-    min_points_threshold = 20 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function).  
-    min_charge_threshold = 10 # ^ same but for charge value
+    min_points_threshold = 70 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function).  
+    min_charge_threshold = 90 # ^ same but for charge value
 
     K_x = 2
     K_y = 2

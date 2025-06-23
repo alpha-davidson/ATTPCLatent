@@ -55,21 +55,21 @@ def plot_data(beam, file):
     sample_size = '512'
     name = ISOTOPE + '_size' + str(sample_size)
 
-    sampled_data = np.load(f'{ISOTOPE}/voxel_data/{file}/O16_size512_sampled.npy')
+    sampled_data = np.load(f'process_data/{ISOTOPE}/voxel_data/{file}/{ISOTOPE}_size512_sampled.npy')
     
     event_num = random.randint(1, len(sampled_data))
 
-    for i in range (5):
+    for i in range (15):
         # create a folder for plots
-        folder_path = f'{ISOTOPE}/plots'
+        folder_path = f'plots/{ISOTOPE}'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         # create a folder for an isotope
-        folder_path = f'{ISOTOPE}/plots/{name}/'
+        folder_path = f'plots/{ISOTOPE}/{name}/'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         # create a folder for a particular file
-        folder_path = f'{ISOTOPE}/plots/{name}/{file}'
+        folder_path = f'plots/{ISOTOPE}/{name}/{file}'
         if not os.path.exists(folder_path):
             os.makedirs(folder_path) 
         
@@ -77,7 +77,7 @@ def plot_data(beam, file):
         plot_event(fig, sampled_data, event_num)
         
         # Saving the plot
-        plt.savefig(f'{ISOTOPE}/plots/{name}/{file}/event_{event_num}.png')
+        plt.savefig(f'plots/{ISOTOPE}/{name}/{file}/event_{event_num}.png')
         event_num = random.randint(1, len(sampled_data))
 
 if __name__ == '__main__':
