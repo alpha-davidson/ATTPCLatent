@@ -13,8 +13,7 @@ import matplotlib.cm as cm
 def plot_event(fig, sampled_data, event_num):
     # Define the colormap and normalization based on the entire dataset
     colormap = 'viridis'
-    norm = plt.Normalize(vmin=np.min(sampled_data[event_num, :, 4]), 
-                     vmax=np.max(sampled_data[event_num, :, 4]))
+    norm = plt.Normalize(vmin=0, vmax=500)
 
     # Create a ScalarMappable object that maps normalized values to colors
     scalarmappable = cm.ScalarMappable(norm=norm, cmap=colormap)
@@ -22,7 +21,7 @@ def plot_event(fig, sampled_data, event_num):
     x = sampled_data[event_num, :, 0].flatten()
     y = sampled_data[event_num, :, 1].flatten()
     z = sampled_data[event_num, :, 2].flatten()
-    
+
     # Create a 3D scatter plot
     ax = fig.add_subplot(111, projection='3d')
 
@@ -31,7 +30,7 @@ def plot_event(fig, sampled_data, event_num):
     ax.set_zlim(-250, 250)
     
     # Creating a plot
-    ax.scatter(x, z, y, s=5, c=sampled_data[event_num, :, 0].flatten()) 
+    ax.scatter(x, z, y, s=5, c=sampled_data[event_num, :, 3].flatten(), cmap=colormap, norm=norm) 
 
     # Set labels and title
     ax.set_xlabel('X (mm)')
