@@ -76,7 +76,7 @@ To evaluate a pre-trained model, use `evaluating_jigsaw.sh` to run the `evaluate
 ## Extraction/Evaluation of Models' Latent Representation
 To extract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. The `global_features` folder will be generated, containing the arrays of extracted global features.
 
-To evaluate the model's latent representation, use `global_feature_exploration.ipynb` that allows to apply implements t-SNE, UMAP, and k-means clusterings/embeddings.
+To evaluate the model's latent representation, use `global_feature_exploration.ipynb` that allows users to apply t-SNE, UMAP, and k-means clusterings/embeddings.
 
 Also, linear probing can be applied to simulated data using `linear_probing.sh`.
 
