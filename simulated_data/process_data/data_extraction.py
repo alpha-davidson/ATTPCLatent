@@ -205,6 +205,47 @@ def random_sample(ISOTOPE, sample_size, dimension, folder_path):
     
     np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size), dataset)
 
+def test_train_and_val(ISOTOPE, sample_size, folder_path):
+    """
+    Performs a 20-test 20-val 60-train split on all 4-track events.
+    
+    Parameters
+    ----------
+    ISOTOPE : str
+        Name of the isotope (ex. O16).
+
+    sample_size : int
+        The number of instances you want each event to become.
+    
+    Returns
+    ----------
+    None.
+    """
+    
+    # generates an array of numbers as long as the length of the data to randomize the events 
+    name = ISOTOPE + '_size' + str(sample_size)
+    all_events = np.load(f'{ISOTOPE}/voxel_data/{folder_path}/{name}.npy')
+    #rand_shuffle = np.random.choice(len(all_events), len(all_events), replace = False)
+    
+    
+    # 20-20 marking for test and validation
+    test_split = int(len(all_events) * .2)
+    val_split = int(len(all_events) * .4)
+    
+    
+    test_data =  all_events[:test_split,:,:]    #only saving the indices and number of tracks of the test events
+    val_data = all_events[test_split:val_split,:,:]
+    train_data = all_events[val_split:,:,:]
+    
+    
+    print(test_data.shape, val_data.shape, train_data.shape)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'test', test_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'train', train_data)
+    np.save(f'{ISOTOPE}/voxel_data/{folder_path}/' + ISOTOPE + '_size' + str(sample_size) + 'val', val_data)
+
+
+
+
 @click.command()
 @click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22)')
 @click.argument('file')
@@ -235,6 +276,7 @@ def extract_data(beam, file):
     convert_data(ISOTOPE, data, file)
     filter_data(ISOTOPE, min_points_threshold, min_charge_threshold, file)
     random_sample(ISOTOPE, sample_size, dimension, file)
+    test_train_and_val(ISOTOPE, sample_size, file)
 
 if __name__ == "__main__":
     extract_data()
