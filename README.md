@@ -73,5 +73,12 @@ To train a pre-trained model after preprocessing the data, use `unscrambling_jig
 ## Evaluation of Models' Performance
 To evaluate a pre-trained model, use `evaluating_jigsaw.sh` to run the `evaluate_jigsaw_reconstruction.py` file. `{experiment}_plots` folder will be created with learning curve, histogram of reconstruction accuracy, and sample reconstructed events.
 
-## Extraction of Models' Latent Representation
-To extract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. `clustering_plots` folder will be created, containing the specified clustering results, such as t-SNE or k-means.
+## Extraction/Evaluation of Models' Latent Representation
+To extract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. The `global_features` folder will be generated, containing the arrays of extracted global features.
+
+To evaluate the model's latent representation, use `global_feature_exploration.ipynb` that allows users to apply t-SNE, UMAP, and k-means clusterings/embeddings.
+
+Also, linear probing can be applied to simulated data using `linear_probing.sh`.
+
+## Simulated Data Extraction
+To extract simulated data, use `run_data_extraction.sh` and adapt outlined parameters in the file. Also, random events of simulated data can be plotted using `run_plotting.sh`
