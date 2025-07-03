@@ -1,0 +1,23 @@
+2025-07-01 14:15:02.573641: I tensorflow/core/util/port.cc:110] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-07-01 14:15:02.630879: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-07-01 14:15:04.148448: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+Traceback (most recent call last):
+  File "/home/DAVIDSON/nialeksii/.conda/envs/tpcnet/lib/python3.9/runpy.py", line 197, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "/home/DAVIDSON/nialeksii/.conda/envs/tpcnet/lib/python3.9/runpy.py", line 87, in _run_code
+    exec(code, run_globals)
+  File "/home/DAVIDSON/nialeksii/ATTPCLatent/latent_layer_processing/svm/svm.py", line 232, in <module>
+  File "/home/DAVIDSON/nialeksii/ATTPCLatent/latent_layer_processing/svm/svm.py", line 213, in svm_classify
+IndexError: index 34245 is out of bounds for axis 0 with size 34070
+Loaded experimental features: (34070, 1024)
+Loaded labeled experimental events: 2470
+Loaded O16 2-track: (3900, 1024)
+Loaded O16 2-track 2T: (3866, 1024)
+Loaded O16 3-track: (4851, 1024)
+Training data shape: (12617, 1024)
+
+Predicted label distribution:
+Unknown   : 40
+2-track   : 5487
+3-track   : 28543

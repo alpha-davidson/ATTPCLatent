@@ -1,0 +1,16 @@
+2025-07-01 09:15:15.660646: I tensorflow/core/util/port.cc:110] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-07-01 09:15:15.713903: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2025-07-01 09:15:17.236253: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+O16 Experimental data shape:  (34070, 1024)
+Train data shape:            (15254, 1024)
+
+Predicted label distribution for O16 experimental data:
+Unknown   : 28
+2-track   : 33647
+3-track   : 395
+
+Sampled Indices by Class:
+2-track   : [4564, 13341, 13588, 14973, 19789, 27515, 28904, 743, 16950, 11412]
+3-track   : [31416, 30185, 17051, 10309, 2064, 33926, 8639, 30778, 24224, 6014]
+Unknown   : [2405, 7590, 26891, 17168, 23028, 22236, 19336, 10010, 12928, 2230]
