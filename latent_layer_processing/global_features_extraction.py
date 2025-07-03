@@ -55,7 +55,7 @@ def test_train_split(ISOTOPE, global_features):
 def extract_global_features(model_folder):
     """
     Sample invocation:
-PYTHONPATH=../.. python3 -m ATTPCLatent.latent_layer_processing.global_features_extraction.py ../training/O16_models/2025-06-16-14:56:34/full_model
+PYTHONPATH=../.. python3 -m ATTPCLatent.latent_layer_processing.global_features_extraction ../training/O16_models/2025-06-16-14:56:34/full_model
     """
     # load model
     model = tf.keras.models.load_model(model_folder)    
@@ -75,6 +75,7 @@ PYTHONPATH=../.. python3 -m ATTPCLatent.latent_layer_processing.global_features_
     global_features_3track = global_features(global_feature_extractor, data_file_O16_3track, BATCH_SIZE)
     experimental_features_O16 = global_features(global_feature_extractor, data_file_O16_Exp, BATCH_SIZE)
 
+    print(global_features_2track.shape)
     # create a folder to save global features
     folder_path = "./global_features"
     if not os.path.exists(folder_path):
