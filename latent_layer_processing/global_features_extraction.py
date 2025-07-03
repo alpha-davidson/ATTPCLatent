@@ -17,16 +17,15 @@ from matplotlib import colors
 import matplotlib.cm as cm
 from sklearn.preprocessing import StandardScaler
 
-def labels_extraction(data_file_stem, BATCH_SIZE):
+def ds_extraction(data_file_stem, BATCH_SIZE):
     ds = np.load('{}{}'.format(data_file_stem, '.npy'))
     features = tf.data.Dataset.from_tensor_slices(ds[:, :, :4]).batch(BATCH_SIZE)
-    labels = ds[:, :, 4]
-    return features, labels
+    return features
 
 def global_features(model, data_file_stem, BATCH_SIZE):
-    features, labels = labels_extraction(data_file_stem, BATCH_SIZE)
+    features = ds_extraction(data_file_stem, BATCH_SIZE)
     global_features = model.predict(features)
-    return global_features, labels
+    return global_features
         
 @click.command()
 @click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22, C16)')
@@ -48,9 +47,13 @@ PYTHONPATH=../.. python3 -m ATTPCLatent.latent_layer_processing.global_features_
     global_feature_extractor = keras.Model(inputs=model.input, outputs=model.get_layer("latent_space").output)
     
     # load global features
-    global_features_2track, test_labels_2track = global_features(global_feature_extractor, '../simulated_data/process_data/O16/voxel_data/output_digi_HDF_2Body/O16_size512', BATCH_SIZE)
-    global_features_3track, test_labels_3track = global_features(global_feature_extractor, '../simulated_data/process_data/O16/voxel_data/output_digi_HDF_3Body/O16_size512', BATCH_SIZE)
-    global_features_Mg22, test_labels__Mg22 = global_features(global_feature_extractor, '../simulated_data/process_data/Mg22/voxel_data/output_digi_HDF_Mg22_Ne20pp_8MeV/Mg22_size512', BATCH_SIZE)
+    data_file_2trackO16 = '../simulated_data/process_data/O16/voxel_data/output_digi_HDF_2Body/O16_size512'
+    data_file_3trackO16 = '../simulated_data/process_data/O16/voxel_data/output_digi_HDF_3Body/O16_size512'
+    data_file_Mg22 = '../simulated_data/process_data/Mg22/voxel_data/output_digi_HDF_Mg22_Ne20pp_8MeV/Mg22_size512'
+    
+    global_features_2track = global_features(global_feature_extractor, data_file_2trackO16, BATCH_SIZE)
+    global_features_3track = global_features(global_feature_extractor, data_file_3trackO16, BATCH_SIZE)
+    global_features_Mg22 = global_features(global_feature_extractor, data_file_Mg22, BATCH_SIZE)
 
     # create a folder to save global features
     folder_path = "./global_features"
@@ -58,9 +61,13 @@ PYTHONPATH=../.. python3 -m ATTPCLatent.latent_layer_processing.global_features_
         os.makedirs(folder_path)
 
     # save global features
-    np.save(f'./global_features/Mg22_features.npy', global_features_Mg22)
-    np.save(f'./global_features/O16_2track_features.npy', global_features_2track)
-    np.save(f'./global_features/O16_3track_features.npy', global_features_3track)
+    dir_2trackO16 = './global_features/O16_2track_features.npy'
+    dir_3trackO16 = './global_features/O16_3track_features.npy'
+    dir_Mg22 = './global_features/Mg22_features.npy'
+    
+    np.save(dir_2trackO16, global_features_Mg22)
+    np.save(dir_3trackO16, global_features_2track)
+    np.save(dir_Mg22, global_features_3track)
 
 if __name__ == '__main__':
     extract_global_features()
