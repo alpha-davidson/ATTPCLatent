@@ -4,12 +4,11 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import f1_score, confusion_matrix
+from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from sklearn.utils import shuffle
 from sklearn import svm 
-
 
 def plot_confusion_matrix(y_true, y_pred, class_names, output_path=None, normalize=False, cmap="Blues"):
     cm = confusion_matrix(y_true, y_pred)
@@ -101,8 +100,9 @@ def balance_classes(X, y, samples, random_state=42):
 
     return X_balanced, y_balanced
 
-# === Neural network that imitates linear SVM ===
-def svm_neural_networkl_classify(samples, output_dir="svm_results"):
+
+    # === Neural network that imitates linear SVM ===
+def svm_neural_network_classify(samples, output_dir="svm_results"):
     os.makedirs(output_dir, exist_ok=True)
 
     # load experimental features and labels
@@ -256,11 +256,12 @@ def svm_classify(samples=140, output_dir="svm_results"):
     # predict
     y_test_pred = model.predict(X_test)
     f1 = f1_score(y_test, y_test_pred, average='weighted')
+    acc = accuracy_score(y_test, y_test_pred)
+    print(f"\nTest Accuracy: {acc:.4f}")
     print(f"Test F1 Score: {f1:.4f}")
 
     # predict full dataset
-    full_pred = model.predict(X)
-    final_labels = full_pred
+    final_labels = model.predict(X)
 
     label_map = {
         0: "0-track", 1: "1-track", 2: "2-track",
@@ -284,6 +285,5 @@ def svm_classify(samples=140, output_dir="svm_results"):
 
     return f1
     
-
 if __name__ == '__main__':
     svm_classify()

@@ -64,7 +64,7 @@ def plot_classification_accuracy():
         label = f"{round((label*6*100)/2458, 1)}%"
         plt.annotate(label, (X[i], y[i]), textcoords="offset points", xytext=(0,10), ha='center')
     
-    plt.savefig(f'plots/sample_accuracy.png')
+    plt.savefig(f'plots/sample_f1.png')
 
 def plot_data():
     # create a folder for plots
