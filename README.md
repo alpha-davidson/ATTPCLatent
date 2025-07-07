@@ -78,7 +78,7 @@ To extract a model's latent representation, use `extract_latent_layer.sh` to run
 
 To evaluate the model's latent representation, use `global_feature_exploration.ipynb` that allows users to apply t-SNE, UMAP, and k-means clusterings/embeddings.
 
-Also, linear probing can be applied to simulated data using `linear_probing.sh`.
+Also, linear probing and SVM classifier can be applied to simulated data by following the instructions in the `latent_layer_processing` folder.
 
 ## Simulated Data Extraction
 To extract simulated data, use `run_data_extraction.sh` and adapt outlined parameters in the file. Also, random events of simulated data can be plotted using `run_plotting.sh`

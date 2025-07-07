@@ -8,7 +8,7 @@ from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from sklearn.utils import shuffle
-from sklearn import svm 
+from sklearn import svm
 
 def plot_confusion_matrix(y_true, y_pred, class_names, output_path=None, normalize=False, cmap="Blues"):
     cm = confusion_matrix(y_true, y_pred)
@@ -220,7 +220,7 @@ def svm_neural_network_classify(samples, output_dir="svm_results"):
 
     return f1
 
-    # === SVM implementation using sklearn ===
+    # === Linear SVM implementation using sklearn ===
 def svm_classify(samples=140, output_dir="svm_results"):
     os.makedirs(output_dir, exist_ok=True)
 
@@ -250,7 +250,8 @@ def svm_classify(samples=140, output_dir="svm_results"):
     y_test = y
 
     # train SVM
-    model = svm.SVC(kernel='rbf', C=1.0, gamma='scale')
+    # model = svm.LinearSVC(kernel='rbf', C=1.0, gamma='scale')
+    model = svm.LinearSVC(max_iter=5000)
     model.fit(X_train, y_train)
 
     # predict
