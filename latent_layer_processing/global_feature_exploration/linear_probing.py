@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import json
-from ..pointnet import create_pointnet_model
+from ATTPCLatent.pointnet import create_pointnet_model
 
 def generate_log_train_sizes(min_size=50, max_size=16000, num_points=20):
     """Generate logarithmically spaced training set sizes."""
