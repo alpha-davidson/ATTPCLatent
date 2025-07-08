@@ -14,11 +14,11 @@ def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
     CLUSTER_DIMENSIONALITY = dimension
 
     # create a folder for t-SNE clustering
-    folder_path = f'./plots/t_sne'
+    folder_path = f'../plots/t_sne'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     # create a folder for plots of particular dimensionality
-    folder_path = f'./plots/t_sne/{CLUSTER_DIMENSIONALITY}d_plots'
+    folder_path = f'../plots/t_sne/{CLUSTER_DIMENSIONALITY}d_plots'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
@@ -54,11 +54,11 @@ def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
     CLUSTER_DIMENSIONALITY = dimension
 
     # create a folder for UMAP embedding
-    folder_path = f'./plots/umap'
+    folder_path = f'../plots/umap'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     # create a folder for plots of particular dimensionality
-    folder_path = f'./plots/umap/{CLUSTER_DIMENSIONALITY}d_plots'
+    folder_path = f'../plots/umap/{CLUSTER_DIMENSIONALITY}d_plots'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
@@ -92,11 +92,11 @@ def k_means_clustering(features, labels, dimension):
     k = 4
 
     # create a folder for k-means clustering
-    folder_path = f'./plots/k_means'
+    folder_path = f'../plots/k_means'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     # create a folder for plots of particular dimensionality
-    folder_path = f'./plots/k_means/{CLUSTER_DIMENSIONALITY}d_plots'
+    folder_path = f'../plots/k_means/{CLUSTER_DIMENSIONALITY}d_plots'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
     
