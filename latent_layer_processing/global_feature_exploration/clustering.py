@@ -9,7 +9,6 @@ import umap
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
-
 def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
     # initialize properties for t-SNE clustering
     PERPLEXITY = perplexity
@@ -100,22 +99,23 @@ def k_means_clustering(features, labels, dimension, save_dir):
     folder_path = f'../plots/k_means/{dimension}d_plots'
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    
-    # reduce dimensionality
-    pca = PCA(n_components=dimension)
-    reduced_features = pca.fit_transform(features)
 
     # k-means clustering
     k = len(np.unique(labels))
     kmeans = KMeans(n_clusters=k, init="k-means++", random_state=42, n_init='auto')
-    cluster_labels = kmeans.fit_predict(reduced_features)
+    cluster_labels = kmeans.fit_predict(features)
     centroids = kmeans.cluster_centers_
-
+    
     # color maps
     num_classes = len(np.unique(labels))
     color_map = cm.get_cmap('tab20', num_classes) 
     colors = [color_map(i) for i in range(num_classes)]
     label_names = [f"{i}-track" for i in range(num_classes)]
+
+    # reduce dimensionality
+    if dimension == 2 or dimension == 3:
+        pca = PCA(n_components=dimension)
+        reduced_features = pca.fit_transform(features)
 
     # plot the clusters in 2D
     if dimension == 2:
@@ -173,3 +173,5 @@ def k_means_clustering(features, labels, dimension, save_dir):
         plt.tight_layout()
         plt.savefig(f"{save_dir}/{dimension}d_plots/kmeans_3d.png")
         plt.close()
+
+    return features, cluster_labels
