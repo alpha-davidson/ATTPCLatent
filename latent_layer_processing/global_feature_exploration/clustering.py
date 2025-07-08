@@ -89,8 +89,8 @@ def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
         ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
         plt.savefig(f'plots/umap/3d_plots/plot_neighbors_{NEIGHBORS}.png')
     return umap_data
- 
-def k_means_clustering(features, labels, dimension, save_dir):
+
+def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_print=10):
     # create a folder for k-means clustering
     folder_path = f'../plots/k_means'
     if not os.path.exists(folder_path):
@@ -100,78 +100,86 @@ def k_means_clustering(features, labels, dimension, save_dir):
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    # k-means clustering
+    # k-means clustering on full feature space
     k = len(np.unique(labels))
     kmeans = KMeans(n_clusters=k, init="k-means++", random_state=42, n_init='auto')
     cluster_labels = kmeans.fit_predict(features)
     centroids = kmeans.cluster_centers_
-    
-    # color maps
-    num_classes = len(np.unique(labels))
-    color_map = cm.get_cmap('tab20', num_classes) 
-    colors = [color_map(i) for i in range(num_classes)]
-    label_names = [f"{i}-track" for i in range(num_classes)]
 
-    # reduce dimensionality
-    if dimension == 2 or dimension == 3:
+    # print random indices for each cluster
+    print("\nRandom sample indices from each cluster:")
+    indices = []
+    for cluster_id in range(k):
+        cluster_indices = np.where(cluster_labels == cluster_id)[0]
+        random_indices = np.random.choice(cluster_indices, 
+                                          size=min(num_samples_to_print, len(cluster_indices)), 
+                                          replace=False)
+        indices.append(random_indices)
+        print(f"Cluster {cluster_id}: {random_indices.tolist()}")
+
+    # visualization for 2D or 3D
+    if dimension in [2, 3]:
         pca = PCA(n_components=dimension)
         reduced_features = pca.fit_transform(features)
 
-    # plot the clusters in 2D
-    if dimension == 2:
-        plt.figure(figsize=(14, 6))
+        color_map = cm.get_cmap('tab20', k)
+        colors = [color_map(i) for i in range(k)]
+        label_names = [f"{i}-track" for i in range(k)]
 
-        # clustering
-        plt.subplot(1, 2, 1)
-        for i in np.unique(cluster_labels):
-            plt.scatter(reduced_features[cluster_labels == i, 0],
-                        reduced_features[cluster_labels == i, 1],
-                        color=colors[i], label=f'Cluster {i}', s=5)
-        plt.scatter(centroids[:, 0], centroids[:, 1], marker='x', s=60, c='black', label='Centroids')
-        plt.title("KMeans Clustering")
-        plt.legend()
+        if dimension == 2:
+            plt.figure(figsize=(14, 6))
 
-        # true labels
-        plt.subplot(1, 2, 2)
-        for i in np.unique(labels):
-            plt.scatter(reduced_features[labels == i, 0],
-                        reduced_features[labels == i, 1],
-                        color=colors[i], label=label_names[i], s=5)
-        plt.title("True Labels")
-        plt.legend()
+            # clustered
+            plt.subplot(1, 2, 1)
+            for i in range(k):
+                plt.scatter(reduced_features[cluster_labels == i, 0],
+                            reduced_features[cluster_labels == i, 1],
+                            color=colors[i], label=f'Cluster {i}', s=5)
+            plt.scatter(pca.transform(centroids)[:, 0],
+                        pca.transform(centroids)[:, 1],
+                        marker='x', s=60, c='black', label='Centroids')
+            plt.title("KMeans Clustering")
+            plt.legend()
 
-        plt.tight_layout()
-        plt.savefig(f"{save_dir}/{dimension}d_plots/kmeans_2d.png")
-        plt.close()
+            # true labels
+            plt.subplot(1, 2, 2)
+            for i in range(k):
+                plt.scatter(reduced_features[labels == i, 0],
+                            reduced_features[labels == i, 1],
+                            color=colors[i], label=label_names[i], s=5)
+            plt.title("True Labels")
+            plt.legend()
 
-    # plot the clusters in 2D
-    if dimension == 3:
-        fig = plt.figure(figsize=(14, 6))
+            plt.tight_layout()
+            plt.savefig(os.path.join(folder_path, "kmeans_2d.png"))
+            plt.close()
 
-        # clustering
-        ax1 = fig.add_subplot(121, projection='3d')
-        for i in np.unique(cluster_labels):
-            ax1.scatter(reduced_features[cluster_labels == i, 0],
-                        reduced_features[cluster_labels == i, 1],
-                        reduced_features[cluster_labels == i, 2],
-                        color=colors[i], label=f'Cluster {i}', s=5)
-        ax1.scatter(centroids[:, 0], centroids[:, 1], centroids[:, 2],
-                    marker='x', s=60, c='black', label='Centroids')
-        ax1.set_title("KMeans Clustering")
-        ax1.legend()
+        elif dimension == 3:
+            fig = plt.figure(figsize=(14, 6))
 
-        # true labels
-        ax2 = fig.add_subplot(122, projection='3d')
-        for i in np.unique(labels):
-            ax2.scatter(reduced_features[labels == i, 0],
-                        reduced_features[labels == i, 1],
-                        reduced_features[labels == i, 2],
-                        color=colors[i], label=label_names[i], s=5)
-        ax2.set_title("True Labels")
-        ax2.legend()
+            # clustered
+            ax1 = fig.add_subplot(121, projection='3d')
+            for i in range(k):
+                ax1.scatter(reduced_features[cluster_labels == i, 0],
+                            reduced_features[cluster_labels == i, 1],
+                            reduced_features[cluster_labels == i, 2],
+                            color=colors[i], label=f'Cluster {i}', s=5)
+            ax1.scatter(*pca.transform(centroids).T, marker='x', s=60, c='black', label='Centroids')
+            ax1.set_title("KMeans Clustering")
+            ax1.legend()
 
-        plt.tight_layout()
-        plt.savefig(f"{save_dir}/{dimension}d_plots/kmeans_3d.png")
-        plt.close()
+            # true labels
+            ax2 = fig.add_subplot(122, projection='3d')
+            for i in range(k):
+                ax2.scatter(reduced_features[labels == i, 0],
+                            reduced_features[labels == i, 1],
+                            reduced_features[labels == i, 2],
+                            color=colors[i], label=label_names[i], s=5)
+            ax2.set_title("True Labels")
+            ax2.legend()
 
-    return features, cluster_labels
+            plt.tight_layout()
+            plt.savefig(os.path.join(folder_path, "kmeans_3d.png"))
+            plt.close()
+
+    return features, cluster_labels, indices
