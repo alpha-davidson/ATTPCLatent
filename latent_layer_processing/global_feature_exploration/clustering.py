@@ -68,7 +68,7 @@ def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
         ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
     return umap_data
 
-def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_print=10):
+def k_means_clustering(features, labels, dimension, save_dir, label_names, num_samples_to_print=10):
     # create a folder for k-means clustering
     folder_path = f'../plots/k_means'
     if not os.path.exists(folder_path):
@@ -102,7 +102,6 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
 
         color_map = cm.get_cmap('tab20', k)
         colors = [color_map(i) for i in range(k)]
-        label_names = [f"{i}-track" for i in range(k)]
 
         if dimension == 2:
             plt.figure(figsize=(14, 6))
