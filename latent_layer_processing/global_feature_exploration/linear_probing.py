@@ -2,14 +2,11 @@ import os
 import json
 import click
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
-from ATTPCLatent.pointnet import create_pointnet_model
 
 
 # =========================== Utility Functions ===========================
@@ -18,29 +15,6 @@ def generate_log_train_sizes(min_size: int, max_size: int, num_points: int) -> n
     sizes = np.unique(np.round(np.logspace(np.log10(min_size), np.log10(max_size), num=num_points)).astype(int))
     sizes = np.unique(np.append(sizes, [min_size, max_size]))
     return np.sort(sizes)
-
-def load_pointnet_model(path: str) -> keras.Model:
-    print("Loading PointNet model...")
-    model = tf.keras.models.load_model(path)
-    print("Model loaded.")
-    return model
-
-def extract_latent_features(model: keras.Model, dataset: np.ndarray, batch_size: int = 32) -> np.ndarray:
-    try:
-        extractor = keras.Model(inputs=model.input, outputs=model.get_layer("latent_space").output)
-    except ValueError:
-        extractor = keras.Model(inputs=model.input, outputs=model.layers[-3].output)
-        print(f"Using fallback layer '{model.layers[-3].name}' for feature extraction.")
-    
-    ds = tf.data.Dataset.from_tensor_slices(dataset).batch(batch_size)
-    return extractor.predict(ds, verbose=1)
-
-def load_data(file_2track: str, file_3track: str, num_features: int = 4) -> tuple[np.ndarray, np.ndarray]:
-    data_2 = np.load(f'{file_2track}.npy')[:, :, :num_features]
-    data_3 = np.load(f'{file_3track}.npy')[:, :, :num_features]
-    X = np.concatenate([data_2, data_3], axis=0)
-    y = np.concatenate([np.zeros(len(data_2)), np.ones(len(data_3))])
-    return X, y.astype(int)
 
 def stratified_sample(X, y, size: int, num_classes: int, seed: int = 0):
     indices = []
@@ -106,18 +80,19 @@ def print_results_table(results, output_dir):
 @click.option('--num-size-points', default=20)
 @click.option('--cv-folds', default=3)
 @click.argument('model_folder')
-@click.argument('data_file_stem_2track')
-@click.argument('data_file_stem_3track')
+@click.argument('features')
+@click.argument('labels')
 def linear_probe_eval(beam, num_points, num_classes, test_size, random_state,
                       regularization, min_train_size, max_train_size, num_size_points,
-                      cv_folds, model_folder, data_file_stem_2track, data_file_stem_3track):
+                      cv_folds, model_folder, features, labels):
 
+    
+    
     output_dir = f"./{beam}_linear_probe"
     os.makedirs(output_dir, exist_ok=True)
 
-    X_raw, y = load_data(data_file_stem_2track, data_file_stem_3track)
-    model = load_pointnet_model(model_folder)
-    features = extract_latent_features(model, X_raw)
+    features = np.load(features)
+    y = np.load(labels)
 
     X_train, X_test, y_train, y_test = train_test_split(
         features, y, test_size=test_size, random_state=random_state, stratify=y
