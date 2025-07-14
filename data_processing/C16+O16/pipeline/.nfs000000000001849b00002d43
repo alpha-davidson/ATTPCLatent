@@ -1,0 +1,22 @@
+Final Filtered Shape: (1803, 887, 5)
+1803
+Final Filtered Shape: (36842, 4093, 5)
+36842
+Traceback (most recent call last):
+  File "/home/DAVIDSON/nialeksii/ATTPCLatent/data_processing/C16+O16/pipeline/C16+O16_data_pipeline.py", line 596, in <module>
+    main()
+  File "/home/DAVIDSON/nialeksii/ATTPCLatent/data_processing/C16+O16/pipeline/C16+O16_data_pipeline.py", line 587, in main
+    combine_data(C16_filtered_data, C16_valid_event_indices, C16_event_lens, O16_filtered_data, O16_valid_event_indices, O16_event_lens)
+  File "/home/DAVIDSON/nialeksii/ATTPCLatent/data_processing/C16+O16/pipeline/C16+O16_data_pipeline.py", line 108, in combine_data
+    C16_filtered_data_padded = np.pad(C16_filtered_data, ((0, 0), (0, diff), (0, 0)), 'constant', constant_values=0)
+  File "<__array_function__ internals>", line 180, in pad
+  File "/home/DAVIDSON/nialeksii/.conda/envs/tpcnet/lib/python3.9/site-packages/numpy/lib/arraypad.py", line 743, in pad
+    pad_width = _as_pairs(pad_width, array.ndim, as_index=True)
+  File "/home/DAVIDSON/nialeksii/.conda/envs/tpcnet/lib/python3.9/site-packages/numpy/lib/arraypad.py", line 518, in _as_pairs
+    return np.broadcast_to(x, (ndim, 2)).tolist()
+  File "<__array_function__ internals>", line 180, in broadcast_to
+  File "/home/DAVIDSON/nialeksii/.conda/envs/tpcnet/lib/python3.9/site-packages/numpy/lib/stride_tricks.py", line 413, in broadcast_to
+    return _broadcast_to(array, shape, subok=subok, readonly=True)
+  File "/home/DAVIDSON/nialeksii/.conda/envs/tpcnet/lib/python3.9/site-packages/numpy/lib/stride_tricks.py", line 349, in _broadcast_to
+    it = np.nditer(
+ValueError: operands could not be broadcast together with remapped shapes [original->remapped]: (3,2)  and requested shape (1,2)
