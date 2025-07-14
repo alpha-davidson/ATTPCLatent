@@ -7,6 +7,19 @@ from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from sklearn.utils import shuffle
 from sklearn import svm
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+
+def plot_feature_importance(model, feature_names, output_dir):
+    coef = model.coef_
+    for i, class_coef in enumerate(coef):
+        top_indices = np.argsort(np.abs(class_coef))[::-1][:10]  # top 10
+        plt.figure(figsize=(8, 4))
+        plt.bar(range(len(top_indices)), class_coef[top_indices], tick_label=np.array(feature_names)[top_indices])
+        plt.title(f"Top Features for Class {i}")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"feature_importance_class_{i}.png"))
+        plt.close()
 
 def plot_confusion_matrix(y_true, y_pred, class_names, output_path=None, normalize=False, cmap="Blues"):
     cm = confusion_matrix(y_true, y_pred)
@@ -199,6 +212,14 @@ def svm_classify(samples=300, output_dir="svm_results"):
     # confusion matrix
     class_names = list(label_map.values())
     plot_confusion_matrix(y_test, y_test_pred, class_names, output_path=os.path.join(output_dir, "confusion_matrix.png"))
+
+    # classification report
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_test_pred, target_names=class_names))
+
+    # most important features
+    feature_names = [f'feature_{i}' for i in range(X_train.shape[1])]
+    plot_feature_importance(model, feature_names, output_dir)
     
     return f1
     
