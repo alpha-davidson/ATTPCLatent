@@ -9,17 +9,6 @@ from sklearn import svm
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
 
-def plot_feature_importance(model, feature_names, output_dir):
-    coef = model.coef_
-    for i, class_coef in enumerate(coef):
-        top_indices = np.argsort(np.abs(class_coef))[::-1][:10]  # top 10
-        plt.figure(figsize=(8, 4))
-        plt.bar(range(len(top_indices)), class_coef[top_indices], tick_label=np.array(feature_names)[top_indices])
-        plt.title(f"Top Features for Class {i}")
-        plt.xticks(rotation=45)
-        plt.tight_layout()
-        plt.savefig(os.path.join(output_dir, f"feature_importance_class_{i}.png"))
-        plt.close()
 
 def plot_confusion_matrix(y_true, y_pred, class_names, output_path=None, normalize=False, cmap="Blues"):
     cm = confusion_matrix(y_true, y_pred)
@@ -83,6 +72,35 @@ def plot_loss(history, output_dir):
     plt.tight_layout()
     plt.savefig(os.path.join(output_dir, "loss_plot.png"))
     plt.close()
+
+def plot_feature_importance(model, feature_names, output_dir, top_n=10):
+    coef = model.coef_
+    
+    # extract numeric feature indices for sorting
+    def get_feature_index(name):
+        try:
+            return int(name.split('_')[1])
+        except (IndexError, ValueError):
+            return float('inf')  # fallback for unexpected names
+    
+    for i, class_coef in enumerate(coef):
+        # get top N absolute values
+        top_indices = np.argsort(np.abs(class_coef))[::-1][:top_n]
+        top_features = [(feature_names[idx], class_coef[idx]) for idx in top_indices]
+        
+        # sort top features by numeric feature index
+        sorted_top = sorted(top_features, key=lambda x: get_feature_index(x[0]))
+        sorted_names = [f[0] for f in sorted_top]
+        sorted_vals = [f[1] for f in sorted_top]
+        
+        # plot
+        plt.figure(figsize=(10, 5))
+        plt.bar(range(len(sorted_vals)), sorted_vals, tick_label=sorted_names)
+        plt.title(f"Top Features for Class {i}")
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(os.path.join(output_dir, f"feature_importance_class_{i}.png"))
+        plt.close()
 
 def sample_event_indices_by_label(labels, num_samples=10):
     sampled_indices = {}
@@ -157,6 +175,7 @@ def load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels
     X = np.concatenate([X_train, X_test], axis=0) 
 
     return X_train, y_train, X_test, y_test, X
+
 
     # === Linear SVM implementation using sklearn ===
     # Be aware that this algorithm balances data (e.g. takes a particular number of samples from each class) in order to get       # rid of evaluational bias. Therefore, if you use 100% samples of one class, you won't see true prediction for this class.
