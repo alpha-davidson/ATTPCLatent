@@ -1,12 +1,9 @@
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import tensorflow as tf
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.callbacks import ReduceLROnPlateau
 from sklearn.utils import shuffle
 from sklearn import svm
 from sklearn.model_selection import train_test_split
@@ -147,125 +144,6 @@ def load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels
     X = np.concatenate([X_train, X_test], axis=0) 
 
     return X_train, y_train, X_test, y_test, X
-
-    # === Neural network that imitates linear SVM ===
-def svm_neural_network_classify(samples, output_dir="svm_results"):
-    os.makedirs(output_dir, exist_ok=True)
-
-    # load experimental features and labels
-    exp_features = np.load('../global_features/O16_experimental_features.npy')
-    print(f"Loaded experimental features: {exp_features.shape}")
-
-    label_data = np.load('../O16_Experimental_Labels.npy')
-    indices = label_data[:, 0].astype(int)
-    labels = label_data[:, 1].astype(int)
-
-    labels = np.where(np.isin(labels, [0, 1, 2]), 0, labels)
-    labels = np.where(np.isin(labels, [3]), 1, labels)
-    labels = np.where(np.isin(labels, [4, 5]), 2, labels)
-    
-    print(f"Loaded labeled experimental events: {len(indices)}")
-    
-    # extract labeled samples 
-    X = exp_features[indices]
-    y = labels
-
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
-    X, y = shuffle(X, y, random_state=42)
-
-    # balance and split
-    X_balanced, y_balanced = balance_classes(X, y, samples)
-    print(f"Shape of X balanced {X_balanced.shape}")
-    print(f"Shape of Y balanced {y_balanced.shape}")
-    print(f"Using labeled experimental data: {X.shape}, {y.shape}")
-    
-    X_train = X_balanced
-    y_train = y_balanced
-    X_test = X
-    y_test = y
-    print(f"Train: {X_train.shape}, Test: {X_test.shape}")
-    
-    num_classes = 6 
-
-    y_train_cat = to_categorical(y_train, num_classes)
-    y_test_cat = to_categorical(y_test, num_classes)    
-    
-    # define model 
-    model = tf.keras.Sequential([
-        tf.keras.layers.Input(shape=(X_train.shape[1],)),
-        tf.keras.layers.Dense(num_classes, activation=None, kernel_regularizer=tf.keras.regularizers.l2(1e-3))
-    ])
-
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-        loss='categorical_hinge',
-        metrics=['accuracy']
-    )
-
-    # learning rate scheduler
-    lr_scheduler = ReduceLROnPlateau(
-        monitor='loss',
-        factor=0.5,
-        patience=10,
-        verbose=1,
-        min_lr=1e-5
-    )
-
-    # train
-    history = model.fit(
-        X_train, y_train_cat,
-        batch_size=8,
-        epochs=200,
-        verbose=1,
-        callbacks=[lr_scheduler]
-    )
-
-    # plot
-    plot_accuracy(history, output_dir)
-    plot_loss(history, output_dir)
-
-    # evaluate on test set
-    test_loss, test_acc = model.evaluate(X_test, y_test_cat, verbose=0)
-    print(f"\nTest Accuracy: {test_acc:.2%}")
-
-    y_test_pred_logits = model.predict(X_test)
-    y_test_pred = np.argmax(y_test_pred_logits, axis=1)
-    f1 = f1_score(y_test, y_test_pred, average='weighted')
-    print(f"Test F1 Score: {f1:.4f}")
-
-    # predict on full dataset
-    full_logits = model.predict(X)
-    final_labels = np.argmax(full_logits, axis=1)  
-
-    label_map = {
-        0: "0-, 1-, 2-track", 1: "3-track", 2: "4-, 5-track"
-    }
-
-    # show label distribution
-    print("\nPredicted label distribution:")
-    summary_lines = []
-    unique_labels, counts = np.unique(final_labels, return_counts=True)
-    for label, count in zip(unique_labels, counts):
-        line = f"{label_map.get(label, f'{label}-track'):<10}: {count}"
-        print(line)
-        summary_lines.append(line)
-
-    # save
-    np.save(os.path.join(output_dir, "O16_predicted_labels.npy"), final_labels)
-
-    # sample indices by class
-    if 'sample_event_indices_by_label' in globals():
-        sampled = sample_event_indices_by_label(final_labels, num_samples=10)
-        print("\nSampled Indices by Class:")
-        for label, indices in sampled.items():
-            print(f"{label_map.get(label, str(label)):<10}: {indices}")
-
-    # confusion matrix
-    class_names = ["0-, 1-, 2-track", "3-track", "4-, 5-track"]
-    plot_confusion_matrix(y_test, y_test_pred, class_names, output_path=os.path.join(output_dir, "confusion_matrix.png"))
-
-    return f1
 
     # === Linear SVM implementation using sklearn ===
     # Be aware that this algorithm balances data (e.g. takes a particular number of samples from each class) in order to get       # rid of evaluational bias. Therefore, if you use 100% samples of one class, you won't see true prediction for this class.
