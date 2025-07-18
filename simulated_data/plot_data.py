@@ -42,7 +42,7 @@ def plot_event(fig, sampled_data, event_num, ax=None):
     ax.set_box_aspect(aspect=None, zoom=0.85)  
         
     # Colorbar
-    fig.colorbar(scalarmappable, label='Energy Loss', pad=0.01, shrink=0.2, ax=ax,
+    fig.colorbar(scalarmappable, label='Amplitude', pad=0.01, shrink=0.2, ax=ax,
                 spacing='proportional')
 
 @click.command()
