@@ -9,63 +9,97 @@ import umap
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
-def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
+def t_SNE_clustering(features, dimension, labels, label_names, alpha, perplexity):
     # initialize properties for t-SNE clustering
     PERPLEXITY = perplexity
     CLUSTER_DIMENSIONALITY = dimension
 
+    k = len(np.unique(labels))
+    color_map = cm.get_cmap('tab20', k)
+    colors = [color_map(i) for i in range(k)]
+
     # apply t-SNE clustering
-    model = TSNE(n_components = CLUSTER_DIMENSIONALITY, perplexity = PERPLEXITY)
+    model = TSNE(n_components=CLUSTER_DIMENSIONALITY, perplexity=PERPLEXITY)
     tsne_data = model.fit_transform(features)
-    
-    # plot the clusters in 2D
-    if (dimension == 2):
-        # ax = fig.add_subplot(111)
+
+    if dimension == 2:
+        plt.figure(figsize=(14, 6))
+        x = tsne_data[:, 0]
+        y = tsne_data[:, 1]
         
-        # extract x- and y-axis values
-        x = np.array(tsne_data[:, 0])
-        y = np.array(tsne_data[:, 1])
-    
-        # # visualize the data on a 2D scatter plot
-        ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
+        for i in range(k):
+            plt.scatter(x[labels == i], y[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
 
-    # plot the clusters in 3D
-    if (dimension == 3):
-        # extract x-, y-, and z-axis values
-        x = np.array(tsne_data[:, 0])
-        y = np.array(tsne_data[:, 1])
-        z = np.array(tsne_data[:, 2])
-    
-        # visualize the data on a 3D plot        
-        ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
-    return tsne_data 
+        plt.title("t-SNE 2D Embedding")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(f"../plots/tsne/tsne_p_{PERPLEXITY}.png"))
+        plt.close()
 
-def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
+    elif dimension == 3:
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        x = tsne_data[:, 0]
+        y = tsne_data[:, 1]
+        z = tsne_data[:, 2]
+
+        for i in range(k):
+            ax.scatter(x[labels == i], y[labels == i], z[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+
+        ax.set_title("t-SNE 3D Embedding")
+        ax.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(f"../plots/tsne/tsne_3d_p_{PERPLEXITY}.png"))
+        plt.close()
+
+    return tsne_data
+
+def UMAP_embedding(features, dimension, labels, label_names, alpha, neighbors):
     # initialize properties for UMAP embedding
     NEIGHBORS = neighbors
     CLUSTER_DIMENSIONALITY = dimension
+
+    k = len(np.unique(labels))
+    color_map = cm.get_cmap('tab20', k)
+    colors = [color_map(i) for i in range(k)]
 
     # apply UMAP embedding
     model = umap.UMAP(n_components=CLUSTER_DIMENSIONALITY, n_neighbors=NEIGHBORS)
     umap_data = model.fit_transform(features)
     print(umap_data)
-    # plot the clusters in 2D
-    if (dimension == 2):
-        # extract x- and y-axis values
-        x = np.array(umap_data[:, 0])
-        y = np.array(umap_data[:, 1])
-    
-        # # visualize the data on a 2D scatter plot
-        ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
-    # plot the clusters in 3D
-    if (dimension == 3):
-        # extract x-, y-, and z-axis values
-        x = np.array(umap_data[:, 0])
-        y = np.array(umap_data[:, 1])
-        z = np.array(umap_data[:, 2])
-    
-        # visualize the data on a 3D plot        
-        ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
+
+    if dimension == 2:
+        plt.figure(figsize=(14, 6))
+        x = umap_data[:, 0]
+        y = umap_data[:, 1]
+
+        for i in range(k):
+            plt.scatter(x[labels == i], y[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+
+        plt.title("UMAP 2D Embedding")
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(f"../plots/umap/umap_n_{NEIGHBORS}.png"))
+        plt.close()
+
+    elif dimension == 3:
+        from mpl_toolkits.mplot3d import Axes3D
+        fig = plt.figure(figsize=(14, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        x = umap_data[:, 0]
+        y = umap_data[:, 1]
+        z = umap_data[:, 2]
+
+        for i in range(k):
+            ax.scatter(x[labels == i], y[labels == i], z[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+
+        ax.set_title("UMAP 3D Embedding")
+        ax.legend()
+        plt.tight_layout()
+        plt.savefig(os.path.join(f"../plots/umap/umap_3d_n_{NEIGHBORS}.png"))
+        plt.close()
+
     return umap_data
 
 def k_means_clustering(features, labels, dimension, save_dir, label_names, num_samples_to_print=10):
