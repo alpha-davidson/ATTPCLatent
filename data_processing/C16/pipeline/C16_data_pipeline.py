@@ -142,6 +142,12 @@ def filter_data(ISOTOPE, min_points_threshold, min_charge_threshold):
     
     # Apply the filter function to the data
     filtered_data = _filter_point_clouds(data)
+
+    # Apply additional filtering based on the charge value
+    filtered_data[:,:,0] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,0])
+    filtered_data[:,:,1] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,1])
+    filtered_data[:,:,2] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,2])
+    filtered_data[:,:,3] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,3])
     
     filtered_data[:,:,0] = np.where(filtered_data[:,:,2] < 0, 0, filtered_data[:,:,0])
     filtered_data[:,:,1] = np.where(filtered_data[:,:,2] < 0, 0, filtered_data[:,:,1])
@@ -525,7 +531,7 @@ def shuffle(ISOTOPE, sample_size, voxels, K_x, K_y, K_z):
     name_unshuffled = ISOTOPE + '_size' + str(sample_size) + '_voxelated'
     data = np.load('../voxel_data/' + name + '.npy')           # This is the data file with all of the voxels plotted on each other in one voxel. This makes the shuffling process easier
     data_unshuffled = np.load('../voxel_data/' + name_unshuffled + '.npy')           # This is the original data with the normalized, voxelized event
-
+    
     new_data = np.zeros((len(data), sample_size, 6), float)
     for i in tqdm.tqdm(range(len(data))):
         
@@ -634,7 +640,7 @@ def main():
     dimension = 4 # desired dimension of data to be input
     ISOTOPE = 'C16'
     min_points_threshold = 60 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function)
-    min_charge_threshold = 0 # ^ same but for charge value
+    min_charge_threshold = 1 # ^ same but for charge value
 
     K_x = 2
     K_y = 2
