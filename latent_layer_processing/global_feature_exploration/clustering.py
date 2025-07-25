@@ -10,7 +10,9 @@ import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.colors as mcolors
 
-def t_SNE_clustering(features, dimension, labels, label_names, alpha, perplexity):
+def t_SNE_clustering(features, dimension, labels, label_names, save_dir, perplexity):
+    os.makedirs(save_dir, exist_ok=True)
+    
     # initialize properties for t-SNE clustering
     PERPLEXITY = perplexity
     CLUSTER_DIMENSIONALITY = dimension
@@ -29,12 +31,12 @@ def t_SNE_clustering(features, dimension, labels, label_names, alpha, perplexity
         y = tsne_data[:, 1]
         
         for i in range(k):
-            plt.scatter(x[labels == i], y[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+            plt.scatter(x[labels == i], y[labels == i], color=colors[i], label=label_names[i], s=5, alpha=1)
 
         plt.title("t-SNE 2D Embedding")
         plt.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(f"../plots/tsne/tsne_p_{PERPLEXITY}.png"))
+        plt.savefig(os.path.join(f"{save_dir}/2d_perplexity_{PERPLEXITY}.png"))
         plt.close()
 
     elif dimension == 3:
@@ -45,17 +47,19 @@ def t_SNE_clustering(features, dimension, labels, label_names, alpha, perplexity
         z = tsne_data[:, 2]
 
         for i in range(k):
-            ax.scatter(x[labels == i], y[labels == i], z[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+            ax.scatter(x[labels == i], y[labels == i], z[labels == i], color=colors[i], label=label_names[i], s=5, alpha=1)
 
         ax.set_title("t-SNE 3D Embedding")
         ax.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(f"../plots/tsne/tsne_3d_p_{PERPLEXITY}.png"))
+        plt.savefig(os.path.join(f"{save_dir}/3d_perplexity_{PERPLEXITY}.png"))
         plt.close()
 
     return tsne_data
 
-def UMAP_embedding(features, dimension, labels, label_names, alpha, neighbors):
+def UMAP_embedding(features, dimension, labels, label_names, save_dir, neighbors):
+    os.makedirs(save_dir, exist_ok=True)
+    
     # initialize properties for UMAP embedding
     NEIGHBORS = neighbors
     CLUSTER_DIMENSIONALITY = dimension
@@ -75,12 +79,12 @@ def UMAP_embedding(features, dimension, labels, label_names, alpha, neighbors):
         y = umap_data[:, 1]
 
         for i in range(k):
-            plt.scatter(x[labels == i], y[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+            plt.scatter(x[labels == i], y[labels == i], color=colors[i], label=label_names[i], s=5, alpha=1)
 
         plt.title("UMAP 2D Embedding")
         plt.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(f"../plots/umap/umap_n_{NEIGHBORS}.png"))
+        plt.savefig(os.path.join(f"{save_dir}/2d_neighbors_{NEIGHBORS}.png"))
         plt.close()
 
     elif dimension == 3:
@@ -91,26 +95,19 @@ def UMAP_embedding(features, dimension, labels, label_names, alpha, neighbors):
         z = umap_data[:, 2]
 
         for i in range(k):
-            ax.scatter(x[labels == i], y[labels == i], z[labels == i], color=colors[i], label=label_names[i], s=5, alpha=alpha)
+            ax.scatter(x[labels == i], y[labels == i], z[labels == i], color=colors[i], label=label_names[i], s=5, alpha=1)
 
         ax.set_title("UMAP 3D Embedding")
         ax.legend()
         plt.tight_layout()
-        plt.savefig(os.path.join(f"../plots/umap/umap_3d_n_{NEIGHBORS}.png"))
+        plt.savefig(os.path.join(f"{save_dir}/3d_neighbors_{NEIGHBORS}.png"))
         plt.close()
 
     return umap_data
 
 def k_means_clustering(features, labels, dimension, save_dir, label_names, num_samples_to_print=10):
-    # create a folder for k-means clustering
-    folder_path = f'../plots/k_means'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    # create a folder for plots of particular dimensionality
-    folder_path = f'../plots/k_means/{dimension}d_plots'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
+    os.makedirs(save_dir, exist_ok=True)
+    
     # k-means clustering on full feature space
     k = len(np.unique(labels))
     kmeans = KMeans(n_clusters=k, init="k-means++", random_state=42, n_init='auto')
@@ -161,7 +158,7 @@ def k_means_clustering(features, labels, dimension, save_dir, label_names, num_s
             plt.legend()
 
             plt.tight_layout()
-            plt.savefig(os.path.join(folder_path, "kmeans_2d.png"))
+            plt.savefig(os.path.join(save_dir, "kmeans_2d.png"))
             plt.close()
 
         elif dimension == 3:
@@ -189,7 +186,7 @@ def k_means_clustering(features, labels, dimension, save_dir, label_names, num_s
             ax2.legend()
 
             plt.tight_layout()
-            plt.savefig(os.path.join(folder_path, "kmeans_3d.png"))
+            plt.savefig(os.path.join(save_dir, "kmeans_3d.png"))
             plt.close()
 
     return features, cluster_labels, indices
