@@ -4,4 +4,4 @@
 #SBATCH --gpus 1
 
 # Adapt the models sub-folder as needed to the correct file name. 
-PYTHONPATH=../../.. python3 -m ATTPCLatent.latent_layer_processing.global_feature_exploration.linear_probing --beam O16 --num-classes 24 path/to/model path/to/first_class_ds path/to/second_class_ds 
+PYTHONPATH=../../.. python3 -m ATTPCLatent.latent_layer_processing.global_feature_exploration.linear_probing --beam O16 --num-classes 3 ../../training/O16_models/2025-06-16-14:56:34/full_model ../global_features/O16_Exp_extr.npy ../global_features/O16_Exp_labels.npy
