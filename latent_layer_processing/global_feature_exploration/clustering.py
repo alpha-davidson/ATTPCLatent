@@ -7,6 +7,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import umap
 import matplotlib.cm as cm
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.colors as mcolors
 
 def t_SNE_clustering(features, dimension, labels, label_names, alpha, perplexity):
@@ -37,7 +38,6 @@ def t_SNE_clustering(features, dimension, labels, label_names, alpha, perplexity
         plt.close()
 
     elif dimension == 3:
-        from mpl_toolkits.mplot3d import Axes3D
         fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
         x = tsne_data[:, 0]
@@ -84,7 +84,6 @@ def UMAP_embedding(features, dimension, labels, label_names, alpha, neighbors):
         plt.close()
 
     elif dimension == 3:
-        from mpl_toolkits.mplot3d import Axes3D
         fig = plt.figure(figsize=(14, 10))
         ax = fig.add_subplot(111, projection='3d')
         x = umap_data[:, 0]
