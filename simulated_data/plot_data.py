@@ -9,8 +9,7 @@ from mpl_toolkits import mplot3d
 from matplotlib import colors
 import matplotlib.cm as cm
 
-
-def plot_event(fig, sampled_data, event_num):
+def plot_event(fig, sampled_data, event_num, ax=None):
     # Define the colormap and normalization based on the entire dataset
     colormap = 'viridis'
     norm = plt.Normalize(vmin=0, vmax=500)
@@ -23,7 +22,8 @@ def plot_event(fig, sampled_data, event_num):
     z = sampled_data[event_num, :, 2].flatten()
 
     # Create a 3D scatter plot
-    ax = fig.add_subplot(111, projection='3d')
+    if ax is None:
+        ax = fig.add_subplot(111, projection='3d')
 
     ax.set_xlim(-250, 250)
     ax.set_ylim(0, 1000)
@@ -78,6 +78,8 @@ def plot_data(beam, file):
         # Saving the plot
         plt.savefig(f'plots/{ISOTOPE}/{name}/{file}/event_{event_num}.png')
         event_num = random.randint(1, len(sampled_data))
+
+
 
 if __name__ == '__main__':
     plot_data()

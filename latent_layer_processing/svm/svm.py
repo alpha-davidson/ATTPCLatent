@@ -9,6 +9,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import ReduceLROnPlateau
 from sklearn.utils import shuffle
 from sklearn import svm
+from sklearn.model_selection import train_test_split
 
 def plot_confusion_matrix(y_true, y_pred, class_names, output_path=None, normalize=False, cmap="Blues"):
     cm = confusion_matrix(y_true, y_pred)
@@ -100,6 +101,51 @@ def balance_classes(X, y, samples, random_state=42):
 
     return X_balanced, y_balanced
 
+    # Splits provided data into train and test data
+def train_test_split(feature_data, label_data, samples):
+    indices = label_data[:, 0].astype(int)
+    labels = label_data[:, 1].astype(int)
+
+    labels = np.where(np.isin(labels, [0, 1, 2]), 0, labels)
+    labels = np.where(np.isin(labels, [3]), 1, labels)
+    labels = np.where(np.isin(labels, [4, 5]), 2, labels)
+    
+    X = feature_data[indices]
+    y = labels
+
+    # normalize
+    scaler = StandardScaler()
+    X = scaler.fit_transform(X)
+
+    # shuffle and balance
+    X, y = shuffle(X, y, random_state=42)
+    X_balanced, y_balanced = balance_classes(X, y, samples)
+
+    # train/test split
+    X_train = X_balanced
+    y_train = y_balanced
+
+    mask = ~np.any(np.all(X[:, None] == X_train, axis=2), axis=1)
+    X_test = X[mask]
+    y_test = y[mask]
+
+    return X_train, y_train, X_test, y_test, X
+
+    # Loads train, test data using provided ids
+def load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels):
+    train_ids = np.array(train_ids, dtype=int)
+    test_ids = np.array(test_ids, dtype=int)
+
+    # slice features by ids
+    X_train = feature_data[train_ids]
+    y_train = np.array(train_labels)
+
+    X_test = feature_data[test_ids]
+    y_test = np.array(test_labels)
+
+    X = np.concatenate([X_train, X_test], axis=0) 
+
+    return X_train, y_train, X_test, y_test, X
 
     # === Neural network that imitates linear SVM ===
 def svm_neural_network_classify(samples, output_dir="svm_results"):
@@ -112,6 +158,11 @@ def svm_neural_network_classify(samples, output_dir="svm_results"):
     label_data = np.load('../O16_Experimental_Labels.npy')
     indices = label_data[:, 0].astype(int)
     labels = label_data[:, 1].astype(int)
+
+    labels = np.where(np.isin(labels, [0, 1, 2]), 0, labels)
+    labels = np.where(np.isin(labels, [3]), 1, labels)
+    labels = np.where(np.isin(labels, [4, 5]), 2, labels)
+    
     print(f"Loaded labeled experimental events: {len(indices)}")
     
     # extract labeled samples 
@@ -187,12 +238,7 @@ def svm_neural_network_classify(samples, output_dir="svm_results"):
     final_labels = np.argmax(full_logits, axis=1)  
 
     label_map = {
-        0: "0-track",
-        1: "1-track",
-        2: "2-track",
-        3: "3-track",
-        4: "4-track",
-        5: "5-track",
+        0: "0-, 1-, 2-track", 1: "3-track", 2: "4-, 5-track"
     }
 
     # show label distribution
@@ -215,43 +261,34 @@ def svm_neural_network_classify(samples, output_dir="svm_results"):
             print(f"{label_map.get(label, str(label)):<10}: {indices}")
 
     # confusion matrix
-    class_names = ["0-track", "1-track", "2-track", "3-track", "4-track", "5-track"]
+    class_names = ["0-, 1-, 2-track", "3-track", "4-, 5-track"]
     plot_confusion_matrix(y_test, y_test_pred, class_names, output_path=os.path.join(output_dir, "confusion_matrix.png"))
 
     return f1
 
     # === Linear SVM implementation using sklearn ===
-def svm_classify(samples=140, output_dir="svm_results"):
+def svm_classify(samples=350, output_dir="svm_results"):
     os.makedirs(output_dir, exist_ok=True)
 
-    # load features and labels
-    exp_features = np.load('../global_features/O16_experimental_features.npy')
-    label_data = np.load('../O16_Experimental_Labels.npy')
-    indices = label_data[:, 0].astype(int)
-    labels = label_data[:, 1].astype(int)
+    # load features and labels and apply train-test split (comment if you have train-test data)
+    # feature_data = np.load('../global_features/O16_experimental_features.npy')
+    # label_data = np.load('../O16_Experimental_Labels.npy')
+    # X_train, y_train, X_test, y_test, X = train_test_split(feature_data, label_data, samples)
+
+    # load train-test data
+    feature_data = np.load('../global_features/O16_experimental_features.npy')
+    train_ids = np.load('./data_set/O16_train_ids.npy')
+    train_labels = np.load('./data_set/O16_train_labels.npy')
+    test_ids = np.load('./data_set/O16_test_ids.npy')
+    test_labels = np.load('./data_set/O16_test_labels.npy')
+    X_train, y_train, X_test, y_test, X = load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels)
     
-    X = exp_features[indices]
-    y = labels
-
-    # normalize
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
-
-    # shuffle and balance
-    X, y = shuffle(X, y, random_state=42)
-    X_balanced, y_balanced = balance_classes(X, y, samples)
-
-    print(f"Balanced shape: {X_balanced.shape}, {y_balanced.shape}")
-
-    # train/test split
-    X_train = X_balanced
-    y_train = y_balanced
-    X_test = X
-    y_test = y
+    print(f"Input shape: {X.shape}")
+    print(f"Train shape: {X_train.shape}")
+    print(f"Test shape: {X_test.shape}")
 
     # train SVM
-    # model = svm.LinearSVC(kernel='rbf', C=1.0, gamma='scale')
-    model = svm.LinearSVC(max_iter=5000)
+    model = svm.LinearSVC(max_iter=10000)
     model.fit(X_train, y_train)
 
     # predict
@@ -265,10 +302,9 @@ def svm_classify(samples=140, output_dir="svm_results"):
     final_labels = model.predict(X)
 
     label_map = {
-        0: "0-track", 1: "1-track", 2: "2-track",
-        3: "3-track", 4: "4-track", 5: "5-track"
+        0: "0-, 1-, 2-track", 1: "3-track", 2: "4-, 5-track"
     }
-
+    
     print("\nPredicted label distribution:")
     summary_lines = []
     unique_labels, counts = np.unique(final_labels, return_counts=True)
@@ -283,7 +319,7 @@ def svm_classify(samples=140, output_dir="svm_results"):
     # confusion matrix
     class_names = list(label_map.values())
     plot_confusion_matrix(y_test, y_test_pred, class_names, output_path=os.path.join(output_dir, "confusion_matrix.png"))
-
+    
     return f1
     
 if __name__ == '__main__':
