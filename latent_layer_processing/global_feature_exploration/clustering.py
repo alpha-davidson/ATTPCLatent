@@ -5,6 +5,9 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.cluster import AgglomerativeClustering, DBSCAN
+from sklearn.metrics import silhouette_score
+from scipy.cluster.hierarchy import dendrogram, linkage
 import umap
 import matplotlib.cm as cm
 from mpl_toolkits.mplot3d import Axes3D
@@ -145,7 +148,7 @@ def k_means_clustering(features, labels, dimension, save_dir, label_names, num_s
             plt.scatter(pca.transform(centroids)[:, 0],
                         pca.transform(centroids)[:, 1],
                         marker='x', s=60, c='black', label='Centroids')
-            plt.title("KMeans Clustering")
+            plt.title("KMeans Clustering (2D PCA)")
             plt.legend()
 
             # true labels
@@ -172,7 +175,7 @@ def k_means_clustering(features, labels, dimension, save_dir, label_names, num_s
                             reduced_features[cluster_labels == i, 2],
                             color=colors[i], label=f'Cluster {i}', s=5)
             ax1.scatter(*pca.transform(centroids).T, marker='x', s=60, c='black', label='Centroids')
-            ax1.set_title("KMeans Clustering")
+            ax1.set_title("KMeans Clustering (3D PCA)")
             ax1.legend()
 
             # true labels
@@ -190,3 +193,105 @@ def k_means_clustering(features, labels, dimension, save_dir, label_names, num_s
             plt.close()
 
     return features, cluster_labels, indices
+
+def hierarchical_clustering(features, save_dir, n_clusters=3, linkage_method='ward'):
+    """
+    Perform hierarchical clustering on the latent space and visualize dendrogram.
+    Parameters:
+        features: np.ndarray, shape (n_samples, 1024)
+        n_clusters: int, number of clusters
+        linkage_method: str, linkage criterion ('ward', 'complete', 'average', 'single')
+    Returns:
+        labels: cluster assignments
+    """
+
+    features = StandardScaler().fit_transform(features)
+    os.makedirs(save_dir, exist_ok=True)
+    # Compute linkage matrix
+    Z = linkage(features, method=linkage_method)
+    
+    # Plot dendrogram
+    plt.figure(figsize=(10, 7))
+    dendrogram(Z, truncate_mode='level', p=5)
+    plt.title(f'Dendrogram (Linkage: {linkage_method})')
+    plt.xlabel('Sample Index')
+    plt.ylabel('Distance')
+    plt.savefig(os.path.join(save_dir, 'dendrogram.png'))
+    plt.close()
+    
+    # Perform clustering
+    clustering = AgglomerativeClustering(n_clusters=n_clusters, linkage=linkage_method)
+    labels = clustering.fit_predict(features)
+    
+    # Evaluate clustering
+    if n_clusters > 1:
+        score = silhouette_score(features, labels)
+        print(f"Hierarchical Clustering Silhouette Score: {score:.4f}")
+    
+    return labels
+
+
+def dbscan_clustering(features, dimension, save_dir, eps=0.5, min_samples=5):
+    """
+    Perform DBSCAN clustering on the latent space.
+    Parameters:
+        features: np.ndarray, shape (n_samples, 1024)
+        eps: float, maximum distance between two samples for one to be considered as in the neighborhood
+        min_samples: int, number of samples in a neighborhood for a point to be considered a core point
+    Returns:
+        labels: cluster assignments (-1 for noise points)
+    """
+    os.makedirs(save_dir, exist_ok=True)
+    
+    clustering = DBSCAN(eps=eps, min_samples=min_samples).fit(features)
+    labels = clustering.labels_
+    
+    # Evaluate clustering
+    n_clusters = len(set(labels)) - (1 if -1 in labels else 0)
+    n_noise = list(labels).count(-1)
+    print(f"DBSCAN: Found {n_clusters} clusters, {n_noise} noise points")
+    
+    if n_clusters > 1:
+        score = silhouette_score(features[labels != -1], labels[labels != -1])
+        print(f"DBSCAN Silhouette Score (excluding noise): {score:.4f}")
+
+    if dimension in [2, 3]:
+        pca = PCA(n_components=dimension)
+        reduced_features = pca.fit_transform(features)
+
+        # Plotting
+        unique_labels = set(labels)
+        colors = plt.cm.get_cmap("tab10", len(unique_labels))
+
+        if dimension == 2:
+            plt.figure(figsize=(8, 6))
+            for label in unique_labels:
+                mask = labels == label
+                color = 'k' if label == -1 else colors(label)
+                plt.scatter(reduced_features[mask, 0], reduced_features[mask, 1], 
+                            c=[color], label=f"Cluster {label}" if label != -1 else "Noise", s=5)
+            plt.title("DBSCAN Clustering (2D PCA)")
+            plt.xlabel("X")
+            plt.ylabel("Y")
+            plt.legend()
+            plt.grid(True)
+            plt.savefig(os.path.join(save_dir, "dbscan_2d.png"))
+            plt.show()
+
+        elif dimension == 3:
+            fig = plt.figure(figsize=(10, 8))
+            ax = fig.add_subplot(111, projection='3d')
+            for label in unique_labels:
+                mask = labels == label
+                color = 'k' if label == -1 else colors(label)
+                ax.scatter(reduced_features[mask, 0], reduced_features[mask, 1], reduced_features[mask, 2],
+                           c=[color], label=f"Cluster {label}" if label != -1 else "Noise", s=5)
+            ax.set_title("DBSCAN Clustering (3D PCA)")
+            ax.set_xlabel("X")
+            ax.set_ylabel("Y")
+            ax.set_zlabel("Z")
+            ax.legend()
+            plt.savefig(os.path.join(save_dir, "dbscan_3d.png"))
+            plt.show()
+
+    return labels
