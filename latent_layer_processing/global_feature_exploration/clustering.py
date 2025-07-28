@@ -14,15 +14,6 @@ def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
     PERPLEXITY = perplexity
     CLUSTER_DIMENSIONALITY = dimension
 
-    # create a folder for t-SNE clustering
-    folder_path = f'../plots/t_sne'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    # create a folder for plots of particular dimensionality
-    folder_path = f'../plots/t_sne/{CLUSTER_DIMENSIONALITY}d_plots'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-
     # apply t-SNE clustering
     model = TSNE(n_components = CLUSTER_DIMENSIONALITY, perplexity = PERPLEXITY)
     tsne_data = model.fit_transform(features)
@@ -37,7 +28,6 @@ def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
     
         # # visualize the data on a 2D scatter plot
         ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/t-sne/2d_plots/plot_perplexity_{PERPLEXITY}.png')
 
     # plot the clusters in 3D
     if (dimension == 3):
@@ -48,22 +38,12 @@ def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
     
         # visualize the data on a 3D plot        
         ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/t-sne/3d_plots/plot_perplexity_{PERPLEXITY}.png')
     return tsne_data 
 
 def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
     # initialize properties for UMAP embedding
     NEIGHBORS = neighbors
     CLUSTER_DIMENSIONALITY = dimension
-
-    # create a folder for UMAP embedding
-    folder_path = f'../plots/umap'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    # create a folder for plots of particular dimensionality
-    folder_path = f'../plots/umap/{CLUSTER_DIMENSIONALITY}d_plots'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
 
     # apply UMAP embedding
     model = umap.UMAP(n_components=CLUSTER_DIMENSIONALITY, n_neighbors=NEIGHBORS)
@@ -77,7 +57,6 @@ def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
     
         # # visualize the data on a 2D scatter plot
         ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/umap/2d_plots/plot_neighbors_{NEIGHBORS}.png')
     # plot the clusters in 3D
     if (dimension == 3):
         # extract x-, y-, and z-axis values
@@ -87,10 +66,9 @@ def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
     
         # visualize the data on a 3D plot        
         ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/umap/3d_plots/plot_neighbors_{NEIGHBORS}.png')
     return umap_data
 
-def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_print=10):
+def k_means_clustering(features, labels, dimension, save_dir, label_names, num_samples_to_print=10):
     # create a folder for k-means clustering
     folder_path = f'../plots/k_means'
     if not os.path.exists(folder_path):
@@ -124,7 +102,6 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
 
         color_map = cm.get_cmap('tab20', k)
         colors = [color_map(i) for i in range(k)]
-        label_names = [f"{i}-track" for i in range(k)]
 
         if dimension == 2:
             plt.figure(figsize=(14, 6))

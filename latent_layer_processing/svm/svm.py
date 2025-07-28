@@ -125,6 +125,7 @@ def train_test_split(feature_data, label_data, samples):
     X_train = X_balanced
     y_train = y_balanced
 
+    # === uncomment if you want to remove global features used for training from the test set ===
     mask = ~np.any(np.all(X[:, None] == X_train, axis=2), axis=1)
     X_test = X[mask]
     y_test = y[mask]
@@ -267,21 +268,22 @@ def svm_neural_network_classify(samples, output_dir="svm_results"):
     return f1
 
     # === Linear SVM implementation using sklearn ===
-def svm_classify(samples=350, output_dir="svm_results"):
+    # Be aware that this algorithm balances data (e.g. takes a particular number of samples from each class) in order to get       # rid of evaluational bias. Therefore, if you use 100% samples of one class, you won't see true prediction for this class.
+def svm_classify(samples=300, output_dir="svm_results"):
     os.makedirs(output_dir, exist_ok=True)
 
-    # load features and labels and apply train-test split (comment if you have train-test data)
-    # feature_data = np.load('../global_features/O16_experimental_features.npy')
-    # label_data = np.load('../O16_Experimental_Labels.npy')
-    # X_train, y_train, X_test, y_test, X = train_test_split(feature_data, label_data, samples)
+    # load features and labels and apply train-test split (comment if you have train-test data). Also use these lines with plot.py
+    feature_data = np.load('../global_features/O16_experimental_features.npy')
+    label_data = np.load('../O16_Experimental_Labels.npy')
+    X_train, y_train, X_test, y_test, X = train_test_split(feature_data, label_data, samples)
 
     # load train-test data
-    feature_data = np.load('../global_features/O16_experimental_features.npy')
-    train_ids = np.load('./data_set/O16_train_ids.npy')
-    train_labels = np.load('./data_set/O16_train_labels.npy')
-    test_ids = np.load('./data_set/O16_test_ids.npy')
-    test_labels = np.load('./data_set/O16_test_labels.npy')
-    X_train, y_train, X_test, y_test, X = load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels)
+    # feature_data = np.load('../global_features/O16_experimental_features.npy')
+    # train_ids = np.load('./data_set/O16_train_ids.npy')
+    # train_labels = np.load('./data_set/O16_train_labels.npy')
+    # test_ids = np.load('./data_set/O16_test_ids.npy')
+    # test_labels = np.load('./data_set/O16_test_labels.npy')
+    # X_train, y_train, X_test, y_test, X = load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels)
     
     print(f"Input shape: {X.shape}")
     print(f"Train shape: {X_train.shape}")
