@@ -1,14 +1,12 @@
 """
 
-name: C16_voxel_pipeline.py
+name: C16+O16_voxel_pipeline.py
 
 description: Takes the raw point cloud data file called 'C16_run160.h5' and creates new files to be placed in 'C16_expt_downstream/voxel_data'. Before running, create a 'voxel_data' folder under the 'C16_expt_downstream' directory and put the 'C16_run160.h5' file into that folder.
 
 designed for data in the following format:
 # x[0] ,y[1] ,z[2] ,Amplitude[3], id[4]
 
-date created: Jul 22, 2024
-date edited: Jul 24, 2024
 
 """
 
@@ -28,146 +26,94 @@ import json
 
 # user defined functions...
 
-def convert_data():
-    """
-    Takes in point cloud data as an .h5 file and converts it into a numpy array.
-    
-    Parameters
-    ----------
-    data : h5
-        Raw point cloud data.
-    
-    Returns
-    ----------
-    None.
-    """
-    
-    data = h5py.File('../voxel_data/example_run_0017_clusters.h5', 'r')
-    DATAFRAME_PATH = '../voxel_data/example_run_0017_fit_2H.parquet'
-    labels_df = pd.read_parquet(DATAFRAME_PATH)[['polar', 'azimuthal', 'brho', 'event', 'cluster_index']]
-    
-    root_group = data['cluster']
-    min_event = root_group.attrs.get("min_event")
-    max_event = root_group.attrs.get("max_event")
-    event_nums = range(0, max_event + 1)
-    
-    # Initialize event_total_points array with zeros
-    event_total_points = np.zeros(max_event + 1, dtype=int)
-    
-    # Iterate over events and fill in the total points
-    for event in event_nums:
-        if f"event_{event}" in root_group.keys():
-            total_points = 0
-            for i in range(root_group[f"event_{event}"].attrs.get('nclusters')):
-                cloud = root_group[f"event_{event}"][f"cluster_{i}"]["cloud"]
-                num_points = cloud.shape[0]  # Number of points in the cluster
-                track_labels = labels_df.loc[(labels_df["event"] == event) & (labels_df["cluster_index"] == i)]
-                if not track_labels.empty:
-                    total_points += num_points
-            event_total_points[event] = total_points
-    
-    # Save the event_total_points array
-    np.save('../voxel_data/C16_event_lens.npy', event_total_points)
+def load_data():
 
-    file_name = 'C16_w_key_index'
-    max_points = np.max(event_total_points)
-    event_data = np.zeros((len(event_total_points), max_points, 5), float)
-    
-    for n, event in tqdm.tqdm(enumerate(range(len(event_total_points)))):
-        event_key = f"event_{event}"
-        if event_key in root_group.keys():
-            event_group = root_group[event_key]
-            cluster_count = event_group.attrs.get('nclusters')
-            
-            point_index = 0
-            for i in range(cluster_count):
-                cluster_key = f"cluster_{i}"
-                if cluster_key in event_group.keys():
-                    cloud = event_group[cluster_key]["cloud"]
-                    num_points = cloud.shape[0]
-                    #print(cloud[:,0])
-                    #instant = np.zeros((num_points, 4))
-                    #instant[:, :cloud.shape[1]] = cloud[:, :4]
-    
-                    track_labels = labels_df.loc[(labels_df["event"] == event) & (labels_df["cluster_index"] == i)]
-                    if not track_labels.empty:
-                        track_labels = np.tile(np.array(track_labels[['polar', 'azimuthal', 'brho']]).flatten(), (num_points, 1))
-                        if track_labels.shape[0] == num_points:
-                            cloud = np.concatenate((cloud, track_labels), axis=1)
-                            event_data[n, point_index:point_index + num_points, :4] = cloud[:, :4]
-                            event_data[n, point_index:point_index + num_points, 4] = event
-                            point_index += num_points
-    
-            event_data[n, 0, 4] = float(event)
-                    
-                    #event_data[n][point_index:point_index + num_points, :4] = cloud[:,:4]
-                    #event_data[n][point_index:point_index + num_points, 4] = float(event)
-                    
-                    #point_index += num_points
-    
-        event_data[n][0, 4] = float(event)
-    
-    # Save the event data to a file
-    np.save('../voxel_data/' + file_name, event_data)
-    np.save('../voxel_data/' + 'C16_w_event_keys', event_data)
-  
-def _filter_point_clouds(data):
-    
-    # Extract only the x, y, z coordinates, and the charge (columns 0, 1, 2, 3)
-    filtered_data = data[..., [0, 1, 2, 3]]
-    
-    return filtered_data
+    C16_data = np.load('../../C16/voxel_data/' + 'C16' + '_w_event_keys.npy', allow_pickle=True)
+    C16_event_lens = np.load('../../C16/voxel_data/' + 'C16' + '_event_lens.npy', allow_pickle=True)
 
-def filter_data(ISOTOPE, min_points_threshold, min_charge_threshold):
-    """
-    Filters out all events that don't have at least 70 points.
+    O16_data = np.load('../../O16/voxel_data/' + 'O16' + '_w_event_keys.npy')
+    # cut O16 data's time dimension
+    O16_data[:,:,3] = O16_data[:,:,4]
+    O16_data[:,:,4] = O16_data[:,:,5]
+    O16_data = O16_data[:, :, :5]
+    O16_event_lens = np.load('../../O16/voxel_data/' + 'O16' + '_event_lens.npy')
+    O16_data[56437,0,-1] = 56437
     
-    Parameters
-    ----------
-    ISOTOPE : str
-        Name of the isotope (ex. C16).
-    
-    min_points_threshold : int
-        Minimum points to be safe.
+    return C16_data, C16_event_lens, O16_data, O16_event_lens
 
-    min_charge_threshold : int
-        Minimum charge value to be safe.
-    
-    Returns
-    ----------
-    None.
-    """
-    
-    data = np.load('../voxel_data/' + ISOTOPE + '_w_event_keys.npy')
-    
-    # Apply the filter function to the data
-    filtered_data = _filter_point_clouds(data)
 
+def filter_point_clouds_C16(C16_data):
+    C16_filtered_data = C16_data
+    
     # Apply additional filtering based on the charge value
-    filtered_data[:,:,0] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,0])
-    filtered_data[:,:,1] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,1])
-    filtered_data[:,:,2] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,2])
-    filtered_data[:,:,3] = np.where(filtered_data[:,:,3] < min_charge_threshold, 0, filtered_data[:,:,3])
+    # filtered_data[:,:,0] = np.where(filtered_data[:,:,3] < 70, 0, filtered_data[:,:,0])
+    # filtered_data[:,:,1] = np.where(filtered_data[:,:,3] < 70, 0, filtered_data[:,:,1])
+    # filtered_data[:,:,2] = np.where(filtered_data[:,:,3] < 70, 0, filtered_data[:,:,2])
+    # filtered_data[:,:,3] = np.where(filtered_data[:,:,3] < 70, 0, filtered_data[:,:,3])
     
-    filtered_data[:,:,0] = np.where(filtered_data[:,:,2] < 0, 0, filtered_data[:,:,0])
-    filtered_data[:,:,1] = np.where(filtered_data[:,:,2] < 0, 0, filtered_data[:,:,1])
-    filtered_data[:,:,2] = np.where(filtered_data[:,:,2] < 0, 0, filtered_data[:,:,2])
-    filtered_data[:,:,3] = np.where(filtered_data[:,:,2] < 0, 0, filtered_data[:,:,3])
+    #Apply additional filtering based on the z-axis
+    C16_filtered_data[:,:,0] = np.where(C16_filtered_data[:,:,2] < 0, 0, C16_filtered_data[:,:,0])
+    C16_filtered_data[:,:,1] = np.where(C16_filtered_data[:,:,2] < 0, 0, C16_filtered_data[:,:,1])
+    C16_filtered_data[:,:,2] = np.where(C16_filtered_data[:,:,2] < 0, 0, C16_filtered_data[:,:,2])
+    C16_filtered_data[:,:,3] = np.where(C16_filtered_data[:,:,2] < 0, 0, C16_filtered_data[:,:,3])
+    
+    # Determine threshold for minimum number of non-zero points
+    min_points_threshold = 60
     
     # Filter out events with too few non-zero points
-    filtered_events = []
-    valid_event_indices = []
-    for i in range(filtered_data.shape[0]):
-        if np.count_nonzero(filtered_data[i, :, 0]) >= min_points_threshold:
-            filtered_events.append(filtered_data[i])
-            valid_event_indices.append(i)
-
-
-    filtered_data = np.array(filtered_events)
-    valid_event_indices = np.array(valid_event_indices)
+    C16_filtered_events = []
+    C16_valid_event_indices = []
+    for i in range(C16_filtered_data.shape[0]):
+        if np.count_nonzero(C16_filtered_data[i, :, 0]) >= min_points_threshold:
+            C16_filtered_events.append(C16_filtered_data[i])
+            C16_valid_event_indices.append(i)
     
-    np.save('../voxel_data/C16_filtered_data', filtered_data)
-    np.save('../voxel_data/C16_valid_event_indices', valid_event_indices)
+    C16_filtered_data = np.array(C16_filtered_events)
+    
+    # Print the final filtered data for verification
+    print('Final Filtered Shape:', C16_filtered_data.shape)
+    print(len(C16_valid_event_indices))
+    return C16_valid_event_indices, C16_filtered_data
+
+def filter_point_clouds_O16(O16_data):    
+    O16_filtered_data = O16_data
+    
+    # Apply additional filtering based on the charge value
+    O16_filtered_data[:,:,0] = np.where(O16_filtered_data[:,:,3] < 90, 0, O16_filtered_data[:,:,0])
+    O16_filtered_data[:,:,1] = np.where(O16_filtered_data[:,:,3] < 90, 0, O16_filtered_data[:,:,1])
+    O16_filtered_data[:,:,2] = np.where(O16_filtered_data[:,:,3] < 90, 0, O16_filtered_data[:,:,2])
+    O16_filtered_data[:,:,3] = np.where(O16_filtered_data[:,:,3] < 90, 0, O16_filtered_data[:,:,3])
+    
+    # Determine threshold for minimum number of non-zero points
+    min_points_threshold = 70
+    
+    # Filter out events with too few non-zero points
+    O16_filtered_events = []
+    O16_valid_event_indices = []
+    for i in range(O16_filtered_data.shape[0]):
+        if np.count_nonzero(O16_filtered_data[i, :, 0]) >= min_points_threshold:
+            O16_filtered_events.append(O16_filtered_data[i])
+            O16_valid_event_indices.append(i)
+    
+    O16_filtered_data = np.array(O16_filtered_events)
+    
+    # Print the final filtered data for verification
+    print('Final Filtered Shape:', O16_filtered_data.shape)
+    print(len(O16_valid_event_indices))
+    return O16_valid_event_indices, O16_filtered_data
+
+def combine_data(C16_filtered_data, C16_valid_event_indices, C16_event_lens, O16_filtered_data, O16_valid_event_indices, O16_event_lens):
+    
+    diff = np.max(O16_event_lens) - np.max(C16_event_lens)
+    C16_filtered_data_padded = np.pad(C16_filtered_data, ((0, 0), (0, diff), (0, 0)), 'constant', constant_values=0)
+    data = np.concatenate((C16_filtered_data_padded, O16_filtered_data), axis=0)
+    event_lens = C16_valid_event_indices + O16_valid_event_indices
+    print(data.shape)
+    print(len(event_lens))
+    assert data.shape == (len(event_lens), np.max(O16_event_lens), 5), 'Array has incorrect shape'
+
+    np.save('../voxel_data/C16+O16_event_lens.npy', event_lens)
+    np.save('../voxel_data/C16+O16_data.npy', data)
 
     
 def random_sample(ISOTOPE, sample_size, dimension):
@@ -190,58 +136,58 @@ def random_sample(ISOTOPE, sample_size, dimension):
     None.
     """
 
-    data = np.load('../voxel_data/' + ISOTOPE + '_w_event_keys.npy')
-    filtered_data = np.load('../voxel_data/C16_filtered_data.npy')
-    valid_event_indices = np.load('../voxel_data/C16_valid_event_indices.npy')
-    
+    event_lens = np.load('../voxel_data/C16+O16_event_lens.npy')
+    data = np.load('../voxel_data/C16+O16_data.npy')
+        
     new_array_name = ISOTOPE + '_size' + str(sample_size) + '_sampled'
-    new_data = np.zeros((filtered_data.shape[0], sample_size, 5), float)
+    new_data = np.zeros((data.shape[0], sample_size, 4), float)
     # Using tqdm with enumerate for progress indication
-    for idx, original_idx in tqdm.tqdm(enumerate(valid_event_indices), total=len(valid_event_indices)):
+    for idx, original_idx in tqdm.tqdm(enumerate(event_lens), total=len(event_lens)):
         # Filter out zero values using idx instead of original_idx
-        non_zero_points = filtered_data[idx][filtered_data[idx, :, 0] != 0]
+        non_zero_points = data[idx][data[idx, :, 0] != 0]
         non_zero_len = non_zero_points.shape[0]
     
-        if non_zero_len > sample_size:
+        if non_zero_len >= sample_size:
             random_points = np.random.choice(non_zero_len, sample_size, replace=False)  # choosing the random instances to sample
             for count, r in enumerate(random_points):
-                new_data[idx, count, :4] = non_zero_points[r, :4]  # Only use the filtered x, y, z, and charge
-                new_data[idx, count, 4] = data[original_idx, r, 4]  # Add event index from the original data
+                new_data[idx, count, :] = non_zero_points[r, :4]  # Only use the filtered x, y, z, and charge
+                #new_data[idx, count, 4] = data[original_idx, r, 4]  # Add event index from the original data
     
         else:
-            new_data[idx, :non_zero_len, :4] = non_zero_points[:, :4]  # Only use the filtered x, y, z, and charge
-            new_data[idx, :non_zero_len, 4] = data[original_idx, :non_zero_len, 4]  # Add event index from the original data
+            new_data[idx, :non_zero_len, :] = non_zero_points[:, :4]  # Only use the filtered x, y, z, and charge
+            #new_data[idx, :non_zero_len, 4] = data[original_idx, :non_zero_len, 4]  # Add event index from the original data
             need = sample_size - non_zero_len
             random_points = np.random.choice(non_zero_len, need, replace=True if need > non_zero_len else False)
             for count, r in enumerate(random_points, start=non_zero_len):
-                new_data[idx, count, :4] = non_zero_points[r, :4]  # Only use the filtered x, y, z, and charge
-                new_data[idx, count, 4] = data[original_idx, r, 4]  # Add event index from the original data
-        new_data[idx, 0, 4] = data[original_idx, 0, 4]  # saving the event index        
+                new_data[idx, count, :] = non_zero_points[r, :4]  # Only use the filtered x, y, z, and charge
+                #new_data[idx, count, 4] = data[original_idx, r, 4]  # Add event index from the original data
+        #new_data[idx, 0, 4] = data[original_idx, 0, 4]  # saving the event index        
     
     # Verify if there are still any zero values in new_data
     print("Final check of new_data for zeros")
     print("Number of zero values in x, y, z, charge columns:", np.count_nonzero(new_data[:, :, :4] == 0))
-    print("Indices of zero values:", np.where(new_data[:, :, :4] == 0))
+    print("Indices of zero values:", np.where(new_data[:, :, :] == 0))
     
     # If there are still zeros, print a few samples where zeros are present
-    zero_indices = np.where(new_data[:, :, :4] == 0)
+    zero_indices = np.where(new_data[:, :, :] == 0)
     if len(zero_indices[0]) > 0:
         for i in range(min(5, len(zero_indices[0]))):
             print(f"Zero found at index {zero_indices[0][i]}, event {zero_indices[1][i]}, column {zero_indices[2][i]}")
     
-    assert np.all(new_data[:, :, :4] != 0), 'new_data contains zero values in the x, y, z, or charge columns'
+    assert np.all(new_data[:, :, :] != 0), 'new_data contains zero values in the x, y, z, or charge columns'
     
     np.save('../voxel_data/' + new_array_name, new_data)
     
-    assert new_data.shape == (filtered_data.shape[0], sample_size, 5), 'Array has incorrect shape'
-    assert len(np.unique(new_data[:, :, 4])) == filtered_data.shape[0], 'Array has incorrect number of events'
+    assert new_data.shape == (data.shape[0], sample_size, 4), 'Array has incorrect shape'
+    #assert len(np.unique(new_data[:, :, 4])) == data.shape[0], 'Array has incorrect number of events'
 
     size = len(new_data)
     dataset = np.zeros((size, sample_size, dimension + 2), float)
     count = 0
     
     for i in range(size):
-        dataset[count,:,:5] = new_data[count,:,:] # x, y, z, charge, event index
+        dataset[count,:,:4] = new_data[count,:,:] # x, y, z, charge
+        # dataset[count,0,4] is zero
         dataset[count,0,5] = np.count_nonzero(new_data[count,:,0])# length of event 
         count += 1
     
@@ -266,9 +212,6 @@ def scale_and_split(ISOTOPE, sample_size):
     """
 
     dataset = np.load('../voxel_data/' + ISOTOPE + '_size' + str(sample_size) + '.npy')
-
-    # scale
-
     # values correspond to the x,y,z,charge index
     values = [0,1,2,3] 
     means_and_stds = []
@@ -280,14 +223,14 @@ def scale_and_split(ISOTOPE, sample_size):
         std = np.std(dataset[:,:,n])
         means_and_stds.append([mean,std])
         dataset[:,:,n] = (dataset[:,:,n] - mean) / std
+        
     dataset[:,0,-1] = np.log(dataset[:,0,-1])
     dataset[:,0,-1] = min_max_scaler.fit_transform(dataset[:,0,-1].reshape(-1, 1)).reshape(1,-1)
     
     assert np.sum(np.isnan(dataset)) == 0, 'NaNs in dataset'
     assert np.sum(np.isinf(dataset)) == 0, 'Infinities in dataset'
 
-    # split
-    
+
     rand_shuffle = np.random.choice(len(dataset), len(dataset), replace = False)
     name = ISOTOPE + '_size' + str(sample_size)
     
@@ -301,7 +244,7 @@ def scale_and_split(ISOTOPE, sample_size):
     print(len(dataset))
     print(test.shape, val.shape, train.shape)
     
-    os.makedirs('../data_splits/')
+    os.makedirs('../data_splits/', exist_ok=True)
     np.save('../data_splits/' + ISOTOPE + '_size' + str(sample_size)+'_test', test)
     np.save('../data_splits/' + ISOTOPE + '_size' + str(sample_size)+'_val', val)
     np.save('../data_splits/' + ISOTOPE + '_size' + str(sample_size)+'_train', train)
@@ -325,7 +268,7 @@ def voxelize(ISOTOPE, sample_size):
     ----------
     None.
     """
-    
+        
     name = ISOTOPE + '_size' + str(sample_size)
     data = np.load('../voxel_data/' + name + '.npy')
     
@@ -335,7 +278,7 @@ def voxelize(ISOTOPE, sample_size):
         'MAX_X': 270.0,
         'MIN_Y': -270.0,
         'MAX_Y': 270.0,
-        'MIN_Z': 0.0,
+        'MIN_Z': -185.0,
         'MAX_Z': 1155.0,  # Corrected from previous example
         'MIN_LOG_A': 0.0,
         'MAX_LOG_A': 8.60
@@ -497,8 +440,8 @@ def label(ISOTOPE, sample_size, K_x, K_y, K_z):
     # print(voxels_np)
     np.save('../voxel_data/voxel_bounds.npy', voxels_np)
     
-    name1 = 'C16' + '_size' + str(512) + '_voxelated'
-    name2 = 'C16' + '_size' + str(512) + '_base_voxels'
+    name1 = ISOTOPE + '_size' + str(512) + '_voxelated'
+    name2 = ISOTOPE + '_size' + str(512) + '_base_voxels'
     voxel_data = np.load('../voxel_data/' + name1 + '.npy')
     next_step_data = np.load('../voxel_data/' + name2 + '.npy')
     
@@ -531,7 +474,7 @@ def shuffle(ISOTOPE, sample_size, voxels, K_x, K_y, K_z):
     name_unshuffled = ISOTOPE + '_size' + str(sample_size) + '_voxelated'
     data = np.load('../voxel_data/' + name + '.npy')           # This is the data file with all of the voxels plotted on each other in one voxel. This makes the shuffling process easier
     data_unshuffled = np.load('../voxel_data/' + name_unshuffled + '.npy')           # This is the original data with the normalized, voxelized event
-    
+
     new_data = np.zeros((len(data), sample_size, 6), float)
     for i in tqdm.tqdm(range(len(data))):
         
@@ -638,23 +581,26 @@ def main():
     sample_size = 512 # enter the size to which events will be up/downsampled
     TRACK_CLASS = False
     dimension = 4 # desired dimension of data to be input
-    ISOTOPE = 'C16'
+    ISOTOPE = 'C16+O16'
     min_points_threshold = 60 # Determine threshold for minimum number of non-zero points (to be used in the filter_data function)
-    min_charge_threshold = 1 # ^ same but for charge value
+    min_charge_threshold = 0 # ^ same but for charge value
 
     K_x = 2
     K_y = 2
     K_z = 6
 
     # calling the functions
-    convert_data()
-    filter_data(ISOTOPE, min_points_threshold, min_charge_threshold)
+    C16_data, C16_event_lens, O16_data, O16_event_lens = load_data()
+    C16_valid_event_indices, C16_filtered_data = filter_point_clouds_C16(C16_data)
+    O16_valid_event_indices, O16_filtered_data = filter_point_clouds_O16(O16_data)
+    combine_data(C16_filtered_data, C16_valid_event_indices, C16_event_lens, O16_filtered_data, O16_valid_event_indices, O16_event_lens)
     random_sample(ISOTOPE, sample_size, dimension)
     scale_and_split(ISOTOPE, sample_size)
     voxelize(ISOTOPE, sample_size)
     voxels = label(ISOTOPE, sample_size, K_x, K_y, K_z)
     shuffle(ISOTOPE, sample_size, voxels, K_x, K_y, K_z)
     test_train_and_val(ISOTOPE, sample_size)
+    
 
 if __name__ == "__main__":
     main()

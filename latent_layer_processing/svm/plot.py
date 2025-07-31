@@ -8,7 +8,7 @@ import matplotlib as mpl
 from mpl_toolkits import mplot3d
 from matplotlib import colors
 import matplotlib.cm as cm
-from svm import svm_classify 
+from svm import svm_classify, svm_neural_network_classify
 
 def plot_event(fig, sampled_data, event_num):
     # define the colormap and normalization based on the entire dataset
@@ -42,11 +42,11 @@ def plot_event(fig, sampled_data, event_num):
     ax.set_box_aspect(aspect=None, zoom=0.85)  
         
     # colorbar
-    fig.colorbar(scalarmappable, label='Energy Loss', pad=0.01, shrink=0.2, ax=ax,
+    fig.colorbar(scalarmappable, label='Amplitude', pad=0.01, shrink=0.2, ax=ax,
                 spacing='proportional')
 
 def plot_classification_accuracy(): 
-    X = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 140]   # choose the number of samples for SVM 
+    X = [1, 10, 50, 100, 200, 300]   # choose the number of samples for SVM 
     y = []
 
     # SVM f1 scores
@@ -61,7 +61,7 @@ def plot_classification_accuracy():
     plt.ylabel('F1')
 
     for i, label in enumerate(X):
-        label = f"{round((label*6*100)/2458, 1)}%"
+        label = f"{round((label*100)/476, 1)}%"
         plt.annotate(label, (X[i], y[i]), textcoords="offset points", xytext=(0,10), ha='center')
     
     plt.savefig(f'plots/sample_f1.png')
