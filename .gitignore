@@ -131,8 +131,9 @@ dmypy.json
 # log directories
 models/
 plots/
-data/
+*.npy
 voxel_data/
+*.log
 
 # slurm files
 slurm*.out
