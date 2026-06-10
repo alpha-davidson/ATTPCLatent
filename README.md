@@ -1,84 +1,50 @@
-This repository implements a self-supervised pretraining strategy for 3D point cloud data using the PointNet architecture. The core idea is to partition each event (represented as a 4D point set with spatial coordinates and charge) into fixed spatial voxels, shuffle the voxel order, and train PointNet to reconstruct the original arrangement. By learning to reverse the shuffling process, the model captures meaningful spatial structures without requiring labeled data. The pretrained model can then be fine-tuned for downstream tasks such as track counting in nuclear physics experiments.
-
-# Packages
-*Runs seamlessly using these versions as of July 12, 2023. Subject to change according to conda compatibility.*
-
-* python 3.9.19
-* tensorflow 2.12.0
-* scikit-learn 1.2.2
-* numpy 1.23.5
-* click 8.0.4
-* matplotlib 3.7.1
-* tqdm 4.65.0
-* jupyter 1.0.0
-* seaborn 0.12.2
-
-# Git Setup
-After accessing server remotely by `ssh`, set up this Git repository for use. Enter your Git username and access token details as required.
-
-* To clone this repo and set up your remote and upstream correctly, do:
+# AT-TPC Latent Space Evaluation 
+ 
+A lightweight, framework-agnostic toolkit for evaluating the quality of latent representations learned from AT-TPC 3D point cloud data.
+ 
+This repo does not handle model training or raw data preprocessing. It takes pre-extracted embeddings as input and provides a standard set of analysis tools that any team member can run regardless of what architecture or framework they used to generate those embeddings.
+ 
+---
+ 
+## Philosophy
+ 
+Different team members may train different architectures (PointNet, EdgeConv, etc.) using different frameworks (PyTorch, TensorFlow). Rather than tying evaluation to any one of those, this suite operates entirely on `.npy` embedding arrays.
+ 
+---
+ 
+## Input Format
+ 
+Every analysis script in this repo expects two aligned `.npy` files:
+ 
+| File | Shape | Description |
+|---|---|---|
+| `embeddings.npy` | `(N, D)` | Global embedding vectors, one per event |
+| `labels.npy` | `(N,)` | Integer class labels corresponding to each event |
+ 
+Where `N` is the number of events and `D` is the embedding dimension (typically 1024). Row order must match between the two files.
+ 
+To export embeddings from your model, add the following to your evaluation notebook:
+ 
+```python
+np.save('embeddings.npy', all_embeddings)
+np.save('labels.npy', all_labels)
 ```
-git clone https://github.com/alpha-davidson/ATTPCLatent
-cd ATTPCLatent
-git remote add upstream https://github.com/alpha-davidson/TPCNet
-git remote set-url --push upstream DISABLED
-```
-
-* To verify everything worked as it's supposed to, type: `git remote -v`. This should produce the
-following output:
-```
-origin	https://github.com/alpha-davidson/ATTPCLatent (fetch)
-origin	https://github.com/alpha-davidson/ATTPCLatent (push)
-upstream	https://github.com/alpha-davidson/TPCNet (fetch)
-upstream	DISABLED (push)
-```
-
-## Setting up conda environment
-
-`conda create -n tpcnet python=3.9.19`
-
-## Installing packages
-
-`conda activate tpcnet`
-
-`conda create -n tpcnet python=3.9 nodejs=16`
-
-`python3 -m pip install tensorflow[and-cuda]==2.12 scikit-learn==1.2.2 numpy==1.23.5 click==8.0.4 matplotlib==3.7.1 tqdm==4.65.0 jupyter==1.0.0 seaborn==0.12.2`
-
-*Ensure versions match those listed above under [Packages](#Packages). If any version is incompatible with conda due to updates, install default versions (ex. `conda install numpy click tqdm ...`) and **update README** accordingly.*
-
-# Folders
-
-The repository currently contains three main folders: `data_processing`, `training`, and `evaluation and plotting`. To reproduce results, visit these folders in order.
-* `data_processing`: Contains data pipelines for different experimental data, including Mg22, O16, C16, and C16+O16. It also includes a python notebook for event-wise voxel data exploration.
-* `training`: Contains scripts for pretraining a PointNet-based model on jigsaw event data. It includes model architecture definitions and the training pipeline.
-* `evaluation and plotting`: Contains scripts for evaluating a pre-trained model.
-* `latent_layer_processing`: Contains scripts for extracting global features and plotting them. 
-
-# Files
-
-The `ATTPCLatent` folder currently containts two Python files:
-* `plotting.py`: Used for plotting purposes
-* `pointnet.py`: PointNet implementation
-
-# Workflow to Reproduce Results
-Start by collecting the relevant data from the data folder (which is above the DAVIDSON directory), and copying it (cp command) to the data_pipeline folder. 
-
-## Data Pipelines
-Each experiment has a data_pipeline folder that will generate numpy files with data that the model creation pipeline can understand. For example, there is a python script for preprocessing the raw data from the O16 experiment (originally an h5 file). Currently, this repo contains four data pipelines for O16, Mg22, C16, and O16+C16. See data pipeline README for more information.
-
-## Training on Dataset
-To train a pre-trained model after preprocessing the data, use `unscrambling_jigsaw.sh` to run the `pretrain_on_jigsaw_events.py` training pipeline. `{experiment}_model` folder will be created with weights after running the pipeline.
-
-## Evaluation of Models' Performance
-To evaluate a pre-trained model, use `evaluating_jigsaw.sh` to run the `evaluate_jigsaw_reconstruction.py` file. `{experiment}_plots` folder will be created with learning curve, histogram of reconstruction accuracy, and sample reconstructed events.
-
-## Extraction/Evaluation of Models' Latent Representation
-To extract a model's latent representation, use `extract_latent_layer.sh` to run the `global_features_extraction.py` file. The `global_features` folder will be generated, containing the arrays of extracted global features.
-
-To evaluate the model's latent representation, use `global_feature_exploration.ipynb` that allows users to apply t-SNE, UMAP, and k-means clusterings/embeddings.
-
-Also, linear probing and SVM classifier can be applied to simulated data by following the instructions in the `latent_layer_processing` folder.
-
-## Simulated Data Extraction
-To extract simulated data, use `run_data_extraction.sh` and adapt outlined parameters in the file. Also, random events of simulated data can be plotted using `run_plotting.sh`
+ 
+---
+ 
+## Analysis Methods
+ 
+### Unsupervised Visualization
+**UMAP** and **t-SNE** project the high-dimensional embedding space down to 2D so you can visually inspect whether the model has learned to group similar events together without using any labels. Well-separated clusters are a good sign that the encoder has learned meaningful structure.
+ 
+### Linear Probing
+A linear SVM trained on top of frozen embeddings. If a simple linear boundary can classify events accurately, it means the relevant physics information is cleanly and explicitly encoded in the latent space. This is the standard benchmark for representation quality.
+ 
+### SVM Classification
+A more general SVM evaluation with F1 score reporting across varying numbers of training samples. Useful for understanding how label-efficient your representations are.
+ 
+### K-Means Clustering
+Unsupervised clustering directly in embedding space, evaluated against ground truth labels to measure how naturally the model separates event categories without supervision.
+ 
+---
+ 
