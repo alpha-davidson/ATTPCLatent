@@ -96,15 +96,21 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
 
 
     
-    # Create results folder
-    results_folder = f"./{name}_linear_probe_learning_curve"
-    if not os.path.exists(results_folder):
-        os.makedirs(results_folder)
+    # 1. Define a global master results directory at the project root
+    master_results_dir = "./results"
+    
+    # 2. Build a unique sub-folder path for this specific run using the --name parameter
+    results_folder = os.path.join(master_results_dir, f"{name}_learning_curve")
+    
+    # 3. Create the folder tree automatically (exist_ok=True prevents crashes if re-run)
+    os.makedirs(results_folder, exist_ok=True)
+    
+    print(f"Target results directory established: {results_folder}")
     
     # Split data into train and test sets (fixed test set for consistent evaluation)
     X_train_full, X_test, y_train_full, y_test = train_test_split(
         global_features, combined_track_labels, 
-        test_size=test_size, seed=seed, 
+        test_size=test_size, random_state=seed, 
         stratify=combined_track_labels
     )
     

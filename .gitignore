@@ -151,3 +151,4 @@ slurm*.out
 
 *.npy
 
+results/
