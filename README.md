@@ -31,7 +31,31 @@ np.save('labels.npy', all_labels)
 ```
  
 ---
- 
+
+---
+
+## Environment Setup
+
+This suite operates entirely on flat numerical matrices rather than raw neural networks, keeping the execution lightweight and free of heavy framework or GPU/CUDA dependencies. 
+
+
+### Installation via Conda
+
+An `environment.yml` file is provided in the project root to automatically handle package dependencies and exact versions. To build and activate the environment, run the following commands from your terminal:
+
+```bash
+# 1. Create the environment from the blueprint file
+conda env create -f environment.yml
+
+# 2. Activate the suite workspace
+conda activate attpc-eval
+```
+    
+---
+
+---
+
+
 ## Analysis Methods
  
 ### Unsupervised Visualization
