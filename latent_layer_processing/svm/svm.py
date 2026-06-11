@@ -123,28 +123,27 @@ def load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels
 
 
     # === Linear SVM implementation using sklearn ===
-def svm_classify(samples=350, output_dir="svm_results"):
+def svm_classify(features, labels, samples, output_dir="svm_results"):
     os.makedirs(output_dir, exist_ok=True)
 
-    # load features and labels and apply train-test split (comment if you have train-test data)
-    # feature_data = np.load('../global_features/O16_experimental_features.npy')
-    # label_data = np.load('../O16_Experimental_Labels.npy')
-    # X_train, y_train, X_test, y_test, X = train_test_split(feature_data, label_data, samples)
+    X = np.load(features)
+    y = np.load(labels)
 
-    # load train-test data
-    feature_data = np.load('../global_features/O16_experimental_features.npy')
-    train_ids = np.load('./data_set/O16_train_ids.npy')
-    train_labels = np.load('./data_set/O16_train_labels.npy')
-    test_ids = np.load('./data_set/O16_test_ids.npy')
-    test_labels = np.load('./data_set/O16_test_labels.npy')
-    X_train, y_train, X_test, y_test, X = load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels)
-    
-    print(f"Input shape: {X.shape}")
-    print(f"Train shape: {X_train.shape}")
-    print(f"Test shape: {X_test.shape}")
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
 
-    # train SVM
-    model = svm.LinearSVC(max_iter=10000)
+    X_balanced, y_balanced = balance_classes(X_scaled, y, samples)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_balanced, 
+        y_balanced, 
+        test_size=0.2, 
+        stratify=y_balanced, 
+        random_state=42
+    )
+
+    print(f"Train Subspace: {X_train.shape} | Test Subspace: {X_test.shape}")
+
+    model = svm.LinearSVC(max_iter=10000, random_state=42)
     model.fit(X_train, y_train)
 
     # predict
@@ -155,11 +154,10 @@ def svm_classify(samples=350, output_dir="svm_results"):
     print(f"Test F1 Score: {f1:.4f}")
 
     # predict full dataset
-    final_labels = model.predict(X)
+    final_labels = model.predict(X_scaled)
 
-    label_map = {
-        0: "0-, 1-, 2-track", 1: "3-track", 2: "4-, 5-track"
-    }
+    unique_labels = np.unique(y)
+    label_map = {int(lbl): f"Class {int(lbl)}-track" for lbl in unique_labels}
     
     print("\nPredicted label distribution:")
     summary_lines = []
@@ -170,10 +168,10 @@ def svm_classify(samples=350, output_dir="svm_results"):
         summary_lines.append(line)
 
     # save results
-    np.save(os.path.join(output_dir, "O16_predicted_labels.npy"), final_labels)
+    np.save(os.path.join(output_dir, "predicted_labels.npy"), final_labels)
 
     # confusion matrix
-    class_names = list(label_map.values())
+    class_names = [label_map[l] for l in sorted(unique_labels)]
     plot_confusion_matrix(y_test, y_test_pred, class_names, output_path=os.path.join(output_dir, "confusion_matrix.png"))
     
     return f1
