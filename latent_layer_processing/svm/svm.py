@@ -75,51 +75,9 @@ def balance_classes(X, y, samples, random_state=42):
 
     return X_balanced, y_balanced
 
-    # Splits provided data into train and test data
-def train_test_split(feature_data, label_data, samples):
-    indices = label_data[:, 0].astype(int)
-    labels = label_data[:, 1].astype(int)
 
-    labels = np.where(np.isin(labels, [0, 1, 2]), 0, labels)
-    labels = np.where(np.isin(labels, [3]), 1, labels)
-    labels = np.where(np.isin(labels, [4, 5]), 2, labels)
-    
-    X = feature_data[indices]
-    y = labels
 
-    # normalize
-    scaler = StandardScaler()
-    X = scaler.fit_transform(X)
 
-    # shuffle and balance
-    X, y = shuffle(X, y, random_state=42)
-    X_balanced, y_balanced = balance_classes(X, y, samples)
-
-    # train/test split
-    X_train = X_balanced
-    y_train = y_balanced
-
-    mask = ~np.any(np.all(X[:, None] == X_train, axis=2), axis=1)
-    X_test = X[mask]
-    y_test = y[mask]
-
-    return X_train, y_train, X_test, y_test, X
-
-    # Loads train, test data using provided ids
-def load_train_test(feature_data, train_ids, train_labels, test_ids, test_labels):
-    train_ids = np.array(train_ids, dtype=int)
-    test_ids = np.array(test_ids, dtype=int)
-
-    # slice features by ids
-    X_train = feature_data[train_ids]
-    y_train = np.array(train_labels)
-
-    X_test = feature_data[test_ids]
-    y_test = np.array(test_labels)
-
-    X = np.concatenate([X_train, X_test], axis=0) 
-
-    return X_train, y_train, X_test, y_test, X
 
 
     # === Linear SVM implementation using sklearn ===
