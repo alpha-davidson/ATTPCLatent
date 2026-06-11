@@ -7,6 +7,7 @@ from sklearn.metrics import f1_score, accuracy_score, confusion_matrix
 from sklearn.utils import shuffle
 from sklearn import svm
 from sklearn.model_selection import train_test_split
+import click
 
 def plot_confusion_matrix(y_true, y_pred, class_names, output_path=None, normalize=False, cmap="Blues"):
     cm = confusion_matrix(y_true, y_pred)
@@ -79,8 +80,11 @@ def balance_classes(X, y, samples, random_state=42):
 
 
 
-
-    # === Linear SVM implementation using sklearn ===
+@click.command()
+@click.argument('features', type=click.Path(exists=True))
+@click.argument('labels', type=click.Path(exists=True))
+@click.option('--samples', type=click.INT, default=10, help='Number of samples per class for balancing')
+@click.option('--output-dir', default="svm_results", type=click.STRING, help='Output directory for plots and predictions')
 def svm_classify(features, labels, samples, output_dir="svm_results"):
     os.makedirs(output_dir, exist_ok=True)
 
@@ -119,8 +123,8 @@ def svm_classify(features, labels, samples, output_dir="svm_results"):
     
     print("\nPredicted label distribution:")
     summary_lines = []
-    unique_labels, counts = np.unique(final_labels, return_counts=True)
-    for label, count in zip(unique_labels, counts):
+    unique_preds, counts = np.unique(final_labels, return_counts=True)
+    for label, count in zip(unique_preds, counts):
         line = f"{label_map.get(label, f'{label}-track'):<10}: {count}"
         print(line)
         summary_lines.append(line)
