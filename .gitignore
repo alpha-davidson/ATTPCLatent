@@ -152,3 +152,4 @@ slurm*.out
 *.npy
 
 results/
+linear_probe_results/

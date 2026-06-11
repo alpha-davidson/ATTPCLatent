@@ -78,7 +78,6 @@ def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_name
 @click.option('--cv-folds', default=3, type=click.INT, help='Number of cross-validation folds for each size')
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
-
 def linear_probe_evaluation(name, test_size, seed, regularization, min_train_size, 
                             max_train_size, num_size_points, cv_folds, features_file, labels_file):
     """
@@ -90,6 +89,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
 
     global_features = np.load(features_file) #Expected shape: (N,1024)
     combined_track_labels = np.load(labels_file) #Expected shape: (N,)
+    unique_classes = np.unique(combined_track_labels)
 
     print(f"Features shape: {global_features.shape}")
     print(f"Labels shape: {combined_track_labels.shape}")
@@ -97,7 +97,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
 
     
     # 1. Define a global master results directory at the project root
-    master_results_dir = "./results"
+    master_results_dir = "./linear_probe_results"
     
     # 2. Build a unique sub-folder path for this specific run using the --name parameter
     results_folder = os.path.join(master_results_dir, f"{name}_learning_curve")
@@ -164,24 +164,14 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
                 X_train_subset = X_train_full_scaled
                 y_train_subset = y_train_full
             else:
-                # Stratified sampling to maintain class balance
-                indices = []
-                for class_label in np.unique(y_train_full):
-                    class_indices = np.where(y_train_full == class_label)[0]
-                    n_samples_per_class = train_size // num_classes
-                    if class_label == np.unique(y_train_full)[-1]:  # Last class gets remainder
-                        n_samples_per_class += train_size % num_classes
-                    
-                    selected_indices = np.random.choice(
-                        class_indices, 
-                        size=min(n_samples_per_class, len(class_indices)), 
-                        replace=False
-                    )
-                    indices.extend(selected_indices)
                 
-                np.random.shuffle(indices)
-                X_train_subset = X_train_full_scaled[indices]
-                y_train_subset = y_train_full[indices]
+                X_train_subset, _, y_train_subset, _ = train_test_split(
+                X_train_full_scaled, y_train_full,
+                train_size=train_size,
+                stratify=y_train_full,
+                random_state=seed + fold
+                )                   
+                
             
             # Train linear probe
             linear_probe = LogisticRegression(
@@ -256,7 +246,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     
     # Create visualizations
     create_learning_curve_visualizations(learning_curve_results, results_folder)
-    
+    create_performance_table(learning_curve_results, results_folder)
     # Train final model with full training data for additional analysis
     print("\nTraining final model with full training data...")
     final_linear_probe = LogisticRegression(
@@ -277,7 +267,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     print(f"Final model - Train Acc: {final_train_acc:.4f}, Test Acc: {final_test_acc:.4f}")
     
     # Create additional visualizations for final model
-    class_names = ['2-track', '3-track']
+    class_names = [f'{int(cls)}-track' for cls in unique_classes]
     create_final_model_visualizations(
         X_test_scaled, y_test, y_test_final_pred, y_test_final_prob,
         class_names, results_folder, final_linear_probe
