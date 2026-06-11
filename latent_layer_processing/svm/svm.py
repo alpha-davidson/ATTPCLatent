@@ -63,7 +63,8 @@ def balance_classes(X, y, samples, random_state=42):
     y_balanced = []
 
     unique_classes, class_counts = np.unique(y, return_counts=True)
-    min_count = samples
+    min_available = np.min(class_counts)
+    min_count = min(samples, min_available)
 
     for cls in unique_classes:
         idx = np.where(y == cls)[0]
