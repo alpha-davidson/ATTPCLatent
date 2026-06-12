@@ -187,3 +187,42 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
             plt.close()
 
     return features, cluster_labels, indices
+
+def pca_clustering(features, labels, dimension, save_dir):
+    master_dir = "./plots/pca" if save_dir is None else save_dir
+    sub_dir = os.path.join(master_dir, f"{dimension}d_plots")
+    os.makedirs(sub_dir, exist_ok=True)
+
+    pca = PCA(n_components=dimension)
+    reduced_features = pca.fit_transform(features)
+
+    k = len(np.unique(labels))
+    color_map = cm.get_cmap('tab10', k) if hasattr(cm, 'get_cmap') else plt.colormaps['tab10'].resampled(k)
+    colors = [color_map(i) for i in range(k)]
+    label_names = ["0,1,2 Tracks", "3 Tracks", "4,5 Tracks"] if k == 3 else [f"{i}-track" for i in range(k)]
+
+    if dimension == 2:
+        plt.figure(figsize=(7, 6))
+        for i in range(k):
+            plt.scatter(reduced_features[labels == i, 0],
+                        reduced_features[labels == i, 1],
+                        color=colors[i], label=label_names[i], s=5)
+        plt.title("PCA Projection")
+        plt.legend()
+        plt.savefig(os.path.join(sub_dir, "pca_2d.png"), dpi=200)
+        plt.close()
+
+    elif dimension == 3:
+        fig = plt.figure(figsize=(7, 6))
+        ax = fig.add_subplot(111, projection='3d')
+        for i in range(k):
+            ax.scatter(reduced_features[labels == i, 0],
+                       reduced_features[labels == i, 1],
+                       reduced_features[labels == i, 2],
+                       color=colors[i], label=label_names[i], s=5)
+        ax.set_title("PCA Projection")
+        ax.legend()
+        plt.savefig(os.path.join(sub_dir, "pca_3d.png"), dpi=200)
+        plt.close()
+
+    return features, labels
