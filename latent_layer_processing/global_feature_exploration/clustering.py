@@ -9,96 +9,102 @@ import umap
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 
-def t_SNE_clustering(features, dimension, ax, color, label, alpha, perplexity):
-    # initialize properties for t-SNE clustering
+def t_SNE_clustering(features, dimension, ax, labels, class_names, plt_colors, perplexity):
+    # Initialize configurations
     PERPLEXITY = perplexity
     CLUSTER_DIMENSIONALITY = dimension
 
-    # create a folder for t-SNE clustering
-    folder_path = f'../plots/t_sne'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    # create a folder for plots of particular dimensionality
-    folder_path = f'../plots/t_sne/{CLUSTER_DIMENSIONALITY}d_plots'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    # Standardize completely localized path targets
+    master_dir = "./plots/t-sne"
+    sub_dir = os.path.join(master_dir, f"{CLUSTER_DIMENSIONALITY}d_plots")
+    os.makedirs(sub_dir, exist_ok=True)
 
-    # apply t-SNE clustering
-    model = TSNE(n_components = CLUSTER_DIMENSIONALITY, perplexity = PERPLEXITY)
+    # 1. Apply t-SNE clustering over ALL features at once
+    model = TSNE(n_components=CLUSTER_DIMENSIONALITY, perplexity=PERPLEXITY, random_state=42)
     tsne_data = model.fit_transform(features)
     
-    # plot the clusters in 2D
-    if (dimension == 2):
-        # ax = fig.add_subplot(111)
-        
-        # extract x- and y-axis values
-        x = np.array(tsne_data[:, 0])
-        y = np.array(tsne_data[:, 1])
-    
-        # # visualize the data on a 2D scatter plot
-        ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/t-sne/2d_plots/plot_perplexity_{PERPLEXITY}.png')
+    # 2. Extract and color external class profiles on the shared axis canvas
+    if CLUSTER_DIMENSIONALITY == 2:
+        for class_id in range(len(class_names)):
+            mask = (labels == class_id)
+            if np.any(mask):
+                ax.scatter(
+                    tsne_data[mask, 0], 
+                    tsne_data[mask, 1], 
+                    color=plt_colors[class_id], 
+                    label=class_names[class_id], 
+                    s=15, 
+                    alpha=0.7
+                )
+        plt.savefig(os.path.join(sub_dir, f'plot_perplexity_{PERPLEXITY}.png'), dpi=200)
 
-    # plot the clusters in 3D
-    if (dimension == 3):
-        # extract x-, y-, and z-axis values
-        x = np.array(tsne_data[:, 0])
-        y = np.array(tsne_data[:, 1])
-        z = np.array(tsne_data[:, 2])
-    
-        # visualize the data on a 3D plot        
-        ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/t-sne/3d_plots/plot_perplexity_{PERPLEXITY}.png')
+    elif CLUSTER_DIMENSIONALITY == 3:
+        for class_id in range(len(class_names)):
+            mask = (labels == class_id)
+            if np.any(mask):
+                ax.scatter(
+                    tsne_data[mask, 0], 
+                    tsne_data[mask, 1], 
+                    tsne_data[mask, 2], 
+                    color=plt_colors[class_id], 
+                    label=class_names[class_id], 
+                    s=15, 
+                    alpha=0.7
+                )
+        plt.savefig(os.path.join(sub_dir, f'plot_perplexity_{PERPLEXITY}.png'), dpi=200)
+        
     return tsne_data 
 
-def UMAP_embedding(features, dimension, ax, color, label, alpha, neighbors):
-    # initialize properties for UMAP embedding
+def UMAP_embedding(features, dimension, ax, labels, class_names, plt_colors, neighbors):
+    # Initialize configurations
     NEIGHBORS = neighbors
     CLUSTER_DIMENSIONALITY = dimension
 
-    # create a folder for UMAP embedding
-    folder_path = f'../plots/umap'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    # create a folder for plots of particular dimensionality
-    folder_path = f'../plots/umap/{CLUSTER_DIMENSIONALITY}d_plots'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    # Standardize completely localized path targets
+    master_dir = "./plots/umap"
+    sub_dir = os.path.join(master_dir, f"{CLUSTER_DIMENSIONALITY}d_plots")
+    os.makedirs(sub_dir, exist_ok=True)
 
-    # apply UMAP embedding
-    model = umap.UMAP(n_components=CLUSTER_DIMENSIONALITY, n_neighbors=NEIGHBORS)
+    # 1. Apply UMAP embedding over ALL features at once
+    model = umap.UMAP(n_components=CLUSTER_DIMENSIONALITY, n_neighbors=NEIGHBORS, random_state=42)
     umap_data = model.fit_transform(features)
-    print(umap_data)
-    # plot the clusters in 2D
-    if (dimension == 2):
-        # extract x- and y-axis values
-        x = np.array(umap_data[:, 0])
-        y = np.array(umap_data[:, 1])
     
-        # # visualize the data on a 2D scatter plot
-        ax.scatter(x, y, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/umap/2d_plots/plot_neighbors_{NEIGHBORS}.png')
-    # plot the clusters in 3D
-    if (dimension == 3):
-        # extract x-, y-, and z-axis values
-        x = np.array(umap_data[:, 0])
-        y = np.array(umap_data[:, 1])
-        z = np.array(umap_data[:, 2])
-    
-        # visualize the data on a 3D plot        
-        ax.scatter(x, y, z, color=color, label=label, s=5, alpha=alpha)
-        plt.savefig(f'plots/umap/3d_plots/plot_neighbors_{NEIGHBORS}.png')
+    # 2. Extract and color external class profiles on the shared axis canvas
+    if CLUSTER_DIMENSIONALITY == 2:
+        for class_id in range(len(class_names)):
+            mask = (labels == class_id)
+            if np.any(mask):
+                ax.scatter(
+                    umap_data[mask, 0], 
+                    umap_data[mask, 1], 
+                    color=plt_colors[class_id], 
+                    label=class_names[class_id], 
+                    s=15, 
+                    alpha=0.7
+                )
+        plt.savefig(os.path.join(sub_dir, f'plot_neighbors_{NEIGHBORS}.png'), dpi=200)
+        
+    elif CLUSTER_DIMENSIONALITY == 3:
+        for class_id in range(len(class_names)):
+            mask = (labels == class_id)
+            if np.any(mask):
+                ax.scatter(
+                    umap_data[mask, 0], 
+                    umap_data[mask, 1], 
+                    umap_data[mask, 2], 
+                    color=plt_colors[class_id], 
+                    label=class_names[class_id], 
+                    s=15, 
+                    alpha=0.7
+                )
+        plt.savefig(os.path.join(sub_dir, f'plot_neighbors_{NEIGHBORS}.png'), dpi=200)
+        
     return umap_data
 
 def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_print=10):
-    # create a folder for k-means clustering
-    folder_path = f'../plots/k_means'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    # create a folder for plots of particular dimensionality
-    folder_path = f'../plots/k_means/{dimension}d_plots'
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    master_dir = "./plots/k_means" if save_dir is None else save_dir
+    sub_dir = os.path.join(master_dir, f"{dimension}d_plots")
+    os.makedirs(sub_dir, exist_ok=True)
 
     # k-means clustering on full feature space
     k = len(np.unique(labels))
@@ -106,7 +112,6 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
     cluster_labels = kmeans.fit_predict(features)
     centroids = kmeans.cluster_centers_
 
-    # print random indices for each cluster
     print("\nRandom sample indices from each cluster:")
     indices = []
     for cluster_id in range(k):
@@ -117,14 +122,13 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
         indices.append(random_indices)
         print(f"Cluster {cluster_id}: {random_indices.tolist()}")
 
-    # visualization for 2D or 3D
     if dimension in [2, 3]:
         pca = PCA(n_components=dimension)
         reduced_features = pca.fit_transform(features)
 
-        color_map = cm.get_cmap('tab20', k)
+        color_map = cm.get_cmap('tab10', k) if hasattr(cm, 'get_cmap') else plt.colormaps['tab10'].resampled(k)
         colors = [color_map(i) for i in range(k)]
-        label_names = [f"{i}-track" for i in range(k)]
+        label_names = ["0,1,2 Tracks", "3 Tracks", "4,5 Tracks"] if k == 3 else [f"{i}-track" for i in range(k)]
 
         if dimension == 2:
             plt.figure(figsize=(14, 6))
@@ -151,7 +155,7 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
             plt.legend()
 
             plt.tight_layout()
-            plt.savefig(os.path.join(folder_path, "kmeans_2d.png"))
+            plt.savefig(os.path.join(sub_dir, "kmeans_2d.png"), dpi=200)
             plt.close()
 
         elif dimension == 3:
@@ -179,7 +183,46 @@ def k_means_clustering(features, labels, dimension, save_dir, num_samples_to_pri
             ax2.legend()
 
             plt.tight_layout()
-            plt.savefig(os.path.join(folder_path, "kmeans_3d.png"))
+            plt.savefig(os.path.join(sub_dir, "kmeans_3d.png"), dpi=200)
             plt.close()
 
     return features, cluster_labels, indices
+
+def pca_clustering(features, labels, dimension, save_dir):
+    master_dir = "./plots/pca" if save_dir is None else save_dir
+    sub_dir = os.path.join(master_dir, f"{dimension}d_plots")
+    os.makedirs(sub_dir, exist_ok=True)
+
+    pca = PCA(n_components=dimension)
+    reduced_features = pca.fit_transform(features)
+
+    k = len(np.unique(labels))
+    color_map = cm.get_cmap('tab10', k) if hasattr(cm, 'get_cmap') else plt.colormaps['tab10'].resampled(k)
+    colors = [color_map(i) for i in range(k)]
+    label_names = ["0,1,2 Tracks", "3 Tracks", "4,5 Tracks"] if k == 3 else [f"{i}-track" for i in range(k)]
+
+    if dimension == 2:
+        plt.figure(figsize=(7, 6))
+        for i in range(k):
+            plt.scatter(reduced_features[labels == i, 0],
+                        reduced_features[labels == i, 1],
+                        color=colors[i], label=label_names[i], s=5)
+        plt.title("PCA Projection")
+        plt.legend()
+        plt.savefig(os.path.join(sub_dir, "pca_2d.png"), dpi=200)
+        plt.close()
+
+    elif dimension == 3:
+        fig = plt.figure(figsize=(7, 6))
+        ax = fig.add_subplot(111, projection='3d')
+        for i in range(k):
+            ax.scatter(reduced_features[labels == i, 0],
+                       reduced_features[labels == i, 1],
+                       reduced_features[labels == i, 2],
+                       color=colors[i], label=label_names[i], s=5)
+        ax.set_title("PCA Projection")
+        ax.legend()
+        plt.savefig(os.path.join(sub_dir, "pca_3d.png"), dpi=200)
+        plt.close()
+
+    return features, labels
