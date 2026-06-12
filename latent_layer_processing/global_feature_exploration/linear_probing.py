@@ -1,7 +1,5 @@
 import click
 import numpy as np
-import tensorflow as tf
-from tensorflow import keras
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -10,7 +8,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import os
 import json
-from ATTPCLatent.pointnet import create_pointnet_model
+
 
 def generate_log_train_sizes(min_size=50, max_size=16000, num_points=20):
     """Generate logarithmically spaced training set sizes."""
@@ -26,93 +24,93 @@ def generate_log_train_sizes(min_size=50, max_size=16000, num_points=20):
         sizes = np.append(sizes, [max_size])
     return np.sort(sizes)
 
+
+def create_learning_curve_visualizations(results, results_folder):
+        """
+        Generate and save the learning curve metrics plot.
+        """
+        plt.figure(figsize=(10, 6))
+        sizes = results['train_sizes']
+        
+        # Plot training and testing accuracies with standard deviation error bars
+        plt.errorbar(sizes, results['train_accuracies_mean'], yerr=results['train_accuracies_std'], 
+                    label='Train Accuracy', fmt='-o', capsize=5, color='#4CAF50')
+        plt.errorbar(sizes, results['test_accuracies_mean'], yerr=results['test_accuracies_std'], 
+                    label='Test Accuracy', fmt='-s', capsize=5, color='#2196F3')
+        
+        plt.xscale('log')
+        plt.xlabel('Training Set Size (Log Scale)', fontsize=11)
+        plt.ylabel('Accuracy', fontsize=11)
+        plt.title('Linear Probe Learning Curve', fontsize=14, fontweight='bold', pad=15)
+        plt.grid(True, which="both", ls="--", alpha=0.5)
+        plt.legend(fontsize=10)
+        
+        plt.savefig(f'{results_folder}/learning_curve.png', dpi=300, bbox_inches='tight')
+        plt.close()
+
+
+def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_names, results_folder, model):
+    """
+    Generate and save a confusion matrix for the final trained model.
+    """
+    cm = confusion_matrix(y_test, y_pred)
+    plt.figure(figsize=(8, 6))
+    
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=class_names, yticklabels=class_names)
+    
+    plt.ylabel('Actual Class', fontsize=11)
+    plt.xlabel('Predicted Class', fontsize=11)
+    plt.title('Final Model Confusion Matrix', fontsize=14, fontweight='bold', pad=15)
+    
+    plt.savefig(f'{results_folder}/final_confusion_matrix.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+
 @click.command()
-@click.option('--beam', default='O16', type=click.STRING, help='The beam to train on (e.g. O16, Mg22, C16)')
-@click.option('--num-points', default=512, type=click.INT, help='Number of points per event')
-@click.option('--num-classes', default=2, type=click.INT, help='Number of classes to predict')
+@click.option('--name', default='O16', type=click.STRING, help='The name/profile identifier for the run (e.g. O16, Mg22, C16)')
 @click.option('--test-size', default=0.2, type=click.FLOAT, help='Fraction of data to use for testing')
-@click.option('--random-state', default=42, type=click.INT, help='Random state for reproducibility')
+@click.option('--seed', default=42, type=click.INT, help='Random seed for reproducibility')
 @click.option('--regularization', default=1.0, type=click.FLOAT, help='Regularization strength for logistic regression')
 @click.option('--min-train-size', default=50, type=click.INT, help='Minimum training set size')
 @click.option('--max-train-size', default=16000, type=click.INT, help='Maximum training set size')
 @click.option('--num-size-points', default=20, type=click.INT, help='Number of training sizes to test')
 @click.option('--cv-folds', default=3, type=click.INT, help='Number of cross-validation folds for each size')
-@click.argument('model-folder')
-@click.argument('data-file-stem-2track')
-@click.argument('data-file-stem-3track')
+@click.argument('features-file', type=click.Path(exists=True))
+@click.argument('labels-file', type=click.Path(exists=True))
+def linear_probe_evaluation(name, test_size, seed, regularization, min_train_size, 
+                            max_train_size, num_size_points, cv_folds, features_file, labels_file):
+    """
+    Perform linear probe evaluation with learning curve analysis using pre-extracted
+    flat NumPy feature embeddings and corresponding target labels.
+    """
 
-def linear_probe_evaluation(beam, num_points, num_classes, test_size, random_state, 
-                          regularization, min_train_size, max_train_size, num_size_points,
-                          cv_folds, model_folder, data_file_stem_2track, data_file_stem_3track):
-    """
-    Perform linear probe evaluation with learning curve analysis.
+    print("Loading features and labels...")
+
+    global_features = np.load(features_file) #Expected shape: (N,1024)
+    combined_track_labels = np.load(labels_file) #Expected shape: (N,)
+    unique_classes = np.unique(combined_track_labels)
+
+    print(f"Features shape: {global_features.shape}")
+    print(f"Labels shape: {combined_track_labels.shape}")
+
+
     
-    This function:
-    1. Loads the trained PointNet model
-    2. Extracts global features from the latent space
-    3. Tests linear classifiers with logarithmically growing training set sizes
-    4. Evaluates performance at each training size
-    5. Creates learning curve visualizations
-    """
+    # 1. Define a global master results directory at the project root
+    master_results_dir = "./linear_probe_results"
     
-    print("Loading PointNet model...")
-    # load model
-    model = tf.keras.models.load_model(model_folder)
-    print("Model loaded successfully")
+    # 2. Build a unique sub-folder path for this specific run using the --name parameter
+    results_folder = os.path.join(master_results_dir, f"{name}_learning_curve")
     
-    # Define batch size
-    BATCH_SIZE = 32
+    # 3. Create the folder tree automatically (exist_ok=True prevents crashes if re-run)
+    os.makedirs(results_folder, exist_ok=True)
     
-    print("Loading datasets...")
-    # Load both datasets
-    test_ds_2track = np.load(f'{data_file_stem_2track}.npy')
-    test_ds_3track = np.load(f'{data_file_stem_3track}.npy')
-    
-    print(f"2-track dataset shape: {test_ds_2track.shape}")
-    print(f"3-track dataset shape: {test_ds_3track.shape}")
-    
-    # Create track type labels (0 for 2-track, 1 for 3-track)
-    track_labels_2 = np.zeros(len(test_ds_2track), dtype=int)
-    track_labels_3 = np.ones(len(test_ds_3track), dtype=int)
-    
-    # Combine datasets (use first 4 features as in your original code)
-    combined_features = np.concatenate([test_ds_2track[:, :, :4], test_ds_3track[:, :, :4]], axis=0)
-    combined_track_labels = np.concatenate([track_labels_2, track_labels_3])
-    
-    print(f"Combined dataset shape: {combined_features.shape}")
-    print(f"Combined labels shape: {combined_track_labels.shape}")
-    
-    # Create TensorFlow dataset
-    dataset = tf.data.Dataset.from_tensor_slices(combined_features).batch(BATCH_SIZE)
-    
-    print("Extracting global features from PointNet latent space...")
-    # Extract global features from the latent space
-    try:
-        global_feature_extractor = keras.Model(inputs=model.input, outputs=model.get_layer("latent_space").output)
-    except ValueError:
-        # If "latent_space" layer doesn't exist, try to find a suitable layer
-        print("'latent_space' layer not found. Available layers:")
-        for i, layer in enumerate(model.layers):
-            print(f"  {i}: {layer.name} - {type(layer).__name__}")
-        
-        # Try to use the layer before the final classification layer
-        global_feature_extractor = keras.Model(inputs=model.input, 
-                                             outputs=model.layers[-3].output)
-        print(f"Using layer '{model.layers[-3].name}' for feature extraction")
-    
-    # Extract features
-    global_features = global_feature_extractor.predict(dataset, verbose=1)
-    print(f"Extracted global features shape: {global_features.shape}")
-    
-    # Create results folder
-    results_folder = f"./{beam}_linear_probe_learning_curve"
-    if not os.path.exists(results_folder):
-        os.makedirs(results_folder)
+    print(f"Target results directory established: {results_folder}")
     
     # Split data into train and test sets (fixed test set for consistent evaluation)
     X_train_full, X_test, y_train_full, y_test = train_test_split(
         global_features, combined_track_labels, 
-        test_size=test_size, random_state=random_state, 
+        test_size=test_size, random_state=seed, 
         stratify=combined_track_labels
     )
     
@@ -148,6 +146,8 @@ def linear_probe_evaluation(beam, num_points, num_classes, test_size, random_sta
     
     print(f"\nStarting learning curve analysis with {len(train_sizes)} training sizes...")
     print("=" * 60)
+
+    num_classes = len(np.unique(y_train_full))
     
     # For each training size
     for i, train_size in enumerate(train_sizes):
@@ -164,30 +164,20 @@ def linear_probe_evaluation(beam, num_points, num_classes, test_size, random_sta
                 X_train_subset = X_train_full_scaled
                 y_train_subset = y_train_full
             else:
-                # Stratified sampling to maintain class balance
-                indices = []
-                for class_label in np.unique(y_train_full):
-                    class_indices = np.where(y_train_full == class_label)[0]
-                    n_samples_per_class = train_size // num_classes
-                    if class_label == np.unique(y_train_full)[-1]:  # Last class gets remainder
-                        n_samples_per_class += train_size % num_classes
-                    
-                    selected_indices = np.random.choice(
-                        class_indices, 
-                        size=min(n_samples_per_class, len(class_indices)), 
-                        replace=False
-                    )
-                    indices.extend(selected_indices)
                 
-                np.random.shuffle(indices)
-                X_train_subset = X_train_full_scaled[indices]
-                y_train_subset = y_train_full[indices]
+                X_train_subset, _, y_train_subset, _ = train_test_split(
+                X_train_full_scaled, y_train_full,
+                train_size=train_size,
+                stratify=y_train_full,
+                random_state=seed + fold
+                )                   
+                
             
             # Train linear probe
             linear_probe = LogisticRegression(
                 C=regularization, 
-                random_state=random_state + fold,
-                max_iter=1000
+                random_state=seed + fold,
+                max_iter=5000
             )
             linear_probe.fit(X_train_subset, y_train_subset)
             
@@ -233,17 +223,16 @@ def linear_probe_evaluation(beam, num_points, num_classes, test_size, random_sta
     
     # Save detailed results
     full_results = {
-        'model_folder': model_folder,
         'dataset_info': {
-            '2track_file': data_file_stem_2track,
-            '3track_file': data_file_stem_3track,
-            'total_samples': len(combined_features),
-            'feature_dim': global_features.shape[1]
+            'features_source': features_file,
+            'labels_source': labels_file,
+            'total_samples': len(global_features),
+            'feature_dim': global_features.shape[1],
         },
         'experiment_config': {
             'test_size': test_size,
             'regularization': regularization,
-            'random_state': random_state,
+            'seed': seed,
             'cv_folds': cv_folds,
             'min_train_size': min_train_size,
             'max_train_size': max_train_size,
@@ -257,12 +246,12 @@ def linear_probe_evaluation(beam, num_points, num_classes, test_size, random_sta
     
     # Create visualizations
     create_learning_curve_visualizations(learning_curve_results, results_folder)
-    
+    create_performance_table(learning_curve_results, results_folder)
     # Train final model with full training data for additional analysis
     print("\nTraining final model with full training data...")
     final_linear_probe = LogisticRegression(
         C=regularization, 
-        random_state=random_state,
+        random_state=seed,
         max_iter=1000
     )
     final_linear_probe.fit(X_train_full_scaled, y_train_full)
@@ -278,7 +267,7 @@ def linear_probe_evaluation(beam, num_points, num_classes, test_size, random_sta
     print(f"Final model - Train Acc: {final_train_acc:.4f}, Test Acc: {final_test_acc:.4f}")
     
     # Create additional visualizations for final model
-    class_names = ['2-track', '3-track']
+    class_names = [f'{int(cls)}-track' for cls in unique_classes]
     create_final_model_visualizations(
         X_test_scaled, y_test, y_test_final_pred, y_test_final_prob,
         class_names, results_folder, final_linear_probe
@@ -338,6 +327,8 @@ def create_performance_table(results, results_folder):
     plt.title('Detailed Learning Curve Results', fontsize=16, fontweight='bold', pad=20)
     plt.savefig(f'{results_folder}/performance_table.png', dpi=300, bbox_inches='tight')
     plt.close()
+
+    
 
 if __name__ == '__main__':
     linear_probe_evaluation()
