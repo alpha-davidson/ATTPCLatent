@@ -27,7 +27,9 @@ bash linear_probing.sh
 
 
 ## 3. SVM Classification & Sample Scaling
-This module evaluates how effectively an architecture learns representations by tracking model performance against sample constraints. svm.py fits a Support Vector Machine to the data, which can be dynamically profiled using plot.py to map downstream F1-scores relative to the number of available training samples.
+Simple probes of the latent embeddings from a pretrained model. An SVM is trained on the frozen embeddings across increasing training sizes to test whether similar physics events are grouped together in the learned space.
+
+svm.py fits a Support Vector Machine to the data, which can be dynamically profiled using plot.py to map downstream F1-scores relative to the number of available training samples.
 
 ### How to Run:
 Modify `plot.sh` to specify your target input files and the desired sample size ranges. Run the script to generate the curves:
