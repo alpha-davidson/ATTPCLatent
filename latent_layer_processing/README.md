@@ -1,15 +1,11 @@
-# Latent Layer Processing & Analytics
-
-This directory contains the core analytical engine of the evaluation suite. It handles downstream data science tasks—including supervised probing, unsupervised clustering, and sample scalability analysis—operating entirely on flat, pre-extracted feature matrices.
-
----
+# Latent Layer Analysis
 
 ## 1. Global Feature Exploration & Clustering
 
 `global_feature_exploration.ipynb` is the interactive workspace used to explore the geometric distribution of the latent space. It interfaces with `clustering.py`, which implements **t-SNE**, **UMAP**, and **k-means** clustering, generating projections in both 2D and 3D spaces.
 
 ### How to Use:
-1. Ensure your model's extracted representation matrix is dropped into the repository (e.g., `dropped_features/your_model_features.npy`).
+1. Ensure your model's extracted representation matrix is dropped into the repository (e.g., `data/your_model_features.npy`).
 2. Open `global_feature_exploration.ipynb` using your `attpc-eval` kernel.
 3. Update the data loading paths to point to your target features and the aligned `labels/master_labels.npy`.
 4. Run the evaluation cells to compute embeddings and automatically save results to the generated `plots/` folder.
@@ -31,7 +27,7 @@ bash linear_probing.sh
 
 
 ## 3. SVM Classification & Sample Scaling
-This module evaluates how efficiently an architecture learns representations by tracking model performance against sample constraints. svm.py fits a Support Vector Machine to the data, which can be dynamically profiled using plot.py to map downstream F1-scores relative to the number of available training samples.
+This module evaluates how effectively an architecture learns representations by tracking model performance against sample constraints. svm.py fits a Support Vector Machine to the data, which can be dynamically profiled using plot.py to map downstream F1-scores relative to the number of available training samples.
 
 ### How to Run:
 Modify `plot.sh` to specify your target input files and the desired sample size ranges. Run the script to generate the curves:
