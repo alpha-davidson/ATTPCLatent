@@ -6,10 +6,10 @@
 
 source activate attpc-latent
 # Adapt the models sub-folder as needed to the correct file name. 
+# IF YOU WOULD LIKE TO RUN ON A SPECIFIC SEED; ADD --seed <SEED_VALUE> TO THE ARGUMENTS BELOW. AFTER TEST-SIZE and BEFORE REGULARIZATION.
 python linear_probing.py \
     --name testing \
     --test-size 0.2 \
-    --seed 42 \
     --regularization 1.0 \
     --min-train-size 50 \
     --max-train-size 16000 \

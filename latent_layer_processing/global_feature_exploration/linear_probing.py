@@ -132,7 +132,7 @@ def create_performance_table(results, results_folder):
 @click.command()
 @click.option('--name', default='O16', type=click.STRING, help='The name/profile identifier for the run (e.g. O16, Mg22, C16)')
 @click.option('--test-size', default=0.2, type=click.FLOAT, help='Fraction of data to use for testing')
-@click.option('--seed', default=42, type=click.INT, help='Random seed for reproducibility')
+@click.option('--seed', default=None, type=click.INT, help='Random seed for reproducibility')
 @click.option('--regularization', default=1.0, type=click.FLOAT, help='Regularization strength for logistic regression')
 @click.option('--min-train-size', default=50, type=click.INT, help='Minimum training set size')
 @click.option('--max-train-size', default=16000, type=click.INT, help='Maximum training set size')
@@ -156,7 +156,9 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     print(f"Features shape: {global_features.shape}")
     print(f"Labels shape: {combined_track_labels.shape}")
 
-
+    # Ensure we have a valid integer base seed for fold-math, even if seed=None
+    base_seed = seed if seed is not None else np.random.randint(0, 100000)
+    print(f"Using random seed baseline: {base_seed}")
     
     # 1. Define a global master results directory at the project root
     master_results_dir = "./linear_probe_results"
@@ -172,7 +174,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     # Split data into train and test sets (fixed test set for consistent evaluation)
     X_train_full, X_test, y_train_full, y_test = train_test_split(
         global_features, combined_track_labels, 
-        test_size=test_size, random_state=seed, 
+        test_size=test_size, random_state=base_seed, 
         stratify=combined_track_labels
     )
     
@@ -220,6 +222,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
         # Perform multiple runs with different random subsets for robustness
         for fold in range(cv_folds):
             # Randomly sample training data of the specified size
+            current_seed = base_seed + fold
             if train_size >= len(X_train_full_scaled):
                 # Use all available training data
                 X_train_subset = X_train_full_scaled
@@ -230,14 +233,14 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
                 X_train_full_scaled, y_train_full,
                 train_size=train_size,
                 stratify=y_train_full,
-                random_state=seed + fold
+                random_state=current_seed
                 )                   
                 
             
             # Train linear probe
             linear_probe = LogisticRegression(
                 C=regularization, 
-                random_state=seed + fold,
+                random_state=current_seed,
                 max_iter=5000
             )
             linear_probe.fit(X_train_subset, y_train_subset)
@@ -312,7 +315,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     print("\nTraining final model with full training data...")
     final_linear_probe = LogisticRegression(
         C=regularization, 
-        random_state=seed,
+        random_state=base_seed,
         max_iter=5000
     )
     final_linear_probe.fit(X_train_full_scaled, y_train_full)
