@@ -86,23 +86,28 @@ def balance_classes(X, y, samples, random_state=42):
 @click.argument('labels', type=click.Path(exists=True))
 @click.option('--samples', type=click.INT, default=10, help='Number of samples per class for balancing')
 @click.option('--output-dir', default="svm_results", type=click.STRING, help='Output directory for plots and predictions')
-def svm_classify(features, labels, samples, output_dir="svm_results"):
+def svm_classify(features, labels, samples, output_dir):
     os.makedirs(output_dir, exist_ok=True)
 
     X = np.load(features)
     y = np.load(labels)
 
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
+    
 
-    X_balanced, y_balanced = balance_classes(X_scaled, y, samples)
-    X_train, X_test, y_train, y_test = train_test_split(
+    X_balanced, y_balanced = balance_classes(X, y, samples)
+    X_train_raw, X_test_raw, y_train, y_test = train_test_split(
         X_balanced, 
         y_balanced, 
         test_size=0.2, 
         stratify=y_balanced, 
         random_state=42
     )
+
+    scaler = StandardScaler()
+    X_train = scaler.fit_transform(X_train_raw)
+    X_test = scaler.transform(X_test_raw)
+    X_all_scaled = scaler.transform(X)
+
 
     print(f"Train Subspace: {X_train.shape} | Test Subspace: {X_test.shape}")
 
@@ -117,7 +122,7 @@ def svm_classify(features, labels, samples, output_dir="svm_results"):
     print(f"Test F1 Score: {f1:.4f}")
 
     # predict full dataset
-    final_labels = model.predict(X_scaled)
+    final_labels = model.predict(X_all_scaled)
 
     unique_labels = np.unique(y)
     label_map = {int(lbl): f"Class {int(lbl)}-track" for lbl in unique_labels}
