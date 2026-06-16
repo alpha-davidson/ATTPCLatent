@@ -1,5 +1,6 @@
 import click
 import numpy as np
+import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
@@ -64,6 +65,23 @@ def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_name
     plt.title('Final Model Confusion Matrix', fontsize=14, fontweight='bold', pad=15)
     
     plt.savefig(f'{results_folder}/final_confusion_matrix.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
+    report_dict = classification_report(y_test, y_pred, target_names=class_names, output_dict=True)
+    df = pd.DataFrame(report_dict).transpose().round(4)
+
+    # Save as CSV
+    df.to_csv(f'{results_folder}/classification_report.csv')
+
+    # Save as PNG
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.axis('off')
+    table = ax.table(cellText=df.values, rowLabels=df.index, colLabels=df.columns, cellLoc='center', loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.5)
+    plt.title('Classification Report', fontsize=14, fontweight='bold', pad=15)
+    plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 def create_performance_table(results, results_folder):
@@ -317,6 +335,9 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     )
     
     print(f"\nAll results saved to: {results_folder}")
+
+    print("\nClassification Report:")
+    print(classification_report(y_test, y_test_final_pred, target_names=class_names))
     
     return {
         'learning_curve_results': learning_curve_results,

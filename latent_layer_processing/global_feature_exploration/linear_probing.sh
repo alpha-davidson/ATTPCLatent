@@ -7,7 +7,7 @@
 source activate attpc-latent
 # Adapt the models sub-folder as needed to the correct file name. 
 python linear_probing.py \
-    --name O16 \
+    --name testing \
     --test-size 0.2 \
     --seed 42 \
     --regularization 1.0 \
