@@ -329,9 +329,38 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     final_test_acc = accuracy_score(y_test, y_test_final_pred)
     
     print(f"Final model - Train Acc: {final_train_acc:.4f}, Test Acc: {final_test_acc:.4f}")
-    
-    # Create additional visualizations for final model
+
     class_names = [f'{int(cls)}-track' for cls in unique_classes]
+
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.metrics import classification_report as knn_report
+
+    print("\nRunning k-NN probe evaluation...")
+    knn_probe = KNeighborsClassifier(n_neighbors=5)
+    knn_probe.fit(X_train_full_scaled, y_train_full)
+
+    y_knn_pred = knn_probe.predict(X_test_scaled)
+    knn_acc = accuracy_score(y_test, y_knn_pred)
+
+    print(f"k-NN Probe - Test Acc: {knn_acc:.4f}")
+    print("\nk-NN Classification Report:")
+    print(knn_report(y_test, y_knn_pred, target_names=class_names))
+
+    # Save k-NN report
+    knn_report_dict = classification_report(y_test, y_knn_pred, target_names=class_names, output_dict=True)
+    knn_df = pd.DataFrame(knn_report_dict).transpose().round(4)
+    knn_df.to_csv(f'{results_folder}/knn_classification_report.csv')
+
+    # Compare linear probe vs k-NN
+    print("\n" + "=" * 40)
+    print("Probe Comparison Summary")
+    print("=" * 40)
+    print(f"Linear Probe Test Acc: {final_test_acc:.4f}")
+    print(f"k-NN Probe Test Acc:   {knn_acc:.4f}")
+    print(f"Difference:            {abs(final_test_acc - knn_acc):.4f}")
+
+    # Create additional visualizations for final model
+    
     create_final_model_visualizations(
         X_test_scaled, y_test, y_test_final_pred, y_test_final_prob,
         class_names, results_folder, final_linear_probe
@@ -339,7 +368,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     
     print(f"\nAll results saved to: {results_folder}")
 
-    print("\nClassification Report:")
+    print("\nLinear Probing Classification Report:")
     print(classification_report(y_test, y_test_final_pred, target_names=class_names))
     
     return {
