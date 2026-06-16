@@ -66,7 +66,51 @@ def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_name
     plt.savefig(f'{results_folder}/final_confusion_matrix.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-
+def create_performance_table(results, results_folder):
+    """Create a detailed performance table."""
+    
+    fig, ax = plt.subplots(figsize=(14, 8))
+    ax.axis('tight')
+    ax.axis('off')
+    
+    # Prepare table data
+    headers = ['Training Size', 'Train Acc (Mean)', 'Train Acc (Std)', 
+               'Test Acc (Mean)', 'Test Acc (Std)', 'Overfitting Gap']
+    
+    table_data = []
+    for i, size in enumerate(results['train_sizes']):
+        gap = results['train_accuracies_mean'][i] - results['test_accuracies_mean'][i]
+        row = [
+            f"{size:,}",
+            f"{results['train_accuracies_mean'][i]:.4f}",
+            f"{results['train_accuracies_std'][i]:.4f}",
+            f"{results['test_accuracies_mean'][i]:.4f}",
+            f"{results['test_accuracies_std'][i]:.4f}",
+            f"{gap:.4f}"
+        ]
+        table_data.append(row)
+    
+    # Create table
+    table = ax.table(cellText=table_data, colLabels=headers, 
+                     cellLoc='center', loc='center')
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    table.scale(1.2, 1.5)
+    
+    # Style the table
+    for i in range(len(headers)):
+        table[(0, i)].set_facecolor('#4CAF50')
+        table[(0, i)].set_text_props(weight='bold', color='white')
+    
+    for i in range(1, len(table_data) + 1):
+        for j in range(len(headers)):
+            if i % 2 == 0:
+                table[(i, j)].set_facecolor('#f0f0f0')
+    
+    plt.title('Detailed Learning Curve Results', fontsize=16, fontweight='bold', pad=20)
+    plt.savefig(f'{results_folder}/performance_table.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    
 @click.command()
 @click.option('--name', default='O16', type=click.STRING, help='The name/profile identifier for the run (e.g. O16, Mg22, C16)')
 @click.option('--test-size', default=0.2, type=click.FLOAT, help='Fraction of data to use for testing')
@@ -283,50 +327,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
         'final_test_accuracy': final_test_acc
     }
 
-def create_performance_table(results, results_folder):
-    """Create a detailed performance table."""
-    
-    fig, ax = plt.subplots(figsize=(14, 8))
-    ax.axis('tight')
-    ax.axis('off')
-    
-    # Prepare table data
-    headers = ['Training Size', 'Train Acc (Mean)', 'Train Acc (Std)', 
-               'Test Acc (Mean)', 'Test Acc (Std)', 'Overfitting Gap']
-    
-    table_data = []
-    for i, size in enumerate(results['train_sizes']):
-        gap = results['train_accuracies_mean'][i] - results['test_accuracies_mean'][i]
-        row = [
-            f"{size:,}",
-            f"{results['train_accuracies_mean'][i]:.4f}",
-            f"{results['train_accuracies_std'][i]:.4f}",
-            f"{results['test_accuracies_mean'][i]:.4f}",
-            f"{results['test_accuracies_std'][i]:.4f}",
-            f"{gap:.4f}"
-        ]
-        table_data.append(row)
-    
-    # Create table
-    table = ax.table(cellText=table_data, colLabels=headers, 
-                     cellLoc='center', loc='center')
-    table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1.2, 1.5)
-    
-    # Style the table
-    for i in range(len(headers)):
-        table[(0, i)].set_facecolor('#4CAF50')
-        table[(0, i)].set_text_props(weight='bold', color='white')
-    
-    for i in range(1, len(table_data) + 1):
-        for j in range(len(headers)):
-            if i % 2 == 0:
-                table[(i, j)].set_facecolor('#f0f0f0')
-    
-    plt.title('Detailed Learning Curve Results', fontsize=16, fontweight='bold', pad=20)
-    plt.savefig(f'{results_folder}/performance_table.png', dpi=300, bbox_inches='tight')
-    plt.close()
+
 
     
 
