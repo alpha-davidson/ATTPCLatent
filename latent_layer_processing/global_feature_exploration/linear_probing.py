@@ -191,7 +191,6 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     print(f"\nStarting learning curve analysis with {len(train_sizes)} training sizes...")
     print("=" * 60)
 
-    num_classes = len(np.unique(y_train_full))
     
     # For each training size
     for i, train_size in enumerate(train_sizes):
@@ -296,7 +295,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     final_linear_probe = LogisticRegression(
         C=regularization, 
         random_state=seed,
-        max_iter=1000
+        max_iter=5000
     )
     final_linear_probe.fit(X_train_full_scaled, y_train_full)
     
