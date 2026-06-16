@@ -25,6 +25,7 @@ np.save('labels.npy', all_labels)
 
 These .npy files **must** be saved within the data/ directory.
 
+
 ---
 
 ## Environment Installation via Conda
@@ -38,6 +39,16 @@ conda env create -f environment.yml
 # 2. Activate the suite workspace
 conda activate attpc-eval
 ```
+
+## To use Linear Probing:
+
+1. Place files within the data/ directory
+
+2. Change the @click parameters within linear_probing.sh to match the file path for your .npy files
+
+3. Change any other @click parameters as needed
+
+4. Run linear_probing.sh using sbatch in the terminal
 
 ## Analysis Methods
 
