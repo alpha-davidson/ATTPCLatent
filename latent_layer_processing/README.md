@@ -1,23 +1,43 @@
-This folder contains the implementation of global feature extraction and exploration using different kinds of clustering/embedding, such as t-SNE, UMAP, and k-means. This folder also contains the implementation of linear probing and SVM classifier. 
+# Latent Layer Analysis
 
-# Global Feature Extraction
+## 1. Global Feature Exploration & Clustering
 
-Before running the script, modify the `extract_latent_layer.sh` shell script to specify the beam, num-classes, etc. Submit the shell script to extract latent space features using the `global_feature_extraction.py` Python script. The `global_features` folder will be generated, containing the arrays of extracted global features.
+`global_feature_exploration.ipynb` is the interactive workspace used to explore the geometric distribution of the latent space. It interfaces with `clustering.py`, which implements **t-SNE**, **UMAP**, and **k-means** clustering, generating projections in both 2D and 3D spaces.
 
-# Global Feature Exploration
+### How to Use:
+1. Ensure your model's extracted representation matrix is dropped into the repository (e.g., `data/your_model_features.npy`).
+2. Open `global_feature_exploration.ipynb` using your `attpc-eval` kernel.
+3. Update the data loading paths to point to your target features and the aligned `labels/master_labels.npy`.
+4. Run the evaluation cells to compute embeddings and automatically save results to the generated `plots/` folder.
 
-`global_feature_exploration.ipynb` is the main file used for global feature exploration. Adapt the parameters outlined in the file to get the desired results.
+---
 
-`clustering.py` is the main execution script called in `global_feature_exploration.ipynb`.
+## 2. Linear Probing
 
-- ```clustering.py``` implements t-SNE, UMAP, and k-means clusterings, generating plots in 2- and 3-dimensional spaces.
+`linear_probing.py` applies a fast, deterministic linear classifier (Logistic Regression / Linear SVM) over the frozen latent spaces to calculate overall classification accuracy. This evaluates how explicitly the encoder separates fundamental physics event topologies (e.g., 2-track vs. 3-track).
 
-The `plots` folder will be generated, containing the specified clustering results, such as t-SNE, UMAP, or k-means.
+### How to Run:
+Modify the `linear_probing.sh` shell script to specify the path to your target `.npy` feature matrix, the master labels, and the model identification name. Execute the shell script to run the evaluation loop:
 
-# Linear Probing
+```bash
+bash linear_probing.sh
+```
 
-Before running the script, modify the `linear_probing.sh` shell script to specify the beam, num-classes, model, etc. Submit the shell script to apply linear probing using the `linear_probing.py` Python script. 
+---
 
-# SVM Classification
 
-Modify the `svm.py` Python script to specify the name of the global feature file and its labels as well. Additionally, `svm.py` can be launched through `plot.py`, which generates a plot with f1 scores in relation to the number of samples. Specify the number of samples in `plot.py` and run it by using `plot.sh`.
+## 3. SVM Classification & Sample Scaling
+Simple probes of the latent embeddings from a pretrained model. An SVM is trained on the frozen embeddings across increasing training sizes to test whether similar physics events are grouped together in the learned space.
+
+svm.py fits a Support Vector Machine to the data, which can be dynamically profiled using plot.py to map downstream F1-scores relative to the number of available training samples.
+
+### How to Run:
+Modify `plot.sh` to specify your target input files and the desired sample size ranges. Run the script to generate the curves:
+
+```bash
+bash plot.sh
+```
+
+---
+
+
