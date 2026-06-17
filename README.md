@@ -11,7 +11,7 @@ Every analysis script in this repo expects two aligned `.npy` files:
 
 | File             | Shape    | Description                                      |
 | ---------------- | -------- | ------------------------------------------------ |
-| `embeddings.npy` | `(N, D)` | Global embedding vectors, one per event          |
+| `embeddings.npy` | `(N, D)` | One event per row                                |
 | `labels.npy`     | `(N,)`   | Integer class labels corresponding to each event |
 
 Where `N` is the number of events and `D` is the embedding dimension (typically 1024). Row order must match between the two files.
