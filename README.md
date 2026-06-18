@@ -79,7 +79,7 @@ sign that the encoder has learned meaningful structure.
 
 ### Linear Probing
 
-A linear SVM trained on top of frozen embeddings. If a simple linear boundary
+A logistic regression model or an SVM trained on top of frozen embeddings. If a simple linear boundary
 can classify events accurately, it means the relevant physics information is
 cleanly and explicitly encoded in the latent space. This is the standard
 benchmark for representation quality.
