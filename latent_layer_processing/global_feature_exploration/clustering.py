@@ -114,12 +114,6 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     if plot_name is None:
         plot_name = f'k_means_{dimension}d'
 
-    if plot_name is None:
-        plot_name = f'k_means_{dimension}d'
-
-    if plot_name is None:
-        plot_name = f'k_means_{dimension}d'
-
     # k-means clustering on full feature space
     labels, unique_labels, class_names = _get_class_names(labels, class_names)
     k = len(unique_labels)
