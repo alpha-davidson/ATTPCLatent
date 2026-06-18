@@ -1,43 +1,83 @@
 # Latent Layer Analysis
 
+This folder contains tools for exploring latent representations with
+clustering/embedding methods such as t-SNE, UMAP, and k-means. It also contains
+linear probing and SVM classification utilities.
+
 ## 1. Global Feature Exploration & Clustering
 
-`global_feature_exploration.ipynb` is the interactive workspace used to explore the geometric distribution of the latent space. It interfaces with `clustering.py`, which implements **t-SNE**, **UMAP**, and **k-means** clustering, generating projections in both 2D and 3D spaces.
+`global_feature_exploration.ipynb` is the interactive workspace used to explore
+the geometric distribution of the latent space. It interfaces with
+`clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
+generating projections in both 2D and 3D spaces.
 
-### How to Use:
-1. Ensure your model's extracted representation matrix is dropped into the repository (e.g., `data/your_model_features.npy`).
-2. Open `global_feature_exploration.ipynb` using your `attpc-eval` kernel.
-3. Update the data loading paths to point to your target features and the aligned `labels/master_labels.npy`.
-4. Run the evaluation cells to compute embeddings and automatically save results to the generated `plots/` folder.
+### How to Use
 
----
+1. Ensure your model's extracted representation matrix is saved in the
+   repository, such as `data/your_model_features.npy`.
+2. Open `global_feature_exploration.ipynb` using your `attpc-latent` kernel.
+3. Update the data loading paths to point to your target features and aligned
+   labels.
+4. Run the evaluation cells to compute embeddings and save results to the
+   generated `plots/` folder.
 
-## 2. Linear Probing
+The `plots` folder will be generated, containing clustering results such as
+t-SNE, UMAP, and k-means plots. Plot filenames include the dataset name and
+method when a `plot_name` is provided.
 
-`linear_probing.py` applies a fast, deterministic linear classifier (Logistic Regression / Linear SVM) over the frozen latent spaces to calculate overall classification accuracy. This evaluates how explicitly the encoder separates fundamental physics event topologies (e.g., 2-track vs. 3-track).
+## 2. Latent Pipeline
 
-### How to Run:
-Modify the `linear_probing.sh` shell script to specify the path to your target `.npy` feature matrix, the master labels, and the model identification name. Execute the shell script to run the evaluation loop:
+`latent_pipeline.py` runs a small suite of checks on any saved latent feature
+dataset:
+
+- SVM classification through `svm/svm.py`
+- k-means clustering through `global_feature_exploration/clustering.py`
+- t-SNE through `global_feature_exploration/clustering.py`
+
+Example:
+
+```bash
+python latent_layer_processing/latent_pipeline.py \
+  --name synthetic_class \
+  --features data/synthetic_latent/synthetic_class_features.npy \
+  --labels data/synthetic_latent/synthetic_class_labels.npy \
+  --samples 50 \
+  --output-dir data/synthetic_latent/class_results
+```
+
+## 3. Linear Probing
+
+`linear_probing.py` applies a fast linear classifier over frozen latent spaces
+to calculate overall classification accuracy. This evaluates how explicitly the
+encoder separates fundamental physics event topologies.
+
+### How to Run
+
+Modify `linear_probing.sh` to specify the path to your target `.npy` feature
+matrix, labels, and model identification name. Execute the shell script to run
+the evaluation loop:
 
 ```bash
 bash linear_probing.sh
 ```
 
----
+## 4. SVM Classification & Sample Scaling
 
+Simple probes of the latent embeddings from a pretrained model. An SVM is
+trained on the frozen embeddings across increasing training sizes to test
+whether similar physics events are grouped together in the learned space.
 
-## 3. SVM Classification & Sample Scaling
-Simple probes of the latent embeddings from a pretrained model. An SVM is trained on the frozen embeddings across increasing training sizes to test whether similar physics events are grouped together in the learned space.
-
-svm.py fits a Support Vector Machine to the data, which can be dynamically profiled using plot.py to map downstream F1-scores relative to the number of available training samples.
-
-### How to Run:
-Modify `plot.sh` to specify your target input files and the desired sample size ranges. Run the script to generate the curves:
+Run `svm/svm.py` with a feature file and a label file:
 
 ```bash
-bash plot.sh
+python latent_layer_processing/svm/svm.py \
+  data/synthetic_latent/synthetic_class_features.npy \
+  data/synthetic_latent/synthetic_class_labels.npy \
+  --samples 50 \
+  --output-dir data/synthetic_latent/class_results/svm
 ```
 
----
-
-
+The feature file should contain an array shaped like `(num_events, latent_dim)`.
+The label file should contain one class label per event. The script balances the
+classes using `--samples`, trains a linear SVM, prints accuracy/F1, saves
+predicted labels, and writes a confusion matrix to the output directory.
