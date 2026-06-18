@@ -10,7 +10,8 @@ source activate attpc-latent
 # --name: label used for the output folder name, saved under ./linear_probe_results/<name>_linear_probe
 # --test-size: fraction of the dataset held out for testing, e.g. 0.2 means 20 percent test data
 # --seed: optional integer seed for reproducible train/test splits, e.g. --seed 42 (default is None, and you will have to add this line if you want to use a specific seed)
-# --regularization: LogisticRegression C value; larger values mean weaker regularization (default is 1.0)
+# --regularization: classifier C value; larger values mean weaker regularization (default is 1.0)
+# --classifier: logistic-regression (default) or linear-svm
 # --class-name: optional display label for a class. Repeat once per sorted unique label. (default is None, and you will have to add this line if you want to use specific class names)
 #               If omitted, labels default to numeric values like "0", "1", "2".
 #               Example format:

@@ -2,6 +2,7 @@ import click
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import LinearSVC
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -55,11 +56,12 @@ def get_class_names(classes, class_names=None):
 @click.option('--name', default='O16', type=click.STRING, help='The name/profile identifier for the run (e.g. O16, Mg22, C16)')
 @click.option('--test-size', default=0.2, type=click.FLOAT, help='Fraction of data to use for testing')
 @click.option('--seed', default=None, type=click.INT, help='Random seed for reproducibility')
-@click.option('--regularization', default=1.0, type=click.FLOAT, help='Regularization strength for logistic regression')
+@click.option('--regularization', default=1.0, type=click.FLOAT, help='Classifier C value; larger values mean weaker regularization')
+@click.option('--classifier', type=click.Choice(['logistic-regression', 'linear-svm']), default='logistic-regression', help='Linear classifier to train on frozen embeddings')
 @click.option('--class-name', 'class_names', multiple=True, help='Class display name. Repeat once per sorted unique label.')
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
-def linear_probe_evaluation(name, test_size, seed, regularization, class_names, features_file, labels_file):
+def linear_probe_evaluation(name, test_size, seed, regularization, classifier, class_names, features_file, labels_file):
     """
     Perform linear probe evaluation using pre-extracted NumPy feature embeddings
     and corresponding target labels.
@@ -99,12 +101,20 @@ def linear_probe_evaluation(name, test_size, seed, regularization, class_names, 
     X_train_full_scaled = scaler.fit_transform(X_train_full)
     X_test_scaled = scaler.transform(X_test)
 
-    print("\nTraining linear probe...")
-    linear_probe = LogisticRegression(
-        C=regularization, 
-        random_state=base_seed,
-        max_iter=5000
-    )
+    print(f"\nTraining linear probe ({classifier})...")
+    if classifier == 'logistic-regression':
+        linear_probe = LogisticRegression(
+            C=regularization,
+            random_state=base_seed,
+            max_iter=5000
+        )
+    else:
+        linear_probe = LinearSVC(
+            C=regularization,
+            random_state=base_seed,
+            max_iter=10000,
+            dual='auto'
+        )
     linear_probe.fit(X_train_full_scaled, y_train_full)
     
     y_train_pred = linear_probe.predict(X_train_full_scaled)
@@ -128,6 +138,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, class_names, 
         'experiment_config': {
             'test_size': test_size,
             'regularization': regularization,
+            'classifier': classifier,
             'seed': seed,
             'class_names': class_names,
         },
