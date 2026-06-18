@@ -23,7 +23,7 @@ def save_linear_probe_outputs(y_test, y_pred, class_names, results_folder):
     
     plt.ylabel('Actual Class', fontsize=11)
     plt.xlabel('Predicted Class', fontsize=11)
-    plt.title('Final Model Confusion Matrix', fontsize=14, fontweight='bold', pad=15)
+    plt.title('Linear Probe Confusion Matrix', fontsize=14, fontweight='bold', pad=15)
     
     plt.savefig(f'{results_folder}/confusion_matrix.png', dpi=300, bbox_inches='tight')
     plt.close()
@@ -34,14 +34,32 @@ def save_linear_probe_outputs(y_test, y_pred, class_names, results_folder):
     df.to_csv(f'{results_folder}/classification_report.csv')
 
 
+def get_class_names(classes, class_names=None):
+    """Use provided class names, or fall back to simple numeric labels."""
+    if class_names:
+        if len(class_names) != len(classes):
+            raise ValueError(
+                f"Expected {len(classes)} class names, got {len(class_names)}. "
+                "Provide one --class-name value per unique label."
+            )
+        return list(class_names)
+
+    numeric_class_names = []
+    for cls in classes:
+        value = float(cls)
+        numeric_class_names.append(str(int(value)) if value.is_integer() else str(cls))
+    return numeric_class_names
+
+
 @click.command()
 @click.option('--name', default='O16', type=click.STRING, help='The name/profile identifier for the run (e.g. O16, Mg22, C16)')
 @click.option('--test-size', default=0.2, type=click.FLOAT, help='Fraction of data to use for testing')
 @click.option('--seed', default=None, type=click.INT, help='Random seed for reproducibility')
 @click.option('--regularization', default=1.0, type=click.FLOAT, help='Regularization strength for logistic regression')
+@click.option('--class-name', 'class_names', multiple=True, help='Class display name. Repeat once per sorted unique label.')
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
-def linear_probe_evaluation(name, test_size, seed, regularization, features_file, labels_file):
+def linear_probe_evaluation(name, test_size, seed, regularization, class_names, features_file, labels_file):
     """
     Perform linear probe evaluation using pre-extracted NumPy feature embeddings
     and corresponding target labels.
@@ -97,7 +115,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, features_file
     
     print(f"Linear probe - Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}")
     
-    class_names = [f'{int(cls)}-track' for cls in unique_classes]
+    class_names = get_class_names(unique_classes, class_names)
     save_linear_probe_outputs(y_test, y_test_pred, class_names, results_folder)
 
     results = {
@@ -111,6 +129,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, features_file
             'test_size': test_size,
             'regularization': regularization,
             'seed': seed,
+            'class_names': class_names,
         },
         'metrics': {
             'train_accuracy': float(train_acc),
