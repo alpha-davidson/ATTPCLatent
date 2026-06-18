@@ -11,9 +11,5 @@ python linear_probing.py \
     --name testing \
     --test-size 0.2 \
     --regularization 1.0 \
-    --min-train-size 50 \
-    --max-train-size 16000 \
-    --num-size-points 20 \
-    --cv-folds 3 \
     ../../data/features.npy \
     ../../data/master_labels.npy
