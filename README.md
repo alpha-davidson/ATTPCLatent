@@ -32,7 +32,8 @@ These `.npy` files should be saved within the `data/` directory.
 
 ## Environment
 
-Create the repo environment from `environment.yml`:
+From the repository root, create the environment from
+`environment.yml`:
 
 ```bash
 ./environment.sh
@@ -64,7 +65,6 @@ python latent_layer_processing/latent_pipeline.py \
   --name synthetic_class \
   --features data/synthetic_latent/synthetic_class_features.npy \
   --labels data/synthetic_latent/synthetic_class_labels.npy \
-  --samples 50 \
   --output-dir data/synthetic_latent/class_results
 ```
 
@@ -87,16 +87,13 @@ space. This is the standard benchmark for representation quality.
 To use linear probing:
 
 1. Place files within the `data/` directory.
-2. Change the Click parameters within `linear_probing.sh` to match the file
-   path for your `.npy` files.
-3. Change any other Click parameters as needed.
-4. Run `linear_probing.sh` using `sbatch` or `bash` in the terminal.
-
-### SVM Classification
-
-A more general SVM evaluation with F1 score reporting across varying numbers of
-training samples. Useful for understanding how label-efficient your
-representations are.
+2. Change the Click parameters within
+   `latent_layer_processing/global_feature_exploration/linear_probing.sh` to
+   match the file path for your `.npy` files.
+3. Change any other Click parameters as needed (for example, `--classifier
+   linear-svm`).
+4. From `latent_layer_processing/global_feature_exploration/`, run
+   `linear_probing.sh` using `sbatch`.
 
 ### K-Means Clustering
 
@@ -107,5 +104,4 @@ without supervision.
 ### PCA Analysis
 
 Uses the principal components of a given latent space to create a
-lower-dimensional representation. This representation maps the data along new,
-flat axes that capture the maximum variation and spread of your embeddings.
+lower-dimensional representation. This representation maps the data along new, flat axes that capture the maximum variation and spread of your embeddings in 2D or 3D.
