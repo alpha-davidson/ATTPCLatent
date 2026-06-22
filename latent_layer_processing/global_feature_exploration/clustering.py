@@ -99,7 +99,7 @@ def _plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
             )
 
 def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=None,
-                     plt_colors=None, save_dir=None, plot_name=None):
+                     plt_colors=None, save_dir=None, plot_name=None, random_state=None):
     """Run t-SNE and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
@@ -119,7 +119,7 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
         plot_name = f"t_sne_{dimension}d"
 
     # apply t-SNE clustering over all features at once
-    model = TSNE(n_components=dimension, perplexity=perplexity)
+    model = TSNE(n_components=dimension, perplexity=perplexity, random_state=random_state)
     tsne_data = model.fit_transform(features)
 
     _plot_labeled_embedding(tsne_data, labels, unique_labels, class_names, ax, plt_colors)
@@ -128,7 +128,7 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
     return tsne_data 
 
 def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
-                   plt_colors=None, save_dir=None, plot_name=None):
+                   plt_colors=None, save_dir=None, plot_name=None, random_state=None):
     """Run UMAP and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
@@ -147,7 +147,7 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
         plot_name = f"umap_{dimension}d"
 
     # apply UMAP embedding over all features at once
-    model = umap.UMAP(n_components=dimension, n_neighbors=neighbors)
+    model = umap.UMAP(n_components=dimension, n_neighbors=neighbors, random_state=random_state)
     umap_data = model.fit_transform(features)
 
     _plot_labeled_embedding(umap_data, labels, unique_labels, class_names, ax, plt_colors)
@@ -156,7 +156,7 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
     return umap_data
 
 def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_to_print=10,
-                       plot_name=None, class_names=None):
+                       plot_name=None, class_names=None, random_state=None):
     """Run k-means and compare cluster assignments with known labels.
 
     labels must contain one label for each row in features. class_names is
@@ -174,7 +174,7 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     # k-means clustering on full feature space
     labels, unique_labels, class_names = _get_class_names(labels, class_names)
     k = len(unique_labels)
-    kmeans = KMeans(n_clusters=k, init="k-means++", n_init='auto')
+    kmeans = KMeans(n_clusters=k, init="k-means++", n_init='auto', random_state=random_state)
     cluster_labels = kmeans.fit_predict(features)
     centroids = kmeans.cluster_centers_
 
@@ -227,7 +227,7 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     return features, cluster_labels, indices
 
 def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
-                   plot_name=None):
+                   plot_name=None, random_state=None):
     """Project features with PCA and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
@@ -247,7 +247,7 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
             UserWarning,
         )
 
-    pca = PCA(n_components=n_components)
+    pca = PCA(n_components=n_components, random_state=random_state)
     reduced_features = pca.fit_transform(features)
 
     labels, unique_labels, class_names = _get_class_names(labels, class_names)
@@ -274,12 +274,13 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     return reduced_features
 
 
-def pca_variance_analysis(features, variance_threshold=0.95, save_dir=None, plot_name=None):
+def pca_variance_analysis(features, variance_threshold=0.95, save_dir=None,
+                          plot_name=None, random_state=None):
     folder_path = os.path.join(save_dir or "../plots/pca", "variance")
     os.makedirs(folder_path, exist_ok=True)
 
     n_components = min(features.shape[0], features.shape[1])
-    pca = PCA(n_components=n_components)
+    pca = PCA(n_components=n_components, random_state=random_state)
     pca.fit(features)
 
     explained_variance_ratio = pca.explained_variance_ratio_
