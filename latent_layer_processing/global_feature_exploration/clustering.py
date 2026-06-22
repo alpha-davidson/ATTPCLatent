@@ -239,3 +239,46 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
         plt.close()
 
     return reduced_features
+
+
+def pca_variance_analysis(features, variance_threshold=0.95, save_dir=None,
+                          plot_name=None, random_state=None):
+    folder_path = os.path.join(save_dir or "../plots/pca", "variance")
+    os.makedirs(folder_path, exist_ok=True)
+
+    n_components = min(features.shape[0], features.shape[1])
+    pca = PCA(n_components=n_components, random_state=random_state)
+    pca.fit(features)
+
+    explained_variance_ratio = pca.explained_variance_ratio_
+    cumulative_variance = np.cumsum(explained_variance_ratio)
+    n_needed = int(np.searchsorted(cumulative_variance, variance_threshold) + 1)
+    variance_at_threshold = float(cumulative_variance[n_needed - 1])
+
+    print(
+        f"\nPCA variance analysis: {n_needed} component(s) explain "
+        f"{variance_at_threshold:.1%} of variance (threshold={variance_threshold:.0%})"
+    )
+
+    plt.figure(figsize=(7, 5))
+    component_numbers = np.arange(1, n_components + 1)
+    plt.plot(component_numbers, cumulative_variance, marker="o", markersize=3)
+    plt.axhline(variance_threshold, color="gray", linestyle="--", linewidth=1)
+    plt.axvline(n_needed, color="gray", linestyle="--", linewidth=1)
+    plt.xlabel("Number of Principal Components")
+    plt.ylabel("Cumulative Explained Variance")
+    plt.title("PCA Cumulative Explained Variance")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    filename = "cumulative_variance.png" if plot_name is None else f"{plot_name}_cumulative_variance.png"
+    plt.savefig(os.path.join(folder_path, filename), dpi=200)
+    plt.close()
+
+    return {
+        "n_components": n_needed,
+        "variance_threshold": variance_threshold,
+        "variance_explained": variance_at_threshold,
+        "explained_variance_ratio": explained_variance_ratio,
+        "cumulative_variance": cumulative_variance,
+    }
