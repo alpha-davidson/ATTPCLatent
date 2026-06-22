@@ -77,12 +77,23 @@ so you can visually inspect whether the model has learned to group similar
 events together without using any labels. Well-separated clusters are a good
 sign that the encoder has learned meaningful structure.
 
+The exploration notebook keeps raw learned embeddings as the default input for
+these plots because coordinate magnitudes may carry model-learned information.
+For distance-based comparisons, optional scaling can be enabled to give every
+embedding coordinate equal weight. t-SNE uses an intermediate PCA reduction by
+default for dense embedding arrays.
+
 ### Linear Probing
 
 A linear SVM trained on top of frozen embeddings. If a simple linear boundary
 can classify events accurately, it means the relevant physics information is
 cleanly and explicitly encoded in the latent space. This is the standard
 benchmark for representation quality.
+
+Linear probing uses the full frozen embedding dimension by default. The probe
+standardizes features after the train/test split, fitting the scaler on training
+data only, because regularized linear classifiers are scale-sensitive. PCA,
+UMAP, and t-SNE are not used before the default probe.
 
 To use linear probing:
 
@@ -92,11 +103,7 @@ To use linear probing:
 3. Change any other Click parameters as needed.
 4. Run `linear_probing.sh` using `sbatch` or `bash` in the terminal.
 
-### SVM Classification
 
-A more general SVM evaluation with F1 score reporting across varying numbers of
-training samples. Useful for understanding how label-efficient your
-representations are.
 
 ### K-Means Clustering
 
@@ -109,3 +116,6 @@ without supervision.
 Uses the principal components of a given latent space to create a
 lower-dimensional representation. This representation maps the data along new,
 flat axes that capture the maximum variation and spread of your embeddings.
+By default, PCA analysis is run on raw embeddings to measure variance in the
+model's learned latent geometry; scaled PCA can be used as an explicit
+equal-coordinate-weight comparison.

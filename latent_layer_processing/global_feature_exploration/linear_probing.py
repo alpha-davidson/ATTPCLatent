@@ -145,6 +145,10 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     """
     Perform linear probe evaluation with learning curve analysis using pre-extracted
     flat NumPy feature embeddings and corresponding target labels.
+
+    The default probe uses the full frozen embedding vector. StandardScaler is
+    fit only on the training split because regularized linear classifiers are
+    scale-sensitive, but no dimensionality reduction is applied before probing.
     """
 
     print("Loading features and labels...")
@@ -192,7 +196,8 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     train_sizes = generate_log_train_sizes(min_train_size, max_train_size, num_size_points)
     print(f"Training sizes to test: {train_sizes}")
     
-    # Standardize features (fit on full training set)
+    # Linear probing evaluates the full frozen representation. Scaling is fit
+    # only on training data to avoid leakage into the held-out test set.
     print("Standardizing features...")
     scaler = StandardScaler()
     X_train_full_scaled = scaler.fit_transform(X_train_full)
@@ -300,7 +305,12 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
             'cv_folds': cv_folds,
             'min_train_size': min_train_size,
             'max_train_size': max_train_size,
-            'num_size_points': num_size_points
+            'num_size_points': num_size_points,
+            'preprocessing': {
+                'feature_scaling': 'StandardScaler fit on training split only',
+                'dimensionality_reduction': None,
+                'uses_full_embedding_dimension': True,
+            },
         },
         'learning_curve_results': learning_curve_results
     }

@@ -11,6 +11,12 @@ the geometric distribution of the latent space. It interfaces with
 `clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
 generating projections in both 2D and 3D spaces.
 
+The notebook preserves raw learned embeddings by default. Optional scaling is
+available for distance-based visualizations when each embedding coordinate
+should contribute equally. t-SNE applies an intermediate linear reduction before
+the final 2D/3D embedding: PCA for dense latent arrays, or TruncatedSVD only for
+genuinely sparse input matrices.
+
 ### How to Use
 
 1. Ensure your model's extracted representation matrix is saved in the
@@ -50,6 +56,11 @@ python latent_layer_processing/latent_pipeline.py \
 `linear_probing.py` applies a fast linear classifier over frozen latent spaces
 to calculate overall classification accuracy. This evaluates how explicitly the
 encoder separates fundamental physics event topologies.
+
+Linear probing is intentionally different from exploratory visualization: it
+uses the full frozen embedding vector, then fits `StandardScaler` only on the
+training split before applying the same transform to the test split. PCA, UMAP,
+and t-SNE are not used before the default probe.
 
 ### How to Run
 
