@@ -12,11 +12,27 @@ import os
 import json
 
 
-def save_linear_probe_outputs(y_test, y_pred, class_names, results_folder):
+def validate_features_and_labels(features, labels):
+    """Validate that every feature row has exactly one label."""
+    labels = np.asarray(labels)
+    if labels.ndim != 1:
+        raise ValueError(
+            "labels must be a one-dimensional array with one label per feature row; "
+            f"got shape {labels.shape}."
+        )
+    if len(features) != len(labels):
+        raise ValueError(
+            "features and labels must contain the same number of rows; "
+            f"got {len(features)} features and {len(labels)} labels."
+        )
+    return features, labels
+
+
+def save_linear_probe_outputs(y_test, y_pred, classes, class_names, results_folder):
     """
     Save the classification report and confusion matrix for the linear probe.
     """
-    cm = confusion_matrix(y_test, y_pred)
+    cm = confusion_matrix(y_test, y_pred, labels=classes)
     plt.figure(figsize=(8, 6))
     
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
@@ -29,7 +45,14 @@ def save_linear_probe_outputs(y_test, y_pred, class_names, results_folder):
     plt.savefig(f'{results_folder}/confusion_matrix.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-    report_dict = classification_report(y_test, y_pred, target_names=class_names, output_dict=True)
+    report_dict = classification_report(
+        y_test,
+        y_pred,
+        labels=classes,
+        target_names=class_names,
+        output_dict=True,
+        zero_division=0,
+    )
     df = pd.DataFrame(report_dict).transpose().round(4)
 
     df.to_csv(f'{results_folder}/classification_report.csv')
@@ -47,8 +70,12 @@ def get_class_names(classes, class_names=None):
 
     numeric_class_names = []
     for cls in classes:
-        value = float(cls)
-        numeric_class_names.append(str(int(value)) if value.is_integer() else str(cls))
+        try:
+            value = float(cls)
+        except (TypeError, ValueError):
+            numeric_class_names.append(str(cls))
+        else:
+            numeric_class_names.append(str(int(value)) if value.is_integer() else str(cls))
     return numeric_class_names
 
 
@@ -71,6 +98,10 @@ def linear_probe_evaluation(name, test_size, seed, regularization, classifier, c
 
     global_features = np.load(features_file) # Expected shape: (N, D)
     combined_track_labels = np.load(labels_file) # Expected shape: (N,)
+    global_features, combined_track_labels = validate_features_and_labels(
+        global_features,
+        combined_track_labels,
+    )
     unique_classes = np.unique(combined_track_labels)
 
     print(f"Features shape: {global_features.shape}")
@@ -126,7 +157,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, classifier, c
     print(f"Linear probe - Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}")
     
     class_names = get_class_names(unique_classes, class_names)
-    save_linear_probe_outputs(y_test, y_test_pred, class_names, results_folder)
+    save_linear_probe_outputs(y_test, y_test_pred, unique_classes, class_names, results_folder)
 
     results = {
         'dataset_info': {
@@ -140,6 +171,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, classifier, c
             'regularization': regularization,
             'classifier': classifier,
             'seed': seed,
+            'effective_seed': int(base_seed),
             'class_names': class_names,
         },
         'metrics': {
@@ -154,7 +186,13 @@ def linear_probe_evaluation(name, test_size, seed, regularization, classifier, c
     print(f"\nAll results saved to: {results_folder}")
 
     print("\nClassification Report:")
-    print(classification_report(y_test, y_test_pred, target_names=class_names))
+    print(classification_report(
+        y_test,
+        y_test_pred,
+        labels=unique_classes,
+        target_names=class_names,
+        zero_division=0,
+    ))
 
 
 if __name__ == '__main__':
