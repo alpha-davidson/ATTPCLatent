@@ -72,9 +72,7 @@ def main(name, features, labels, samples, output_dir, perplexity):
         feature_data,
         dimension=2,
         ax=ax,
-        color="tab:blue",
-        label=name,
-        alpha=0.7,
+        labels=label_data,
         perplexity=perplexity,
         plot_name=name,
     )
