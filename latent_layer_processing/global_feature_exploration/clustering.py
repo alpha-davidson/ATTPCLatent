@@ -7,6 +7,24 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import umap
 
+def _validate_features_and_labels(features, labels):
+    labels = np.asarray(labels)
+    if labels.ndim != 1:
+        raise ValueError(
+            "labels must be a one-dimensional array with one label per feature row; "
+            f"got shape {labels.shape}."
+        )
+    if len(features) != len(labels):
+        raise ValueError(
+            "features and labels must contain the same number of rows; "
+            f"got {len(features)} features and {len(labels)} labels."
+        )
+    return features, labels
+
+def _validate_plot_dimension(dimension, function_name):
+    if dimension not in (2, 3):
+        raise ValueError(f"{function_name} plots only support dimension=2 or dimension=3.")
+
 def _get_class_names(labels, class_names):
     """Return labels, sorted label values, and display names.
 
@@ -89,6 +107,8 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
     plt_colors is optional; when omitted, one color is generated per class.
     """
 
+    _validate_plot_dimension(dimension, "t_SNE_clustering")
+    features, labels = _validate_features_and_labels(features, labels)
     labels, unique_labels, class_names = _get_class_names(labels, class_names)
 
     # create a folder for t-SNE clustering
@@ -115,6 +135,8 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
     optional; when provided as a list, it follows np.unique(labels) order.
     plt_colors is optional; when omitted, one color is generated per class.
     """
+    _validate_plot_dimension(dimension, "UMAP_embedding")
+    features, labels = _validate_features_and_labels(features, labels)
     labels, unique_labels, class_names = _get_class_names(labels, class_names)
 
     # create a folder for UMAP embedding
@@ -140,9 +162,9 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     """
-    if dimension not in (2, 3):
-        raise ValueError("k_means_clustering plots only support dimension=2 or dimension=3.")
+    _validate_plot_dimension(dimension, "k_means_clustering")
 
+    features, labels = _validate_features_and_labels(features, labels)
     folder_path = os.path.join(save_dir or "../plots/k_means", f"{dimension}d_plots")
     os.makedirs(folder_path, exist_ok=True)
 
@@ -211,9 +233,9 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     """
-    if dimension not in (2, 3):
-        raise ValueError("pca_clustering plots only support dimension=2 or dimension=3.")
+    _validate_plot_dimension(dimension, "pca_clustering")
 
+    features, labels = _validate_features_and_labels(features, labels)
     folder_path = os.path.join(save_dir or "../plots/pca", f"{dimension}d_plots")
     os.makedirs(folder_path, exist_ok=True)
 
