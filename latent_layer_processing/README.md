@@ -58,9 +58,10 @@ to calculate overall classification accuracy. This evaluates how explicitly the
 encoder separates fundamental physics event topologies.
 
 Linear probing is intentionally different from exploratory visualization: it
-uses the full frozen embedding vector, then fits `StandardScaler` only on the
-training split before applying the same transform to the test split. PCA, UMAP,
-and t-SNE are not used before the default probe.
+uses the full frozen embedding vector by default without additional preprocessing.
+Add `--standardize-features` to apply `StandardScaler` fit on the training split
+before transforming the test split. PCA, UMAP, and t-SNE are not used before the
+default probe.
 
 ### How to Run
 

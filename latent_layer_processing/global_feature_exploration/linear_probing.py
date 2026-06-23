@@ -84,6 +84,15 @@ def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_name
     plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
     plt.close()
 
+def prepare_probe_features(X_train, X_test, standardize_features):
+    """Return probe inputs, optionally standardized using train-only statistics."""
+    if not standardize_features:
+        return X_train, X_test, None
+
+    scaler = StandardScaler()
+    return scaler.fit_transform(X_train), scaler.transform(X_test), scaler
+
+
 def create_performance_table(results, results_folder):
     """Create a detailed performance table."""
     
@@ -138,17 +147,24 @@ def create_performance_table(results, results_folder):
 @click.option('--max-train-size', default=16000, type=click.INT, help='Maximum training set size')
 @click.option('--num-size-points', default=20, type=click.INT, help='Number of training sizes to test')
 @click.option('--cv-folds', default=3, type=click.INT, help='Number of cross-validation folds for each size')
+@click.option(
+    '--standardize-features',
+    is_flag=True,
+    default=False,
+    help='Apply StandardScaler fit on the training split before probing.',
+)
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
 def linear_probe_evaluation(name, test_size, seed, regularization, min_train_size, 
-                            max_train_size, num_size_points, cv_folds, features_file, labels_file):
+                            max_train_size, num_size_points, cv_folds,
+                            standardize_features, features_file, labels_file):
     """
     Perform linear probe evaluation with learning curve analysis using pre-extracted
     flat NumPy feature embeddings and corresponding target labels.
 
-    The default probe uses the full frozen embedding vector. StandardScaler is
-    fit only on the training split because regularized linear classifiers are
-    scale-sensitive, but no dimensionality reduction is applied before probing.
+    The default probe uses the full frozen embedding vector without additional
+    preprocessing. Use --standardize-features to apply train-only StandardScaler
+    when equal coordinate weighting is desired.
     """
 
     print("Loading features and labels...")
@@ -196,12 +212,15 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     train_sizes = generate_log_train_sizes(min_train_size, max_train_size, num_size_points)
     print(f"Training sizes to test: {train_sizes}")
     
-    # Linear probing evaluates the full frozen representation. Scaling is fit
-    # only on training data to avoid leakage into the held-out test set.
-    print("Standardizing features...")
-    scaler = StandardScaler()
-    X_train_full_scaled = scaler.fit_transform(X_train_full)
-    X_test_scaled = scaler.transform(X_test)
+    X_train_probe, X_test_probe, scaler = prepare_probe_features(
+        X_train_full,
+        X_test,
+        standardize_features,
+    )
+    if standardize_features:
+        print("Using standardized probe features (StandardScaler fit on training split only).")
+    else:
+        print("Using raw frozen embeddings without additional preprocessing.")
     
     # Initialize results storage
     learning_curve_results = {
@@ -228,14 +247,14 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
         for fold in range(cv_folds):
             # Randomly sample training data of the specified size
             current_seed = base_seed + fold
-            if train_size >= len(X_train_full_scaled):
+            if train_size >= len(X_train_probe):
                 # Use all available training data
-                X_train_subset = X_train_full_scaled
+                X_train_subset = X_train_probe
                 y_train_subset = y_train_full
             else:
                 
                 X_train_subset, _, y_train_subset, _ = train_test_split(
-                X_train_full_scaled, y_train_full,
+                X_train_probe, y_train_full,
                 train_size=train_size,
                 stratify=y_train_full,
                 random_state=current_seed
@@ -252,7 +271,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
             
             # Evaluate
             train_pred = linear_probe.predict(X_train_subset)
-            test_pred = linear_probe.predict(X_test_scaled)
+            test_pred = linear_probe.predict(X_test_probe)
             
             train_acc = accuracy_score(y_train_subset, train_pred)
             test_acc = accuracy_score(y_test, test_pred)
@@ -306,8 +325,13 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
             'min_train_size': min_train_size,
             'max_train_size': max_train_size,
             'num_size_points': num_size_points,
+            'standardize_features': standardize_features,
             'preprocessing': {
-                'feature_scaling': 'StandardScaler fit on training split only',
+                'feature_scaling': (
+                    'StandardScaler fit on training split only'
+                    if standardize_features
+                    else 'none'
+                ),
                 'dimensionality_reduction': None,
                 'uses_full_embedding_dimension': True,
             },
@@ -328,12 +352,12 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
         random_state=base_seed,
         max_iter=5000
     )
-    final_linear_probe.fit(X_train_full_scaled, y_train_full)
+    final_linear_probe.fit(X_train_probe, y_train_full)
     
     # Final evaluation
-    y_train_final_pred = final_linear_probe.predict(X_train_full_scaled)
-    y_test_final_pred = final_linear_probe.predict(X_test_scaled)
-    y_test_final_prob = final_linear_probe.predict_proba(X_test_scaled)
+    y_train_final_pred = final_linear_probe.predict(X_train_probe)
+    y_test_final_pred = final_linear_probe.predict(X_test_probe)
+    y_test_final_prob = final_linear_probe.predict_proba(X_test_probe)
     
     final_train_acc = accuracy_score(y_train_full, y_train_final_pred)
     final_test_acc = accuracy_score(y_test, y_test_final_pred)
@@ -343,7 +367,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     # Create additional visualizations for final model
     class_names = [f'{int(cls)}-track' for cls in unique_classes]
     create_final_model_visualizations(
-        X_test_scaled, y_test, y_test_final_pred, y_test_final_prob,
+        X_test_probe, y_test, y_test_final_pred, y_test_final_prob,
         class_names, results_folder, final_linear_probe
     )
     

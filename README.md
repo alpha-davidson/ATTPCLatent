@@ -80,8 +80,7 @@ sign that the encoder has learned meaningful structure.
 The exploration notebook keeps raw learned embeddings as the default input for
 these plots because coordinate magnitudes may carry model-learned information.
 For distance-based comparisons, optional scaling can be enabled to give every
-embedding coordinate equal weight. t-SNE uses an intermediate PCA reduction by
-default for dense embedding arrays.
+embedding coordinate equal weight. t-SNE uses an intermediate PCA reduction.
 
 ### Linear Probing
 
@@ -90,10 +89,9 @@ can classify events accurately, it means the relevant physics information is
 cleanly and explicitly encoded in the latent space. This is the standard
 benchmark for representation quality.
 
-Linear probing uses the full frozen embedding dimension by default. The probe
-standardizes features after the train/test split, fitting the scaler on training
-data only, because regularized linear classifiers are scale-sensitive. PCA,
-UMAP, and t-SNE are not used before the default probe.
+Linear probing uses the full frozen embedding dimension by default on raw
+embeddings. Add `--standardize-features` if you want train-only StandardScaler
+before probing. PCA, UMAP, and t-SNE are not used before the default probe.
 
 To use linear probing:
 
