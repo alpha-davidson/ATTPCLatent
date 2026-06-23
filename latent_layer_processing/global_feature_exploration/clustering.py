@@ -6,6 +6,7 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import umap
+from skdim.id import TwoNN
 
 def _validate_features_and_labels(features, labels):
     labels = np.asarray(labels)
@@ -314,4 +315,70 @@ def pca_variance_analysis(features, variance_threshold=0.95, save_dir=None,
         "variance_explained": variance_at_threshold,
         "explained_variance_ratio": explained_variance_ratio,
         "cumulative_variance": cumulative_variance,
+    }
+
+
+def twonn_intrinsic_dimension(
+    features,
+    discard_fraction=0.1,
+    max_samples=None,
+    random_state=None,
+    save_dir=None,
+    plot_name=None,
+):
+    """Estimate intrinsic dimension with the TwoNN algorithm (Facco et al., 2019)."""
+    features = np.asarray(features)
+    if features.ndim != 2:
+        raise ValueError(f"features must be a 2D array, got shape {features.shape}")
+    if features.shape[0] < 3:
+        raise ValueError("TwoNN requires at least 3 samples.")
+
+    if max_samples is not None and features.shape[0] > max_samples:
+        rng = np.random.default_rng(random_state)
+        sample_indices = rng.choice(features.shape[0], size=max_samples, replace=False)
+        features = features[sample_indices]
+
+    estimator = TwoNN(discard_fraction=discard_fraction)
+    estimator.fit(features)
+    intrinsic_dimension = float(estimator.dimension_)
+    embedding_dimension = int(features.shape[1])
+    x_values = estimator.x_.ravel()
+    y_values = estimator.y_.ravel()
+
+    print(
+        f"\nTwoNN intrinsic dimension: {intrinsic_dimension:.2f} "
+        f"(embedding dimension={embedding_dimension}, "
+        f"n_samples={features.shape[0]}, discard_fraction={discard_fraction})"
+    )
+
+    folder_path = os.path.join(save_dir or "../plots/twonn", "estimates")
+    os.makedirs(folder_path, exist_ok=True)
+
+    plt.figure(figsize=(7, 5))
+    plt.plot(x_values, y_values, "o", markersize=3, label="Empirical CDF fit points")
+    plt.plot(
+        x_values,
+        intrinsic_dimension * x_values,
+        "--",
+        color="gray",
+        label=f"Estimated ID = {intrinsic_dimension:.2f}",
+    )
+    plt.xlabel("-log(mu)")
+    plt.ylabel("-log(1 - F(mu))")
+    plt.title("TwoNN Intrinsic Dimension Estimation")
+    plt.legend()
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+
+    filename = "twonn_fit.png" if plot_name is None else f"{plot_name}_twonn_fit.png"
+    plt.savefig(os.path.join(folder_path, filename), dpi=200)
+    plt.close()
+
+    return {
+        "intrinsic_dimension": intrinsic_dimension,
+        "embedding_dimension": embedding_dimension,
+        "n_samples_used": int(features.shape[0]),
+        "discard_fraction": discard_fraction,
+        "x": x_values,
+        "y": y_values,
     }

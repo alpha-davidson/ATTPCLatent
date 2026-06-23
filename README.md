@@ -117,3 +117,10 @@ flat axes that capture the maximum variation and spread of your embeddings.
 By default, PCA analysis is run on raw embeddings to measure variance in the
 model's learned latent geometry; scaled PCA can be used as an explicit
 equal-coordinate-weight comparison.
+
+### TwoNN Intrinsic Dimension
+
+Estimates the effective intrinsic dimension of the embedding cloud from 1st/2nd
+nearest-neighbor distance ratios, implemented via
+`scikit-dimension`. By default this runs on raw embeddings through
+`analysis_features` in the exploration notebook. 

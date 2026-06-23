@@ -8,8 +8,9 @@ linear probing and SVM classification utilities.
 
 `global_feature_exploration.ipynb` is the interactive workspace used to explore
 the geometric distribution of the latent space. It interfaces with
-`clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
-generating projections in both 2D and 3D spaces.
+`clustering.py`, which implements t-SNE, UMAP, k-means clustering, PCA
+variance analysis, and TwoNN intrinsic dimension estimation via
+`scikit-dimension`, generating projections in both 2D and 3D spaces.
 
 The notebook preserves raw learned embeddings by default. Optional scaling is
 available for distance-based visualizations when each embedding coordinate
@@ -28,8 +29,9 @@ genuinely sparse input matrices.
    generated `plots/` folder.
 
 The `plots` folder will be generated, containing clustering results such as
-t-SNE, UMAP, and k-means plots. Plot filenames include the dataset name and
-method when a `plot_name` is provided.
+t-SNE, UMAP, k-means plots, and TwoNN fit plots under `./plots/twonn/`.
+Plot filenames include the dataset name and method when a `plot_name` is
+provided.
 
 ## 2. Latent Pipeline
 
@@ -38,6 +40,7 @@ dataset:
 
 - SVM classification through `svm/svm.py`
 - k-means clustering through `global_feature_exploration/clustering.py`
+- TwoNN intrinsic dimension through `global_feature_exploration/clustering.py`
 - t-SNE through `global_feature_exploration/clustering.py`
 
 Example:
