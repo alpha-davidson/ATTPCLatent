@@ -17,9 +17,14 @@ generating projections in both 2D and 3D spaces.
    repository, such as `data/your_model_features.npy`.
 2. Open `global_feature_exploration.ipynb` using your `attpc-latent` kernel.
 3. Update the data loading paths to point to your target features and aligned
-   labels.
+   **verified** labels. Use `-1` for unlabeled rows, or set `labels_path =
+   None` for fully unlabeled data (PCA variance only).
 4. Run the evaluation cells to compute embeddings and save results to the
    generated `plots/` folder.
+
+**Label policy:** bring verified reference labels (simulation truth or manual
+review). Do not use model predictions as labels for supervised checks. Partially
+labeled data is supported; fully unlabeled data can use PCA variance only.
 
 The `plots` folder will be generated, containing clustering results such as
 t-SNE, UMAP, and k-means plots. Plot filenames include the dataset name and
@@ -52,9 +57,9 @@ encoder separates fundamental physics event topologies.
 ### How to Run
 
 Modify `global_feature_exploration/linear_probing.sh` to specify the path to
-your target `.npy` feature matrix, labels, and model identification name. Use
-`--classifier linear-svm` for a linear SVM instead of logistic regression.
-Execute the shell script from that folder:
+your target `.npy` feature matrix, verified labels, and model identification
+name. Rows marked `-1` are ignored. Use `--classifier linear-svm` for a linear
+SVM instead of logistic regression. Execute the shell script from that folder:
 
 ```bash
 cd global_feature_exploration
