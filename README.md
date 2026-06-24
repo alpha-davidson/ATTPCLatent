@@ -121,6 +121,6 @@ equal-coordinate-weight comparison.
 ### TwoNN Intrinsic Dimension
 
 Estimates the effective intrinsic dimension of the embedding cloud from 1st/2nd
-nearest-neighbor distance ratios, implemented via
-`scikit-dimension`. By default this runs on raw embeddings through
-`analysis_features` in the exploration notebook. 
+nearest-neighbor distance ratios, implemented via `scikit-dimension`. The
+exploration notebook runs TwoNN on random subsamples of many sizes and plots ID
+vs subsample size; the plateau of that curve is reported as the effective ID. 
