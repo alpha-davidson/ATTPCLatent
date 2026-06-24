@@ -16,7 +16,7 @@ label vector:
 | File | Shape | Description |
 | --- | --- | --- |
 | `embeddings.npy` | `(N, D)` | One event per row |
-| `labels.npy` | `(N,)` | Verified class label per event (optional for some tools) |
+| `labels.npy` | `(N,)` | Class label per event (optional for some tools) |
 
 Where `N` is the number of events and `D` is the embedding dimension. Row order
 must match between the two files when labels are provided.
