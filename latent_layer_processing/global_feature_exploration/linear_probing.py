@@ -11,8 +11,6 @@ import seaborn as sns
 import os
 import json
 
-from label_utils import require_labeled_rows, split_labeled
-
 
 def validate_features_and_labels(features, labels):
     """Validate that every feature row has exactly one label."""
@@ -93,10 +91,10 @@ def get_class_names(classes, class_names=None):
 def linear_probe_evaluation(name, test_size, seed, regularization, classifier, class_names, features_file, labels_file):
     """
     Perform linear probe evaluation using pre-extracted NumPy feature embeddings
-    and corresponding verified reference labels.
+    and corresponding labels.
 
-    Rows marked as unlabeled (default: -1) are ignored. Do not use model
-    predictions as labels for this benchmark.
+    Every unique label value is treated as its own class, including sentinel
+    values such as -1 for unlabeled events.
     """
 
     print("Loading features and labels...")
@@ -104,11 +102,6 @@ def linear_probe_evaluation(name, test_size, seed, regularization, classifier, c
     global_features = np.load(features_file) # Expected shape: (N, D)
     combined_track_labels = np.load(labels_file).ravel() # Expected shape: (N,)
     global_features, combined_track_labels = validate_features_and_labels(
-        global_features,
-        combined_track_labels,
-    )
-    require_labeled_rows(combined_track_labels, context="Linear probing")
-    global_features, combined_track_labels, _ = split_labeled(
         global_features,
         combined_track_labels,
     )

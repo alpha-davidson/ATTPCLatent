@@ -7,7 +7,24 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import umap
 
-from label_utils import labeled_mask
+DEFAULT_UNLABELED_VALUES = (-1,)
+UNLABELED_PLOT_COLOR = "0.55"
+
+
+def _normalize_unlabeled_values(unlabeled_values):
+    if unlabeled_values is None:
+        return DEFAULT_UNLABELED_VALUES
+    if np.isscalar(unlabeled_values):
+        return (unlabeled_values,)
+    return tuple(unlabeled_values)
+
+
+def _is_unlabeled_label(label_value, unlabeled_values):
+    for value in _normalize_unlabeled_values(unlabeled_values):
+        if label_value == value or str(label_value) == str(value):
+            return True
+    return False
+
 
 def _validate_features_and_labels(features, labels):
     labels = np.asarray(labels)
@@ -27,23 +44,16 @@ def _validate_plot_dimension(dimension, function_name):
     if dimension not in (2, 3):
         raise ValueError(f"{function_name} plots only support dimension=2 or dimension=3.")
 
-def _get_class_names(labels, class_names, unlabeled_values=None):
+def _get_class_names(labels, class_names):
     """Return labels, sorted label values, and display names.
 
     labels should contain one class label for each row in the feature matrix.
     If class_names is a list, it must follow the order of np.unique(labels).
     If class_names is a dict, keys should be raw label values and values are
     the display names used in plot legends.
-    Unlabeled rows are excluded from class counts and legends.
     """
     labels = np.asarray(labels)
-    mask = labeled_mask(labels, unlabeled_values)
-    if not np.any(mask):
-        raise ValueError(
-            "No labeled events found. Provide verified class labels or use "
-            "label-free analyses such as PCA variance."
-        )
-    unique_labels = np.unique(labels[mask])
+    unique_labels = np.unique(labels)
     if class_names is None:
         class_names = [str(label) for label in unique_labels]
     elif isinstance(class_names, dict):
@@ -78,44 +88,34 @@ def _get_plot_colors(n_classes, plt_colors=None):
 
 def _plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
                             plt_colors=None, size=15, alpha=0.7,
-                            unlabeled_values=None):
+                            unlabeled_values=DEFAULT_UNLABELED_VALUES):
     if embedding.shape[1] not in (2, 3):
         raise ValueError("Labeled embedding plots require 2 or 3 dimensions.")
 
-    labels = np.asarray(labels)
-    unlabeled = ~labeled_mask(labels, unlabeled_values)
-    if np.any(unlabeled):
-        if embedding.shape[1] == 2:
-            ax.scatter(
-                embedding[unlabeled, 0],
-                embedding[unlabeled, 1],
-                color="lightgray",
-                label="unlabeled",
-                s=size,
-                alpha=alpha,
-            )
-        else:
-            ax.scatter(
-                embedding[unlabeled, 0],
-                embedding[unlabeled, 1],
-                embedding[unlabeled, 2],
-                color="lightgray",
-                label="unlabeled",
-                s=size,
-                alpha=alpha,
-            )
+    labeled_unique = [
+        label_value
+        for label_value in unique_labels
+        if not _is_unlabeled_label(label_value, unlabeled_values)
+    ]
+    colors = _get_plot_colors(len(labeled_unique), plt_colors)
+    labeled_color_index = 0
 
-    colors = _get_plot_colors(len(unique_labels), plt_colors)
     for class_index, label_value in enumerate(unique_labels):
         mask = (labels == label_value)
         if not np.any(mask):
             continue
 
+        if _is_unlabeled_label(label_value, unlabeled_values):
+            color = UNLABELED_PLOT_COLOR
+        else:
+            color = colors[labeled_color_index]
+            labeled_color_index += 1
+
         if embedding.shape[1] == 2:
             ax.scatter(
                 embedding[mask, 0],
                 embedding[mask, 1],
-                color=colors[class_index],
+                color=color,
                 label=class_names[class_index],
                 s=size,
                 alpha=alpha,
@@ -125,7 +125,7 @@ def _plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
                 embedding[mask, 0],
                 embedding[mask, 1],
                 embedding[mask, 2],
-                color=colors[class_index],
+                color=color,
                 label=class_names[class_index],
                 s=size,
                 alpha=alpha,
@@ -133,20 +133,18 @@ def _plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
 
 def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=None,
                      plt_colors=None, save_dir=None, plot_name=None, random_state=None,
-                     unlabeled_values=None):
+                     unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Run t-SNE and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     plt_colors is optional; when omitted, one color is generated per class.
-    Rows matching unlabeled_values are shown in gray and excluded from legends.
+    Rows matching unlabeled_values are always drawn in grey.
     """
 
     _validate_plot_dimension(dimension, "t_SNE_clustering")
     features, labels = _validate_features_and_labels(features, labels)
-    labels, unique_labels, class_names = _get_class_names(
-        labels, class_names, unlabeled_values=unlabeled_values
-    )
+    labels, unique_labels, class_names = _get_class_names(labels, class_names)
 
     # create a folder for t-SNE clustering
     folder_path = os.path.join(save_dir or "../plots", "t-sne", f"{dimension}d_plots")
@@ -169,19 +167,17 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
 
 def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
                    plt_colors=None, save_dir=None, plot_name=None, random_state=None,
-                   unlabeled_values=None):
+                   unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Run UMAP and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     plt_colors is optional; when omitted, one color is generated per class.
-    Rows matching unlabeled_values are shown in gray and excluded from legends.
+    Rows matching unlabeled_values are always drawn in grey.
     """
     _validate_plot_dimension(dimension, "UMAP_embedding")
     features, labels = _validate_features_and_labels(features, labels)
-    labels, unique_labels, class_names = _get_class_names(
-        labels, class_names, unlabeled_values=unlabeled_values
-    )
+    labels, unique_labels, class_names = _get_class_names(labels, class_names)
 
     # create a folder for UMAP embedding
     folder_path = os.path.join(save_dir or "../plots", "umap", f"{dimension}d_plots")
@@ -204,13 +200,12 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
 
 def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_to_print=10,
                        plot_name=None, class_names=None, random_state=None,
-                       unlabeled_values=None):
+                       unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Run k-means and compare cluster assignments with known labels.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
-    Unlabeled rows are shown in gray on the true-label panel and excluded
-    from the class count used to set k.
+    Rows matching unlabeled_values are always drawn in grey on the true-label panel.
     """
     _validate_plot_dimension(dimension, "k_means_clustering")
 
@@ -221,9 +216,7 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     if plot_name is None:
         plot_name = f'k_means_{dimension}d'
 
-    labels, unique_labels, class_names = _get_class_names(
-        labels, class_names, unlabeled_values=unlabeled_values
-    )
+    labels, unique_labels, class_names = _get_class_names(labels, class_names)
     k = len(unique_labels)
     kmeans = KMeans(n_clusters=k, init="k-means++", n_init='auto', random_state=random_state)
     cluster_labels = kmeans.fit_predict(features)
@@ -284,12 +277,13 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     return features, cluster_labels, indices
 
 def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
-                   plot_name=None, random_state=None, unlabeled_values=None):
+                   plot_name=None, random_state=None,
+                   unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Project features with PCA and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
-    Rows matching unlabeled_values are shown in gray and excluded from legends.
+    Rows matching unlabeled_values are always drawn in grey.
     """
     _validate_plot_dimension(dimension, "pca_clustering")
 
@@ -308,9 +302,7 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     pca = PCA(n_components=n_components, random_state=random_state)
     reduced_features = pca.fit_transform(features)
 
-    labels, unique_labels, class_names = _get_class_names(
-        labels, class_names, unlabeled_values=unlabeled_values
-    )
+    labels, unique_labels, class_names = _get_class_names(labels, class_names)
 
     if dimension == 2:
         fig, ax = plt.subplots(figsize=(7, 6))

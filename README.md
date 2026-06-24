@@ -10,35 +10,21 @@ framework they used to generate those embeddings.
 
 ## Input Format
 
-Every analysis script expects a feature matrix and, for most tools, a matching
-label vector:
+Every analysis script expects a feature matrix and a matching label vector:
 
 | File | Shape | Description |
 | --- | --- | --- |
 | `embeddings.npy` | `(N, D)` | One event per row |
-| `labels.npy` | `(N,)` | Class label per event (optional for some tools) |
+| `labels.npy` | `(N,)` | Class label per event |
 
 Where `N` is the number of events and `D` is the embedding dimension. Row order
-must match between the two files when labels are provided.
+must match between the two files.
 
-### Label policy
-
-Use **verified reference labels** — simulation truth, manual review, or another
-trusted taxonomy. **Do not** use the embedding model's own predictions as labels
-for supervised benchmarks (linear probing, k-means comparison).
-
-| Tool | Labels required? |
-| --- | --- |
-| PCA variance | No |
-| k-means, PCA/UMAP/t-SNE plots | Optional (unlabeled rows shown in gray) |
-| Linear probing | Yes (labeled rows only) |
-
-**Partially labeled data:** mark unlabeled rows with `-1` (default). Supervised
-tools ignore those rows automatically.
-
-**Fully unlabeled data:** omit `labels.npy` in the notebook (`labels_path =
-None`) or provide an all-`-1` vector. Only label-free analyses (PCA variance)
-will run.
+**Partially labeled data:** assign unlabeled events a dedicated label value such
+as `-1`. That value is treated as its own class in every analysis (plots, k-means,
+linear probing), not filtered out. On label-colored plots it is always drawn in
+grey so it stands out from verified classes. Use `class_names` in the notebook or
+`--class-name` in linear probing to give it a readable legend name.
 
 To export embeddings from your model, add the following to your evaluation
 notebook:
@@ -101,18 +87,20 @@ python latent_layer_processing/latent_pipeline.py \
 
 ### Unsupervised Visualization
 
-**UMAP** and **t-SNE** project the high-dimensional embedding space down to 2D.
-When verified labels are available, points are colored by class and unlabeled
-rows appear in gray. Well-separated clusters are a good sign that the encoder has
-learned meaningful structure.
+**UMAP** and **t-SNE** project the high-dimensional embedding space down to 2D
+so you can visually inspect whether the model has learned to group similar
+events together. Points are colored by label; unlabeled events (default `-1`)
+appear in grey.
+Well-separated clusters are a good sign that the encoder has learned meaningful
+structure.
 
 ### Linear Probing
 
-A logistic regression model or linear SVM trained on top of frozen embeddings
-using **verified labels only**. If a simple linear boundary can classify events
-accurately, it means the relevant physics information is cleanly and explicitly
-encoded in the latent space. This is the standard benchmark for representation
-quality. Unlabeled rows (`-1`) are ignored.
+A logistic regression model or linear SVM trained on top of frozen embeddings.
+If a simple linear boundary can classify events accurately, it means the relevant
+physics information is cleanly and explicitly encoded in the latent space. This
+is the standard benchmark for representation quality. Every label value in the
+file is treated as a class, including unlabeled sentinels such as `-1`.
 
 To use linear probing:
 
@@ -127,12 +115,14 @@ To use linear probing:
 
 ### K-Means Clustering
 
-Unsupervised clustering directly in embedding space, evaluated against verified
-labels when available. Unlabeled rows are shown in gray and excluded from the
-class count used to set k.
+Unsupervised clustering directly in embedding space, evaluated against the
+provided labels. The number of clusters matches the number of unique label
+values, including any unlabeled group.
 
 ### PCA Analysis
 
 Uses the principal components of a given latent space to create a
-lower-dimensional representation. **PCA variance analysis** works without
-labels; labeled PCA/UMAP/t-SNE projections require at least one verified class.
+lower-dimensional representation. This representation maps the data along new,
+flat axes that capture the maximum variation and spread of your embeddings.
+PCA variance analysis runs without label coloring; labeled projection plots use
+every class in the label file.
