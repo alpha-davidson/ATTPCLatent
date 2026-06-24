@@ -15,7 +15,7 @@ The notebook preserves raw learned embeddings by default. Optional scaling is
 available for distance-based visualizations when each embedding coordinate
 should contribute equally. t-SNE applies an intermediate linear reduction before
 the final 2D/3D embedding: PCA for dense latent arrays, or TruncatedSVD only for
-genuinely sparse input matrices.
+sparse input matrices.
 
 ### How to Use
 
