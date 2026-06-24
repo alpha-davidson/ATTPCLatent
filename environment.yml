@@ -13,3 +13,4 @@ dependencies:
   - pip
   - pip:
       - umap-learn==0.5.5
+      - scikit-dimension==0.3.3
