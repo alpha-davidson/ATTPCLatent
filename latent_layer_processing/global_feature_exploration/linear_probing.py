@@ -57,6 +57,22 @@ def save_linear_probe_outputs(y_test, y_pred, classes, class_names, results_fold
 
     df.to_csv(f'{results_folder}/classification_report.csv')
 
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.axis('off')
+    table = ax.table(
+        cellText=df.values,
+        rowLabels=df.index,
+        colLabels=df.columns,
+        cellLoc='center',
+        loc='center',
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.5)
+    plt.title('Classification Report', fontsize=14, fontweight='bold', pad=15)
+    plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
+    plt.close()
+
 
 def get_class_names(classes, class_names=None):
     """Use provided class names, or fall back to simple numeric labels."""
