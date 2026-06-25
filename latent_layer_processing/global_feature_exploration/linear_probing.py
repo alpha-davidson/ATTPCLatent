@@ -84,6 +84,19 @@ def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_name
     plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
     plt.close()
 
+def prepare_probe_features(X_train, X_test, apply_batch_norm):
+    """Return probe inputs with optional input batch norm (Lee et al. 2023).
+
+    When enabled, per-dimension mean and variance are fit on the training split
+    only (affine-free, equivalent to BN with gamma=1 and beta=0).
+    """
+    if not apply_batch_norm:
+        return X_train, X_test, None
+
+    scaler = StandardScaler()
+    return scaler.fit_transform(X_train), scaler.transform(X_test), scaler
+
+
 def create_performance_table(results, results_folder):
     """Create a detailed performance table."""
     
@@ -138,14 +151,26 @@ def create_performance_table(results, results_folder):
 @click.option('--max-train-size', default=16000, type=click.INT, help='Maximum training set size')
 @click.option('--num-size-points', default=20, type=click.INT, help='Number of training sizes to test')
 @click.option('--cv-folds', default=3, type=click.INT, help='Number of cross-validation folds for each size')
+@click.option(
+    '--no-batch-norm',
+    is_flag=True,
+    default=False,
+    help='Skip input batch normalization before probing.',
+)
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
 def linear_probe_evaluation(name, test_size, seed, regularization, min_train_size, 
-                            max_train_size, num_size_points, cv_folds, features_file, labels_file):
+                            max_train_size, num_size_points, cv_folds,
+                            no_batch_norm, features_file, labels_file):
     """
     Perform linear probe evaluation with learning curve analysis using pre-extracted
     flat NumPy feature embeddings and corresponding target labels.
+
+    By default, input batch normalization is applied before the linear classifier:
+    train-split mean/variance per dimension,
+    no learnable scale or shift. Use --no-batch-norm to probe raw embeddings.
     """
+    apply_batch_norm = not no_batch_norm
 
     print("Loading features and labels...")
 
@@ -192,11 +217,18 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     train_sizes = generate_log_train_sizes(min_train_size, max_train_size, num_size_points)
     print(f"Training sizes to test: {train_sizes}")
     
-    # Standardize features (fit on full training set)
-    print("Standardizing features...")
-    scaler = StandardScaler()
-    X_train_full_scaled = scaler.fit_transform(X_train_full)
-    X_test_scaled = scaler.transform(X_test)
+    X_train_probe, X_test_probe, scaler = prepare_probe_features(
+        X_train_full,
+        X_test,
+        apply_batch_norm,
+    )
+    if apply_batch_norm:
+        print(
+            "Using input batch normalization (train-split mean/variance, "
+            "Lee et al. 2023 protocol)."
+        )
+    else:
+        print("Using raw frozen embeddings without input batch normalization.")
     
     # Initialize results storage
     learning_curve_results = {
@@ -223,14 +255,14 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
         for fold in range(cv_folds):
             # Randomly sample training data of the specified size
             current_seed = base_seed + fold
-            if train_size >= len(X_train_full_scaled):
+            if train_size >= len(X_train_probe):
                 # Use all available training data
-                X_train_subset = X_train_full_scaled
+                X_train_subset = X_train_probe
                 y_train_subset = y_train_full
             else:
                 
                 X_train_subset, _, y_train_subset, _ = train_test_split(
-                X_train_full_scaled, y_train_full,
+                X_train_probe, y_train_full,
                 train_size=train_size,
                 stratify=y_train_full,
                 random_state=current_seed
@@ -247,7 +279,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
             
             # Evaluate
             train_pred = linear_probe.predict(X_train_subset)
-            test_pred = linear_probe.predict(X_test_scaled)
+            test_pred = linear_probe.predict(X_test_probe)
             
             train_acc = accuracy_score(y_train_subset, train_pred)
             test_acc = accuracy_score(y_test, test_pred)
@@ -300,7 +332,18 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
             'cv_folds': cv_folds,
             'min_train_size': min_train_size,
             'max_train_size': max_train_size,
-            'num_size_points': num_size_points
+            'num_size_points': num_size_points,
+            'batch_norm': apply_batch_norm,
+            'preprocessing': {
+                'input_batch_norm': apply_batch_norm,
+                'feature_scaling': (
+                    'train-split batch norm (Lee et al. 2023, affine-free)'
+                    if apply_batch_norm
+                    else 'none'
+                ),
+                'dimensionality_reduction': None,
+                'uses_full_embedding_dimension': True,
+            },
         },
         'learning_curve_results': learning_curve_results
     }
@@ -318,12 +361,12 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
         random_state=base_seed,
         max_iter=5000
     )
-    final_linear_probe.fit(X_train_full_scaled, y_train_full)
+    final_linear_probe.fit(X_train_probe, y_train_full)
     
     # Final evaluation
-    y_train_final_pred = final_linear_probe.predict(X_train_full_scaled)
-    y_test_final_pred = final_linear_probe.predict(X_test_scaled)
-    y_test_final_prob = final_linear_probe.predict_proba(X_test_scaled)
+    y_train_final_pred = final_linear_probe.predict(X_train_probe)
+    y_test_final_pred = final_linear_probe.predict(X_test_probe)
+    y_test_final_prob = final_linear_probe.predict_proba(X_test_probe)
     
     final_train_acc = accuracy_score(y_train_full, y_train_final_pred)
     final_test_acc = accuracy_score(y_test, y_test_final_pred)
@@ -333,7 +376,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     # Create additional visualizations for final model
     class_names = [f'{int(cls)}-track' for cls in unique_classes]
     create_final_model_visualizations(
-        X_test_scaled, y_test, y_test_final_pred, y_test_final_prob,
+        X_test_probe, y_test, y_test_final_pred, y_test_final_prob,
         class_names, results_folder, final_linear_probe
     )
     
