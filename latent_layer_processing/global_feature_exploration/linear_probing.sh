@@ -1,6 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name "LINEAR_PROBING"
 #SBATCH --mem 32G
+#SBATCH --gpus 1
 #SBATCH --output=logs/linear_probe_%j.log
 
 source activate attpc-latent
