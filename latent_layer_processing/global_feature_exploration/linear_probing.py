@@ -84,9 +84,13 @@ def create_final_model_visualizations(X_test, y_test, y_pred, y_prob, class_name
     plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
     plt.close()
 
-def prepare_probe_features(X_train, X_test, standardize_features):
-    """Return probe inputs, optionally standardized using train-only statistics."""
-    if not standardize_features:
+def prepare_probe_features(X_train, X_test, apply_batch_norm):
+    """Return probe inputs with optional input batch norm (Lee et al. 2023).
+
+    When enabled, per-dimension mean and variance are fit on the training split
+    only (affine-free, equivalent to BN with gamma=1 and beta=0).
+    """
+    if not apply_batch_norm:
         return X_train, X_test, None
 
     scaler = StandardScaler()
@@ -148,24 +152,25 @@ def create_performance_table(results, results_folder):
 @click.option('--num-size-points', default=20, type=click.INT, help='Number of training sizes to test')
 @click.option('--cv-folds', default=3, type=click.INT, help='Number of cross-validation folds for each size')
 @click.option(
-    '--standardize-features',
+    '--no-batch-norm',
     is_flag=True,
     default=False,
-    help='Apply StandardScaler fit on the training split before probing.',
+    help='Skip input batch normalization before probing.',
 )
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
 def linear_probe_evaluation(name, test_size, seed, regularization, min_train_size, 
                             max_train_size, num_size_points, cv_folds,
-                            standardize_features, features_file, labels_file):
+                            no_batch_norm, features_file, labels_file):
     """
     Perform linear probe evaluation with learning curve analysis using pre-extracted
     flat NumPy feature embeddings and corresponding target labels.
 
-    The default probe uses the full frozen embedding vector without additional
-    preprocessing. Use --standardize-features to apply train-only StandardScaler
-    when equal coordinate weighting is desired.
+    By default, input batch normalization is applied before the linear classifier:
+    train-split mean/variance per dimension,
+    no learnable scale or shift. Use --no-batch-norm to probe raw embeddings.
     """
+    apply_batch_norm = not no_batch_norm
 
     print("Loading features and labels...")
 
@@ -215,12 +220,15 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
     X_train_probe, X_test_probe, scaler = prepare_probe_features(
         X_train_full,
         X_test,
-        standardize_features,
+        apply_batch_norm,
     )
-    if standardize_features:
-        print("Using standardized probe features (StandardScaler fit on training split only).")
+    if apply_batch_norm:
+        print(
+            "Using input batch normalization (train-split mean/variance, "
+            "Lee et al. 2023 protocol)."
+        )
     else:
-        print("Using raw frozen embeddings without additional preprocessing.")
+        print("Using raw frozen embeddings without input batch normalization.")
     
     # Initialize results storage
     learning_curve_results = {
@@ -325,11 +333,12 @@ def linear_probe_evaluation(name, test_size, seed, regularization, min_train_siz
             'min_train_size': min_train_size,
             'max_train_size': max_train_size,
             'num_size_points': num_size_points,
-            'standardize_features': standardize_features,
+            'batch_norm': apply_batch_norm,
             'preprocessing': {
+                'input_batch_norm': apply_batch_norm,
                 'feature_scaling': (
-                    'StandardScaler fit on training split only'
-                    if standardize_features
+                    'train-split batch norm (Lee et al. 2023, affine-free)'
+                    if apply_batch_norm
                     else 'none'
                 ),
                 'dimensionality_reduction': None,

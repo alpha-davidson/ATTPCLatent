@@ -7,7 +7,7 @@
 source activate attpc-latent
 # Adapt the models sub-folder as needed to the correct file name. 
 # IF YOU WOULD LIKE TO RUN ON A SPECIFIC SEED; ADD --seed <SEED_VALUE> TO THE ARGUMENTS BELOW. AFTER TEST-SIZE and BEFORE REGULARIZATION.
-# Add --standardize-features to apply train-only StandardScaler before probing.
+# Add --no-batch-norm to probe raw embeddings without input batch normalization.
 python linear_probing.py \
     --name testing \
     --test-size 0.2 \

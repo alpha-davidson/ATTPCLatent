@@ -89,9 +89,10 @@ can classify events accurately, it means the relevant physics information is
 cleanly and explicitly encoded in the latent space. This is the standard
 benchmark for representation quality.
 
-Linear probing uses the full frozen embedding dimension by default on raw
-embeddings. Add `--standardize-features` if you want train-only StandardScaler
-before probing. PCA, UMAP, and t-SNE are not used before the default probe.
+Linear probing uses the full frozen embedding dimension with input batch
+normalization by default: 
+Add `--no-batch-norm` to probe raw embeddings instead. PCA, UMAP, and
+t-SNE are not used before the default probe.
 
 To use linear probing:
 
