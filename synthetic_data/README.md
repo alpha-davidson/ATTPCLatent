@@ -26,14 +26,12 @@ python latent_layer_processing/latent_pipeline.py \
   --name synthetic_class \
   --features data/synthetic_latent/synthetic_class_features.npy \
   --labels data/synthetic_latent/synthetic_class_labels.npy \
-  --samples 50 \
   --output-dir data/synthetic_latent/class_results
 
 python latent_layer_processing/latent_pipeline.py \
   --name synthetic_gaussian_noise \
   --features data/synthetic_latent/synthetic_gaussian_noise_features.npy \
   --labels data/synthetic_latent/synthetic_gaussian_noise_labels.npy \
-  --samples 50 \
   --output-dir data/synthetic_latent/gaussian_noise_results
 ```
 
