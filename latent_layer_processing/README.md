@@ -2,14 +2,13 @@
 
 This folder contains tools for exploring latent representations with
 clustering/embedding methods such as t-SNE, UMAP, and k-means. It also contains
-linear probing and SVM classification utilities.
+linear probing utilities.
 
 ## 1. Global Feature Exploration & Clustering
 
-`global_feature_exploration.ipynb` is the interactive workspace used to explore
-the geometric distribution of the latent space. It interfaces with
-`clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
-generating projections in both 2D and 3D spaces.
+The notebook and `clustering.py` support class-colored plots by default. For
+continuous metadata such as energy or charge, pass `color_mode='continuous'` and
+`values=<array>` to `UMAP_embedding` or `t_SNE_clustering`.
 
 ### How to Use
 
@@ -30,7 +29,6 @@ method when a `plot_name` is provided.
 `latent_pipeline.py` runs a small suite of checks on any saved latent feature
 dataset:
 
-- SVM classification through `svm/svm.py`
 - k-means clustering through `global_feature_exploration/clustering.py`
 - t-SNE through `global_feature_exploration/clustering.py`
 
@@ -41,43 +39,23 @@ python latent_layer_processing/latent_pipeline.py \
   --name synthetic_class \
   --features data/synthetic_latent/synthetic_class_features.npy \
   --labels data/synthetic_latent/synthetic_class_labels.npy \
-  --samples 50 \
   --output-dir data/synthetic_latent/class_results
 ```
 
 ## 3. Linear Probing
 
-`linear_probing.py` applies a fast linear classifier over frozen latent spaces
-to calculate overall classification accuracy. This evaluates how explicitly the
-encoder separates fundamental physics event topologies.
+`linear_probing.py` applies a fast linear classifier or Ridge regressor over frozen
+latent spaces. Use `--task classification` (default) for class labels, or
+`--task regression` for continuous targets with shape `(N,)`.
 
 ### How to Run
 
-Modify `linear_probing.sh` to specify the path to your target `.npy` feature
-matrix, labels, and model identification name. Execute the shell script to run
-the evaluation loop:
+Modify `global_feature_exploration/linear_probing.sh` to specify the path to
+your target `.npy` feature matrix, labels, and model identification name. Use
+`--classifier linear-svm` for a linear SVM instead of logistic regression.
+Execute the shell script from that folder:
 
 ```bash
+cd global_feature_exploration
 bash linear_probing.sh
 ```
-
-## 4. SVM Classification & Sample Scaling
-
-Simple probes of the latent embeddings from a pretrained model. An SVM is
-trained on the frozen embeddings across increasing training sizes to test
-whether similar physics events are grouped together in the learned space.
-
-Run `svm/svm.py` with a feature file and a label file:
-
-```bash
-python latent_layer_processing/svm/svm.py \
-  data/synthetic_latent/synthetic_class_features.npy \
-  data/synthetic_latent/synthetic_class_labels.npy \
-  --samples 50 \
-  --output-dir data/synthetic_latent/class_results/svm
-```
-
-The feature file should contain an array shaped like `(num_events, latent_dim)`.
-The label file should contain one class label per event. The script balances the
-classes using `--samples`, trains a linear SVM, prints accuracy/F1, saves
-predicted labels, and writes a confusion matrix to the output directory.
