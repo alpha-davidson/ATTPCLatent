@@ -6,10 +6,9 @@ linear probing utilities.
 
 ## 1. Global Feature Exploration & Clustering
 
-`global_feature_exploration.ipynb` is the interactive workspace used to explore
-the geometric distribution of the latent space. It interfaces with
-`clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
-generating projections in both 2D and 3D spaces.
+The notebook and `clustering.py` support class-colored plots by default. For
+continuous metadata such as energy or charge, pass `color_mode='continuous'` and
+`values=<array>` to `UMAP_embedding` or `t_SNE_clustering`.
 
 ### How to Use
 
@@ -45,9 +44,9 @@ python latent_layer_processing/latent_pipeline.py \
 
 ## 3. Linear Probing
 
-`linear_probing.py` applies a fast linear classifier over frozen latent spaces
-to calculate overall classification accuracy. This evaluates how explicitly the
-encoder separates fundamental physics event topologies.
+`linear_probing.py` applies a fast linear classifier or Ridge regressor over frozen
+latent spaces. Use `--task classification` (default) for class labels, or
+`--task regression` for continuous targets with shape `(N,)`.
 
 ### How to Run
 

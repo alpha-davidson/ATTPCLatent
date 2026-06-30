@@ -21,6 +21,33 @@ def _validate_features_and_labels(features, labels):
         )
     return features, labels
 
+def _validate_features_and_values(features, values):
+    values = np.asarray(values, dtype=float).ravel()
+    if values.ndim != 1:
+        raise ValueError(
+            "values must be a one-dimensional array with one value per feature row; "
+            f"got shape {values.shape}."
+        )
+    if len(features) != len(values):
+        raise ValueError(
+            "features and values must contain the same number of rows; "
+            f"got {len(features)} features and {len(values)} values."
+        )
+    if not np.any(np.isfinite(values)):
+        raise ValueError("values must contain at least one finite value.")
+    return features, values
+
+def _resolve_color_limits(values, vmin, vmax):
+    finite_values = values[np.isfinite(values)]
+    if vmin is None:
+        vmin = float(np.percentile(finite_values, 2))
+    if vmax is None:
+        vmax = float(np.percentile(finite_values, 98))
+    if vmin >= vmax:
+        vmin = float(np.min(finite_values))
+        vmax = float(np.max(finite_values))
+    return vmin, vmax
+
 def _validate_plot_dimension(dimension, function_name):
     if dimension not in (2, 3):
         raise ValueError(f"{function_name} plots only support dimension=2 or dimension=3.")
@@ -98,61 +125,174 @@ def _plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
                 alpha=alpha,
             )
 
-def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=None,
-                     plt_colors=None, save_dir=None, plot_name=None, random_state=None):
-    """Run t-SNE and plot points colored by class label.
+def _plot_continuous_embedding(
+    embedding,
+    values,
+    ax,
+    cmap="viridis",
+    colorbar_label=None,
+    size=15,
+    alpha=0.7,
+    vmin=None,
+    vmax=None,
+):
+    if embedding.shape[1] not in (2, 3):
+        raise ValueError("Continuous embedding plots require 2 or 3 dimensions.")
 
-    labels must contain one label for each row in features. class_names is
-    optional; when provided as a list, it follows np.unique(labels) order.
-    plt_colors is optional; when omitted, one color is generated per class.
+    values = np.asarray(values, dtype=float).ravel()
+    vmin, vmax = _resolve_color_limits(values, vmin, vmax)
+
+    if embedding.shape[1] == 2:
+        scatter = ax.scatter(
+            embedding[:, 0],
+            embedding[:, 1],
+            c=values,
+            cmap=cmap,
+            s=size,
+            alpha=alpha,
+            vmin=vmin,
+            vmax=vmax,
+        )
+    else:
+        scatter = ax.scatter(
+            embedding[:, 0],
+            embedding[:, 1],
+            embedding[:, 2],
+            c=values,
+            cmap=cmap,
+            s=size,
+            alpha=alpha,
+            vmin=vmin,
+            vmax=vmax,
+        )
+
+    colorbar = ax.figure.colorbar(scatter, ax=ax)
+    if colorbar_label:
+        colorbar.set_label(colorbar_label)
+
+def t_SNE_clustering(
+    features,
+    dimension,
+    ax,
+    labels=None,
+    perplexity=30,
+    class_names=None,
+    plt_colors=None,
+    save_dir=None,
+    plot_name=None,
+    random_state=None,
+    color_mode="class",
+    values=None,
+    cmap="viridis",
+    colorbar_label=None,
+    vmin=None,
+    vmax=None,
+):
+    """Run t-SNE and plot points colored by class labels or a continuous variable.
+
+    For class coloring, pass labels with color_mode='class' (default).
+    For gradient coloring, pass values with color_mode='continuous'.
+    The embedding is always fit on features only.
     """
 
     _validate_plot_dimension(dimension, "t_SNE_clustering")
-    features, labels = _validate_features_and_labels(features, labels)
-    labels, unique_labels, class_names = _get_class_names(labels, class_names)
+    if color_mode not in ("class", "continuous"):
+        raise ValueError("color_mode must be 'class' or 'continuous'.")
 
-    # create a folder for t-SNE clustering
     folder_path = os.path.join(save_dir or "../plots", "t-sne", f"{dimension}d_plots")
     os.makedirs(folder_path, exist_ok=True)
 
     if plot_name is None:
         plot_name = f"t_sne_{dimension}d"
 
-    # apply t-SNE clustering over all features at once
     model = TSNE(n_components=dimension, perplexity=perplexity, random_state=random_state)
     tsne_data = model.fit_transform(features)
 
-    _plot_labeled_embedding(tsne_data, labels, unique_labels, class_names, ax, plt_colors)
-    ax.figure.savefig(os.path.join(folder_path, f"{plot_name}_perplexity_{perplexity}.png"), dpi=200)
+    if color_mode == "class":
+        if labels is None:
+            raise ValueError("labels are required when color_mode='class'.")
+        features, labels = _validate_features_and_labels(features, labels)
+        labels, unique_labels, class_names = _get_class_names(labels, class_names)
+        _plot_labeled_embedding(tsne_data, labels, unique_labels, class_names, ax, plt_colors)
+        output_name = f"{plot_name}_perplexity_{perplexity}.png"
+    else:
+        if values is None:
+            raise ValueError("values are required when color_mode='continuous'.")
+        features, values = _validate_features_and_values(features, values)
+        _plot_continuous_embedding(
+            tsne_data,
+            values,
+            ax,
+            cmap=cmap,
+            colorbar_label=colorbar_label,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        output_name = f"{plot_name}_continuous_perplexity_{perplexity}.png"
 
-    return tsne_data 
+    ax.figure.savefig(os.path.join(folder_path, output_name), dpi=200)
+    return tsne_data
 
-def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
-                   plt_colors=None, save_dir=None, plot_name=None, random_state=None):
-    """Run UMAP and plot points colored by class label.
+def UMAP_embedding(
+    features,
+    dimension,
+    ax,
+    labels=None,
+    neighbors=15,
+    class_names=None,
+    plt_colors=None,
+    save_dir=None,
+    plot_name=None,
+    random_state=None,
+    color_mode="class",
+    values=None,
+    cmap="viridis",
+    colorbar_label=None,
+    vmin=None,
+    vmax=None,
+):
+    """Run UMAP and plot points colored by class labels or a continuous variable.
 
-    labels must contain one label for each row in features. class_names is
-    optional; when provided as a list, it follows np.unique(labels) order.
-    plt_colors is optional; when omitted, one color is generated per class.
+    For class coloring, pass labels with color_mode='class' (default).
+    For gradient coloring, pass values with color_mode='continuous'.
+    The embedding is always fit on features only.
     """
     _validate_plot_dimension(dimension, "UMAP_embedding")
-    features, labels = _validate_features_and_labels(features, labels)
-    labels, unique_labels, class_names = _get_class_names(labels, class_names)
+    if color_mode not in ("class", "continuous"):
+        raise ValueError("color_mode must be 'class' or 'continuous'.")
 
-    # create a folder for UMAP embedding
     folder_path = os.path.join(save_dir or "../plots", "umap", f"{dimension}d_plots")
     os.makedirs(folder_path, exist_ok=True)
 
     if plot_name is None:
         plot_name = f"umap_{dimension}d"
 
-    # apply UMAP embedding over all features at once
     model = umap.UMAP(n_components=dimension, n_neighbors=neighbors, random_state=random_state)
     umap_data = model.fit_transform(features)
 
-    _plot_labeled_embedding(umap_data, labels, unique_labels, class_names, ax, plt_colors)
-    ax.figure.savefig(os.path.join(folder_path, f"{plot_name}_neighbors_{neighbors}.png"), dpi=200)
+    if color_mode == "class":
+        if labels is None:
+            raise ValueError("labels are required when color_mode='class'.")
+        features, labels = _validate_features_and_labels(features, labels)
+        labels, unique_labels, class_names = _get_class_names(labels, class_names)
+        _plot_labeled_embedding(umap_data, labels, unique_labels, class_names, ax, plt_colors)
+        output_name = f"{plot_name}_neighbors_{neighbors}.png"
+    else:
+        if values is None:
+            raise ValueError("values are required when color_mode='continuous'.")
+        features, values = _validate_features_and_values(features, values)
+        _plot_continuous_embedding(
+            umap_data,
+            values,
+            ax,
+            cmap=cmap,
+            colorbar_label=colorbar_label,
+            vmin=vmin,
+            vmax=vmax,
+        )
+        output_name = f"{plot_name}_continuous_neighbors_{neighbors}.png"
 
+    ax.figure.savefig(os.path.join(folder_path, output_name), dpi=200)
     return umap_data
 
 def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_to_print=10,
