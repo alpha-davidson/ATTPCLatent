@@ -11,21 +11,7 @@ import seaborn as sns
 import os
 import json
 
-
-def validate_features_and_labels(features, labels):
-    """Validate that every feature row has exactly one label."""
-    labels = np.asarray(labels)
-    if labels.ndim != 1:
-        raise ValueError(
-            "labels must be a one-dimensional array with one label per feature row; "
-            f"got shape {labels.shape}."
-        )
-    if len(features) != len(labels):
-        raise ValueError(
-            "features and labels must contain the same number of rows; "
-            f"got {len(features)} features and {len(labels)} labels."
-        )
-    return features, labels
+from utils import validate_features_and_labels, format_class_names
 
 
 def save_linear_probe_outputs(y_test, y_pred, classes, class_names, results_folder):
@@ -72,27 +58,6 @@ def save_linear_probe_outputs(y_test, y_pred, classes, class_names, results_fold
     plt.title('Classification Report', fontsize=14, fontweight='bold', pad=15)
     plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
     plt.close()
-
-
-def get_class_names(classes, class_names=None):
-    """Use provided class names, or fall back to simple numeric labels."""
-    if class_names:
-        if len(class_names) != len(classes):
-            raise ValueError(
-                f"Expected {len(classes)} class names, got {len(class_names)}. "
-                "Provide one --class-name value per unique label."
-            )
-        return list(class_names)
-
-    numeric_class_names = []
-    for cls in classes:
-        try:
-            value = float(cls)
-        except (TypeError, ValueError):
-            numeric_class_names.append(str(cls))
-        else:
-            numeric_class_names.append(str(int(value)) if value.is_integer() else str(cls))
-    return numeric_class_names
 
 
 @click.command()
@@ -172,7 +137,7 @@ def linear_probe_evaluation(name, test_size, seed, regularization, classifier, c
     
     print(f"Linear probe - Train Acc: {train_acc:.4f}, Test Acc: {test_acc:.4f}")
     
-    class_names = get_class_names(unique_classes, class_names)
+    class_names = format_class_names(unique_classes, class_names)
     save_linear_probe_outputs(y_test, y_test_pred, unique_classes, class_names, results_folder)
 
     results = {

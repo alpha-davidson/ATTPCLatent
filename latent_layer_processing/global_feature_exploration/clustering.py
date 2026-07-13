@@ -7,96 +7,13 @@ from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 import umap
 
-def _validate_features_and_labels(features, labels):
-    labels = np.asarray(labels)
-    if labels.ndim != 1:
-        raise ValueError(
-            "labels must be a one-dimensional array with one label per feature row; "
-            f"got shape {labels.shape}."
-        )
-    if len(features) != len(labels):
-        raise ValueError(
-            "features and labels must contain the same number of rows; "
-            f"got {len(features)} features and {len(labels)} labels."
-        )
-    return features, labels
-
-def _validate_plot_dimension(dimension, function_name):
-    if dimension not in (2, 3):
-        raise ValueError(f"{function_name} plots only support dimension=2 or dimension=3.")
-
-def _get_class_names(labels, class_names):
-    """Return labels, sorted label values, and display names.
-
-    labels should contain one class label for each row in the feature matrix.
-    If class_names is a list, it must follow the order of np.unique(labels).
-    If class_names is a dict, keys should be raw label values and values are
-    the display names used in plot legends.
-    """
-    labels = np.asarray(labels)
-    unique_labels = np.unique(labels)
-    if class_names is None:
-        class_names = [str(label) for label in unique_labels]
-    elif isinstance(class_names, dict):
-        missing_labels = [label for label in unique_labels if label not in class_names]
-        if missing_labels:
-            raise ValueError(f"class_names is missing labels: {missing_labels}")
-        class_names = [class_names[label] for label in unique_labels]
-    if len(class_names) != len(unique_labels):
-        raise ValueError(
-            f"class_names must have {len(unique_labels)} entries, got {len(class_names)}"
-        )
-    return labels, unique_labels, class_names
-
-def _get_plot_colors(n_classes, plt_colors=None):
-    """Return one color per class without reusing colors.
-
-    If plt_colors is provided, it must include at least one color per class.
-    Otherwise, colors are generated from tab10 for up to 10 classes, tab20 for
-    up to 20 classes, and hsv for larger class counts.
-    """
-    if plt_colors is not None:
-        if len(plt_colors) < n_classes:
-            raise ValueError(
-                f"Need at least {n_classes} colors for {n_classes} classes; "
-                f"got {len(plt_colors)}."
-            )
-        return plt_colors
-
-    colormap_name = "tab10" if n_classes <= 10 else "tab20" if n_classes <= 20 else "hsv"
-    color_map = plt.colormaps[colormap_name].resampled(n_classes)
-    return [color_map(i) for i in range(n_classes)]
-
-def _plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
-                            plt_colors=None, size=15, alpha=0.7):
-    if embedding.shape[1] not in (2, 3):
-        raise ValueError("Labeled embedding plots require 2 or 3 dimensions.")
-
-    colors = _get_plot_colors(len(unique_labels), plt_colors)
-    for class_index, label_value in enumerate(unique_labels):
-        mask = (labels == label_value)
-        if not np.any(mask):
-            continue
-
-        if embedding.shape[1] == 2:
-            ax.scatter(
-                embedding[mask, 0],
-                embedding[mask, 1],
-                color=colors[class_index],
-                label=class_names[class_index],
-                s=size,
-                alpha=alpha,
-            )
-        else:
-            ax.scatter(
-                embedding[mask, 0],
-                embedding[mask, 1],
-                embedding[mask, 2],
-                color=colors[class_index],
-                label=class_names[class_index],
-                s=size,
-                alpha=alpha,
-            )
+from utils import (
+    validate_features_and_labels,
+    validate_plot_dimension,
+    get_class_names,
+    get_plot_colors,
+    plot_labeled_embedding,
+)
 
 def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=None,
                      plt_colors=None, save_dir=None, plot_name=None, random_state=None):
@@ -107,9 +24,9 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
     plt_colors is optional; when omitted, one color is generated per class.
     """
 
-    _validate_plot_dimension(dimension, "t_SNE_clustering")
-    features, labels = _validate_features_and_labels(features, labels)
-    labels, unique_labels, class_names = _get_class_names(labels, class_names)
+    validate_plot_dimension(dimension, "t_SNE_clustering")
+    features, labels = validate_features_and_labels(features, labels)
+    labels, unique_labels, class_names = get_class_names(labels, class_names)
 
     # create a folder for t-SNE clustering
     folder_path = os.path.join(save_dir or "../plots", "t-sne", f"{dimension}d_plots")
@@ -122,7 +39,7 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
     model = TSNE(n_components=dimension, perplexity=perplexity, random_state=random_state)
     tsne_data = model.fit_transform(features)
 
-    _plot_labeled_embedding(tsne_data, labels, unique_labels, class_names, ax, plt_colors)
+    plot_labeled_embedding(tsne_data, labels, unique_labels, class_names, ax, plt_colors)
     ax.figure.savefig(os.path.join(folder_path, f"{plot_name}_perplexity_{perplexity}.png"), dpi=200)
 
     return tsne_data 
@@ -135,9 +52,9 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
     optional; when provided as a list, it follows np.unique(labels) order.
     plt_colors is optional; when omitted, one color is generated per class.
     """
-    _validate_plot_dimension(dimension, "UMAP_embedding")
-    features, labels = _validate_features_and_labels(features, labels)
-    labels, unique_labels, class_names = _get_class_names(labels, class_names)
+    validate_plot_dimension(dimension, "UMAP_embedding")
+    features, labels = validate_features_and_labels(features, labels)
+    labels, unique_labels, class_names = get_class_names(labels, class_names)
 
     # create a folder for UMAP embedding
     folder_path = os.path.join(save_dir or "../plots", "umap", f"{dimension}d_plots")
@@ -150,7 +67,7 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
     model = umap.UMAP(n_components=dimension, n_neighbors=neighbors, random_state=random_state)
     umap_data = model.fit_transform(features)
 
-    _plot_labeled_embedding(umap_data, labels, unique_labels, class_names, ax, plt_colors)
+    plot_labeled_embedding(umap_data, labels, unique_labels, class_names, ax, plt_colors)
     ax.figure.savefig(os.path.join(folder_path, f"{plot_name}_neighbors_{neighbors}.png"), dpi=200)
 
     return umap_data
@@ -162,9 +79,9 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     """
-    _validate_plot_dimension(dimension, "k_means_clustering")
+    validate_plot_dimension(dimension, "k_means_clustering")
 
-    features, labels = _validate_features_and_labels(features, labels)
+    features, labels = validate_features_and_labels(features, labels)
     folder_path = os.path.join(save_dir or "../plots/k_means", f"{dimension}d_plots")
     os.makedirs(folder_path, exist_ok=True)
 
@@ -172,7 +89,7 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
         plot_name = f'k_means_{dimension}d'
 
     # k-means clustering on full feature space
-    labels, unique_labels, class_names = _get_class_names(labels, class_names)
+    labels, unique_labels, class_names = get_class_names(labels, class_names)
     k = len(unique_labels)
     kmeans = KMeans(n_clusters=k, init="k-means++", n_init='auto', random_state=random_state)
     cluster_labels = kmeans.fit_predict(features)
@@ -196,26 +113,26 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
 
     if dimension == 2:
         fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-        _plot_labeled_embedding(reduced_features, cluster_labels, cluster_values, cluster_names, ax1, size=5, alpha=1.0)
+        plot_labeled_embedding(reduced_features, cluster_labels, cluster_values, cluster_names, ax1, size=5, alpha=1.0)
         ax1.scatter(centroid_features[:, 0], centroid_features[:, 1],
                     marker='x', s=60, c='black', label='Centroids')
         ax1.set_title("KMeans Clustering")
         ax1.legend()
 
-        _plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0)
+        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0)
         ax2.set_title("True Labels")
         ax2.legend()
 
     else:
         fig = plt.figure(figsize=(14, 6))
         ax1 = fig.add_subplot(121, projection='3d')
-        _plot_labeled_embedding(reduced_features, cluster_labels, cluster_values, cluster_names, ax1, size=5, alpha=1.0)
+        plot_labeled_embedding(reduced_features, cluster_labels, cluster_values, cluster_names, ax1, size=5, alpha=1.0)
         ax1.scatter(*centroid_features.T, marker='x', s=60, c='black', label='Centroids')
         ax1.set_title("KMeans Clustering")
         ax1.legend()
 
         ax2 = fig.add_subplot(122, projection='3d')
-        _plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0)
+        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0)
         ax2.set_title("True Labels")
         ax2.legend()
 
@@ -233,9 +150,9 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     """
-    _validate_plot_dimension(dimension, "pca_clustering")
+    validate_plot_dimension(dimension, "pca_clustering")
 
-    features, labels = _validate_features_and_labels(features, labels)
+    features, labels = validate_features_and_labels(features, labels)
     folder_path = os.path.join(save_dir or "../plots/pca", f"{dimension}d_plots")
     os.makedirs(folder_path, exist_ok=True)
 
@@ -250,11 +167,11 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     pca = PCA(n_components=n_components, random_state=random_state)
     reduced_features = pca.fit_transform(features)
 
-    labels, unique_labels, class_names = _get_class_names(labels, class_names)
+    labels, unique_labels, class_names = get_class_names(labels, class_names)
 
     if dimension == 2:
         fig, ax = plt.subplots(figsize=(7, 6))
-        _plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0)
+        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0)
         ax.set_title("PCA Projection")
         ax.legend()
         filename = "pca_2d.png" if plot_name is None else f"{plot_name}_pca_2d.png"
@@ -264,7 +181,7 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     elif dimension == 3:
         fig = plt.figure(figsize=(7, 6))
         ax = fig.add_subplot(111, projection='3d')
-        _plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0)
+        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0)
         ax.set_title("PCA Projection")
         ax.legend()
         filename = "pca_3d.png" if plot_name is None else f"{plot_name}_pca_3d.png"
