@@ -4,6 +4,24 @@ and linear_probing.py."""
 import matplotlib.pyplot as plt
 import numpy as np
 
+DEFAULT_UNLABELED_VALUES = (-1,)
+UNLABELED_PLOT_COLOR = "0.55"
+
+
+def _normalize_unlabeled_values(unlabeled_values):
+    if unlabeled_values is None:
+        return DEFAULT_UNLABELED_VALUES
+    if np.isscalar(unlabeled_values):
+        return (unlabeled_values,)
+    return tuple(unlabeled_values)
+
+
+def _is_unlabeled_label(label_value, unlabeled_values):
+    for value in _normalize_unlabeled_values(unlabeled_values):
+        if label_value == value or str(label_value) == str(value):
+            return True
+    return False
+
 
 def validate_features_and_labels(features, labels):
     """Validate that every feature row has exactly one label."""
@@ -97,21 +115,35 @@ def get_plot_colors(n_classes, plt_colors=None):
 
 
 def plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
-                            plt_colors=None, size=15, alpha=0.7):
+                            plt_colors=None, size=15, alpha=0.7,
+                            unlabeled_values=DEFAULT_UNLABELED_VALUES):
     if embedding.shape[1] not in (2, 3):
         raise ValueError("Labeled embedding plots require 2 or 3 dimensions.")
 
-    colors = get_plot_colors(len(unique_labels), plt_colors)
+    labeled_unique = [
+        label_value
+        for label_value in unique_labels
+        if not _is_unlabeled_label(label_value, unlabeled_values)
+    ]
+    colors = get_plot_colors(len(labeled_unique), plt_colors)
+    labeled_color_index = 0
+
     for class_index, label_value in enumerate(unique_labels):
         mask = (labels == label_value)
         if not np.any(mask):
             continue
 
+        if _is_unlabeled_label(label_value, unlabeled_values):
+            color = UNLABELED_PLOT_COLOR
+        else:
+            color = colors[labeled_color_index]
+            labeled_color_index += 1
+
         if embedding.shape[1] == 2:
             ax.scatter(
                 embedding[mask, 0],
                 embedding[mask, 1],
-                color=colors[class_index],
+                color=color,
                 label=class_names[class_index],
                 s=size,
                 alpha=alpha,
@@ -121,7 +153,7 @@ def plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
                 embedding[mask, 0],
                 embedding[mask, 1],
                 embedding[mask, 2],
-                color=colors[class_index],
+                color=color,
                 label=class_names[class_index],
                 s=size,
                 alpha=alpha,

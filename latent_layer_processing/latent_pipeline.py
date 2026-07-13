@@ -18,7 +18,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 CLUSTERING_DIR = REPO_ROOT / "latent_layer_processing" / "global_feature_exploration"
 
 sys.path.insert(0, str(CLUSTERING_DIR))
-from clustering import k_means_clustering, t_SNE_clustering  # noqa: E402
+from clustering import k_means_clustering, pca_variance_analysis, t_SNE_clustering  # noqa: E402
 
 
 @click.command()
@@ -34,10 +34,15 @@ from clustering import k_means_clustering, t_SNE_clustering  # noqa: E402
 @click.option("--perplexity", default=20, type=click.INT, help="t-SNE perplexity.")
 def main(name, features, labels, output_dir, perplexity):
     feature_data = np.load(features)
-    label_data = np.load(labels)
+    label_data = np.load(labels).ravel()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # The clustering helpers save plots relative to their own folder.
+    pca_variance_analysis(
+        feature_data,
+        save_dir=str(output_dir),
+        plot_name=name,
+    )
+
     os.chdir(CLUSTERING_DIR)
     _, cluster_labels, _ = k_means_clustering(
         feature_data,
@@ -56,12 +61,14 @@ def main(name, features, labels, output_dir, perplexity):
         labels=label_data,
         perplexity=perplexity,
         plot_name=name,
+        save_dir=str(output_dir),
     )
     plt.close(fig)
 
+    ari = adjusted_rand_score(label_data, cluster_labels)
     print(f"\n{name}")
     print(f"  features: {feature_data.shape}")
-    print(f"  k-means adjusted rand: {adjusted_rand_score(label_data, cluster_labels):.4f}")
+    print(f"  k-means adjusted rand: {ari:.4f}")
     print(f"  t-SNE output: {tsne.shape}")
 
 

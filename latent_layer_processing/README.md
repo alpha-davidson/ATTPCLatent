@@ -17,7 +17,8 @@ generating projections in both 2D and 3D spaces.
    repository, such as `data/your_model_features.npy`.
 2. Open `global_feature_exploration.ipynb` using your `attpc-latent` kernel.
 3. Update the data loading paths to point to your target features and aligned
-   labels.
+   labels. Use a sentinel such as `-1` for unlabeled events; it is treated as its
+   own class in every section and always plotted in grey.
 4. Run the evaluation cells to compute embeddings and save results to the
    generated `plots/` folder.
 
@@ -53,7 +54,8 @@ encoder separates fundamental physics event topologies.
 
 Modify `global_feature_exploration/linear_probing.sh` to specify the path to
 your target `.npy` feature matrix, labels, and model identification name. Use
-`--classifier linear-svm` for a linear SVM instead of logistic regression.
+`--class-name` once per sorted unique label (including unlabeled sentinels).
+Use `--classifier linear-svm` for a linear SVM instead of logistic regression.
 Execute the shell script from that folder:
 
 ```bash

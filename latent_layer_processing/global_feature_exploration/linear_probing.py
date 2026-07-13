@@ -72,13 +72,16 @@ def save_linear_probe_outputs(y_test, y_pred, classes, class_names, results_fold
 def linear_probe_evaluation(name, test_size, seed, regularization, classifier, class_names, features_file, labels_file):
     """
     Perform linear probe evaluation using pre-extracted NumPy feature embeddings
-    and corresponding target labels.
+    and corresponding labels.
+
+    Every unique label value is treated as its own class, including sentinel
+    values such as -1 for unlabeled events.
     """
 
     print("Loading features and labels...")
 
     global_features = np.load(features_file) # Expected shape: (N, D)
-    combined_track_labels = np.load(labels_file) # Expected shape: (N,)
+    combined_track_labels = np.load(labels_file).ravel() # Expected shape: (N,)
     global_features, combined_track_labels = validate_features_and_labels(
         global_features,
         combined_track_labels,
