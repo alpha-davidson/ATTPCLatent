@@ -81,7 +81,9 @@ sign that the encoder has learned meaningful structure.
 
 A logistic regression model, linear SVM, or Ridge regressor trained on top of
 frozen embeddings. Use `--task classification` for discrete labels or
-`--task regression` for continuous targets `(N,)`.
+`--task regression` for continuous targets `(N,)`. Input batch normalization
+(train-split mean/variance, applied identically to both tasks) is on by
+default; use `--no-batch-norm` to probe raw embeddings instead.
 
 To use linear probing:
 
