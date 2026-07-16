@@ -1,23 +1,16 @@
 import click
-import json
-import os
-
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sns
 from sklearn.linear_model import LogisticRegression, Ridge
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    mean_absolute_error,
-    mean_squared_error,
-    r2_score,
-)
+from sklearn.svm import LinearSVC
+from sklearn.metrics import (accuracy_score, classification_report, confusion_matrix,
+                             mean_absolute_error, mean_squared_error, r2_score)
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import LinearSVC
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import json
 
 from utils import validate_features_and_labels, format_class_names
 
@@ -44,21 +37,15 @@ def save_classification_outputs(y_test, y_pred, classes, class_names, results_fo
     """Save the classification report and confusion matrix for the linear probe."""
     cm = confusion_matrix(y_test, y_pred, labels=classes)
     plt.figure(figsize=(8, 6))
-
-    sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        xticklabels=class_names,
-        yticklabels=class_names,
-    )
-
-    plt.ylabel("Actual Class", fontsize=11)
-    plt.xlabel("Predicted Class", fontsize=11)
-    plt.title("Linear Probe Confusion Matrix", fontsize=14, fontweight="bold", pad=15)
-
-    plt.savefig(f"{results_folder}/confusion_matrix.png", dpi=300, bbox_inches="tight")
+    
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', 
+                xticklabels=class_names, yticklabels=class_names)
+    
+    plt.ylabel('Actual Class', fontsize=11)
+    plt.xlabel('Predicted Class', fontsize=11)
+    plt.title('Linear Probe Confusion Matrix', fontsize=14, fontweight='bold', pad=15)
+    
+    plt.savefig(f'{results_folder}/confusion_matrix.png', dpi=300, bbox_inches='tight')
     plt.close()
 
     report_dict = classification_report(
@@ -70,22 +57,23 @@ def save_classification_outputs(y_test, y_pred, classes, class_names, results_fo
         zero_division=0,
     )
     df = pd.DataFrame(report_dict).transpose().round(4)
-    df.to_csv(f"{results_folder}/classification_report.csv")
+
+    df.to_csv(f'{results_folder}/classification_report.csv')
 
     fig, ax = plt.subplots(figsize=(10, 4))
-    ax.axis("off")
+    ax.axis('off')
     table = ax.table(
         cellText=df.values,
         rowLabels=df.index,
         colLabels=df.columns,
-        cellLoc="center",
-        loc="center",
+        cellLoc='center',
+        loc='center',
     )
     table.auto_set_font_size(False)
     table.set_fontsize(10)
     table.scale(1.2, 1.5)
-    plt.title("Classification Report", fontsize=14, fontweight="bold", pad=15)
-    plt.savefig(f"{results_folder}/classification_report.png", dpi=300, bbox_inches="tight")
+    plt.title('Classification Report', fontsize=14, fontweight='bold', pad=15)
+    plt.savefig(f'{results_folder}/classification_report.png', dpi=300, bbox_inches='tight')
     plt.close()
 
 
@@ -231,7 +219,7 @@ def run_regression_probe(X_train, X_test, y_train, y_test, regularization, resul
     help="The name/profile identifier for the run (e.g. O16, Mg22, C16)",
 )
 @click.option("--test-size", default=0.2, type=click.FLOAT, help="Fraction of data held out for testing")
-@click.option("--seed", default=None, type=click.INT, help="Random seed for reproducibility")
+@click.option('--seed', default=None, type=click.INT, help='Random seed for reproducibility')
 @click.option(
     "--task",
     type=click.Choice(["classification", "regression"]),
@@ -256,8 +244,8 @@ def run_regression_probe(X_train, X_test, y_train, y_test, regularization, resul
     multiple=True,
     help="Class display name. Repeat once per sorted unique label.",
 )
-@click.argument("features-file", type=click.Path(exists=True))
-@click.argument("labels-file", type=click.Path(exists=True))
+@click.argument('features-file', type=click.Path(exists=True))
+@click.argument('labels-file', type=click.Path(exists=True))
 def linear_probe_evaluation(
     name,
     test_size,
@@ -280,13 +268,13 @@ def linear_probe_evaluation(
 
     base_seed = seed if seed is not None else np.random.randint(0, 100000)
     print(f"Using random seed baseline: {base_seed}")
-
+    
     master_results_dir = "./linear_probe_results"
     results_suffix = "linear_regression" if task == "regression" else "linear_probe"
     results_folder = os.path.join(master_results_dir, f"{name}_{results_suffix}")
     os.makedirs(results_folder, exist_ok=True)
     print(f"Target results directory established: {results_folder}")
-
+    
     if task == "classification":
         global_features, target_values = validate_features_and_labels(global_features, target_values)
         split_kwargs = {"stratify": target_values}
@@ -301,7 +289,7 @@ def linear_probe_evaluation(
         random_state=base_seed,
         **split_kwargs,
     )
-
+    
     print(f"Training set size: {X_train.shape[0]}")
     print(f"Test set size: {X_test.shape[0]}")
 
@@ -331,26 +319,26 @@ def linear_probe_evaluation(
         )
 
     results = {
-        "dataset_info": {
-            "features_source": features_file,
-            "labels_source": labels_file,
-            "total_samples": len(global_features),
-            "feature_dim": global_features.shape[1],
+        'dataset_info': {
+            'features_source': features_file,
+            'labels_source': labels_file,
+            'total_samples': len(global_features),
+            'feature_dim': global_features.shape[1],
         },
-        "experiment_config": {
-            "test_size": test_size,
-            "seed": seed,
-            "effective_seed": int(base_seed),
+        'experiment_config': {
+            'test_size': test_size,
+            'seed': seed,
+            'effective_seed': int(base_seed),
             **task_results["experiment_config"],
         },
         "metrics": task_results["metrics"],
     }
 
-    with open(f"{results_folder}/results.json", "w") as f:
+    with open(f'{results_folder}/results.json', 'w') as f:
         json.dump(results, f, indent=4)
-
+    
     print(f"\nAll results saved to: {results_folder}")
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     linear_probe_evaluation()
