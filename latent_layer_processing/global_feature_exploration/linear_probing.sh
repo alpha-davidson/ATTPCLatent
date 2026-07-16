@@ -10,7 +10,8 @@ source activate attpc-latent
 # --name: label used for the output folder name, saved under ./linear_probe_results/<name>_linear_probe
 # --test-size: fraction of the dataset held out for testing, e.g. 0.2 means 20 percent test data
 # --seed: optional integer seed for reproducible train/test splits, e.g. --seed 42 (default is None, and you will have to add this line if you want to use a specific seed)
-# --task: classification (default) or regression
+# --task: classification (default) or regression. Add --task regression BELOW only when the
+#         labels file holds continuous (N,) targets, not class labels like master_labels.npy.
 # --regularization: classification uses C (larger = weaker regularization); regression uses Ridge alpha
 # --classifier: logistic-regression (default) or linear-svm (classification only)
 # --class-name: optional display label for a class. Repeat once per sorted unique label. (default is None, and you will have to add this line if you want to use specific class names)
@@ -24,7 +25,6 @@ source activate attpc-latent
 python linear_probing.py \
     --name testing \
     --test-size 0.2 \
-    --task regression \
     --regularization 1.0 \
     ../../data/features.npy \
     ../../data/master_labels.npy
