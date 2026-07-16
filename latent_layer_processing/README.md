@@ -6,9 +6,14 @@ linear probing utilities.
 
 ## 1. Global Feature Exploration & Clustering
 
-The notebook and `clustering.py` support class-colored plots by default. For
-continuous metadata such as energy or charge, pass `color_mode='continuous'` and
-`values=<array>` to `UMAP_embedding` or `t_SNE_clustering`.
+`global_feature_exploration.ipynb` is the interactive workspace used to explore
+the geometric distribution of the latent space. It interfaces with
+`clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
+generating projections in both 2D and 3D spaces.
+
+Plots are class-colored by default. For continuous metadata such as energy or
+charge, pass `color_mode='continuous'` and `values=<array>` to `UMAP_embedding`
+or `t_SNE_clustering`.
 
 ### How to Use
 
