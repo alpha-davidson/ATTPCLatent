@@ -12,25 +12,9 @@ import seaborn as sns
 import os
 import json
 
-from utils import validate_features_and_labels, format_class_names
+from utils import validate_features_and_labels, format_class_names, validate_features_and_targets
 
 
-def validate_features_and_targets(features, targets):
-    """Validate that every feature row has exactly one regression target."""
-    targets = np.asarray(targets, dtype=float).ravel()
-    if targets.ndim != 1:
-        raise ValueError(
-            "targets must be a one-dimensional array with one value per feature row; "
-            f"got shape {targets.shape}."
-        )
-    if len(features) != len(targets):
-        raise ValueError(
-            "features and targets must contain the same number of rows; "
-            f"got {len(features)} features and {len(targets)} targets."
-        )
-    if not np.all(np.isfinite(targets)):
-        raise ValueError("targets must contain only finite values.")
-    return features, targets
 
 
 def save_classification_outputs(y_test, y_pred, classes, class_names, results_folder):
@@ -77,7 +61,7 @@ def save_classification_outputs(y_test, y_pred, classes, class_names, results_fo
     plt.close()
 
 
-def save_regression_outputs(y_test, y_pred, results_folder):
+def save_regression_outputs(y_test, y_pred, metrics, results_folder):
     """Save predicted-vs-true plot and regression metrics table."""
     plt.figure(figsize=(6, 6))
     plt.scatter(y_test, y_pred, alpha=0.7, s=20)
@@ -90,6 +74,24 @@ def save_regression_outputs(y_test, y_pred, results_folder):
     plt.legend()
     plt.tight_layout()
     plt.savefig(f"{results_folder}/predicted_vs_true.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+    df = pd.DataFrame([metrics]).round(4)
+    df.to_csv(f"{results_folder}/regression_metrics.csv", index=False)
+
+    fig, ax = plt.subplots(figsize=(8, 2))
+    ax.axis("off")
+    table = ax.table(
+        cellText=df.values,
+        colLabels=df.columns,
+        cellLoc="center",
+        loc="center",
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(10)
+    table.scale(1.2, 1.5)
+    plt.title("Regression Metrics", fontsize=14, fontweight="bold", pad=15)
+    plt.savefig(f"{results_folder}/regression_metrics.png", dpi=300, bbox_inches="tight")
     plt.close()
 
 
@@ -177,9 +179,17 @@ def run_classification_probe(
     return results
 
 
-def run_regression_probe(X_train, X_test, y_train, y_test, regularization, results_folder):
+def run_regression_probe(
+    X_train,
+    X_test,
+    y_train,
+    y_test,   
+    regularization, 
+    base_seed, 
+    results_folder
+):
     print("\nTraining linear regression probe (Ridge)...")
-    model = Ridge(alpha=regularization)
+    model = Ridge(alpha=regularization, random_state=base_seed)
     model.fit(X_train, y_train)
 
     y_train_pred = model.predict(X_train)
@@ -194,7 +204,7 @@ def run_regression_probe(X_train, X_test, y_train, y_test, regularization, resul
         f"Test RMSE: {test_metrics['rmse']:.4f}"
     )
 
-    save_regression_outputs(y_test, y_test_pred, results_folder)
+    save_regression_outputs(y_test, y_test_pred, test_metrics, results_folder)
 
     results = {
         "experiment_config": {
