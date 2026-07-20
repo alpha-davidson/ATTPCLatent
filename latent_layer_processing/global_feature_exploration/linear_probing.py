@@ -325,6 +325,7 @@ def linear_probe_evaluation(
             y_train,
             y_test,
             regularization,
+            base_seed,
             results_folder,
         )
 
