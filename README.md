@@ -96,11 +96,14 @@ structure.
 
 ### Linear Probing
 
-A logistic regression model or linear SVM trained on top of frozen embeddings.
-If a simple linear boundary can classify events accurately, it means the relevant
-physics information is cleanly and explicitly encoded in the latent space. This
-is the standard benchmark for representation quality. Every label value in the
-file is treated as a class, including unlabeled sentinels such as `-1`.
+A logistic regression model, linear SVM, or Ridge regressor trained on top of
+frozen embeddings. Use `--task classification` for discrete labels or
+`--task regression` for continuous targets `(N,)`.
+It is assumed that if a simple linear boundary can classify events accurately, 
+it means the relevant physics information is cleanly and explicitly encoded in
+the latent space.  
+
+This is the standard benchmark for representation quality. 
 
 To use linear probing:
 
