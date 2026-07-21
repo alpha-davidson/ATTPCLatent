@@ -45,9 +45,9 @@ python latent_layer_processing/latent_pipeline.py \
 
 ## 3. Linear Probing
 
-`linear_probing.py` applies a fast linear classifier over frozen latent spaces
-to calculate overall classification accuracy. This evaluates how explicitly the
-encoder separates fundamental physics event topologies.
+`linear_probing.py` applies a fast linear classifier or Ridge regressor over frozen
+latent spaces. Use `--task classification` (default) for class labels, or
+`--task regression` for continuous targets with shape `(N,)`.
 
 ### How to Run
 

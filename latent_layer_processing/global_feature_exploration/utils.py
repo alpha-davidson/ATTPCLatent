@@ -126,3 +126,20 @@ def plot_labeled_embedding(embedding, labels, unique_labels, class_names, ax,
                 s=size,
                 alpha=alpha,
             )
+def validate_features_and_targets(features, targets):
+    """Validate that every feature row has exactly one regression target."""
+    targets = np.asarray(targets, dtype=float).ravel()
+    if targets.ndim != 1:
+        raise ValueError(
+            "targets must be a one-dimensional array with one value per feature row; "
+            f"got shape {targets.shape}."
+        )
+    if len(features) != len(targets):
+        raise ValueError(
+            "features and targets must contain the same number of rows; "
+            f"got {len(features)} features and {len(targets)} targets."
+        )
+    if not np.all(np.isfinite(targets)):
+        raise ValueError("targets must contain only finite values.")
+    return features, targets
+
