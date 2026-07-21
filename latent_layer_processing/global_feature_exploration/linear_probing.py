@@ -267,11 +267,16 @@ def linear_probe_evaluation(
     features_file,
     labels_file,
 ):
-    """Evaluate frozen embeddings with a linear probe for classification or regression."""
+    """
+    Evaluate frozen embeddings with a linear probe for classification or regression.
+
+    For classification, every unique label value is treated as its own class,
+    including sentinel values such as -1 for unlabeled events.
+    """
 
     print("Loading features and labels...")
-    global_features = np.load(features_file)
-    target_values = np.load(labels_file)
+    global_features = np.load(features_file)  # Expected shape: (N, D)
+    target_values = np.load(labels_file).ravel()  # Expected shape: (N,)
 
     print(f"Features shape: {global_features.shape}")
     print(f"Targets shape: {np.asarray(target_values).shape}")

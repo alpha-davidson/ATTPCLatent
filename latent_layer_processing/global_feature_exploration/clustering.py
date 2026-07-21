@@ -8,6 +8,7 @@ from sklearn.decomposition import PCA
 import umap
 
 from utils import (
+    DEFAULT_UNLABELED_VALUES,
     validate_features_and_labels,
     validate_plot_dimension,
     get_class_names,
@@ -16,12 +17,14 @@ from utils import (
 )
 
 def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=None,
-                     plt_colors=None, save_dir=None, plot_name=None, random_state=None):
+                     plt_colors=None, save_dir=None, plot_name=None, random_state=None,
+                     unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Run t-SNE and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     plt_colors is optional; when omitted, one color is generated per class.
+    Rows matching unlabeled_values are always drawn in grey.
     """
 
     validate_plot_dimension(dimension, "t_SNE_clustering")
@@ -39,18 +42,23 @@ def t_SNE_clustering(features, dimension, ax, labels, perplexity, class_names=No
     model = TSNE(n_components=dimension, perplexity=perplexity, random_state=random_state)
     tsne_data = model.fit_transform(features)
 
-    plot_labeled_embedding(tsne_data, labels, unique_labels, class_names, ax, plt_colors)
+    plot_labeled_embedding(
+        tsne_data, labels, unique_labels, class_names, ax, plt_colors,
+        unlabeled_values=unlabeled_values,
+    )
     ax.figure.savefig(os.path.join(folder_path, f"{plot_name}_perplexity_{perplexity}.png"), dpi=200)
 
-    return tsne_data 
+    return tsne_data
 
 def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
-                   plt_colors=None, save_dir=None, plot_name=None, random_state=None):
+                   plt_colors=None, save_dir=None, plot_name=None, random_state=None,
+                   unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Run UMAP and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
     plt_colors is optional; when omitted, one color is generated per class.
+    Rows matching unlabeled_values are always drawn in grey.
     """
     validate_plot_dimension(dimension, "UMAP_embedding")
     features, labels = validate_features_and_labels(features, labels)
@@ -67,17 +75,22 @@ def UMAP_embedding(features, dimension, ax, labels, neighbors, class_names=None,
     model = umap.UMAP(n_components=dimension, n_neighbors=neighbors, random_state=random_state)
     umap_data = model.fit_transform(features)
 
-    plot_labeled_embedding(umap_data, labels, unique_labels, class_names, ax, plt_colors)
+    plot_labeled_embedding(
+        umap_data, labels, unique_labels, class_names, ax, plt_colors,
+        unlabeled_values=unlabeled_values,
+    )
     ax.figure.savefig(os.path.join(folder_path, f"{plot_name}_neighbors_{neighbors}.png"), dpi=200)
 
     return umap_data
 
 def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_to_print=10,
-                       plot_name=None, class_names=None, random_state=None):
+                       plot_name=None, class_names=None, random_state=None,
+                       unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Run k-means and compare cluster assignments with known labels.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
+    Rows matching unlabeled_values are always drawn in grey on the true-label panel.
     """
     validate_plot_dimension(dimension, "k_means_clustering")
 
@@ -119,7 +132,10 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
         ax1.set_title("KMeans Clustering")
         ax1.legend()
 
-        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0)
+        plot_labeled_embedding(
+            reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0,
+            unlabeled_values=unlabeled_values,
+        )
         ax2.set_title("True Labels")
         ax2.legend()
 
@@ -132,7 +148,10 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
         ax1.legend()
 
         ax2 = fig.add_subplot(122, projection='3d')
-        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0)
+        plot_labeled_embedding(
+            reduced_features, labels, unique_labels, class_names, ax2, size=5, alpha=1.0,
+            unlabeled_values=unlabeled_values,
+        )
         ax2.set_title("True Labels")
         ax2.legend()
 
@@ -144,11 +163,13 @@ def k_means_clustering(features, labels, dimension, save_dir=None, num_samples_t
     return features, cluster_labels, indices
 
 def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
-                   plot_name=None, random_state=None):
+                   plot_name=None, random_state=None,
+                   unlabeled_values=DEFAULT_UNLABELED_VALUES):
     """Project features with PCA and plot points colored by class label.
 
     labels must contain one label for each row in features. class_names is
     optional; when provided as a list, it follows np.unique(labels) order.
+    Rows matching unlabeled_values are always drawn in grey.
     """
     validate_plot_dimension(dimension, "pca_clustering")
 
@@ -171,7 +192,10 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
 
     if dimension == 2:
         fig, ax = plt.subplots(figsize=(7, 6))
-        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0)
+        plot_labeled_embedding(
+            reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0,
+            unlabeled_values=unlabeled_values,
+        )
         ax.set_title("PCA Projection")
         ax.legend()
         filename = "pca_2d.png" if plot_name is None else f"{plot_name}_pca_2d.png"
@@ -181,7 +205,10 @@ def pca_clustering(features, labels, dimension, save_dir=None, class_names=None,
     elif dimension == 3:
         fig = plt.figure(figsize=(7, 6))
         ax = fig.add_subplot(111, projection='3d')
-        plot_labeled_embedding(reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0)
+        plot_labeled_embedding(
+            reduced_features, labels, unique_labels, class_names, ax, size=5, alpha=1.0,
+            unlabeled_values=unlabeled_values,
+        )
         ax.set_title("PCA Projection")
         ax.legend()
         filename = "pca_3d.png" if plot_name is None else f"{plot_name}_pca_3d.png"

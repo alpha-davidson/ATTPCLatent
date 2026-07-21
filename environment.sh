@@ -25,6 +25,14 @@ fi
 echo "Creating conda environment '${ENV_NAME}' from ${ENV_FILE}"
 "${CONDA_EXE}" env create --file "${ENV_FILE}"
 
+echo "Registering Jupyter kernel '${ENV_NAME}'"
+"${CONDA_EXE}" run -n "${ENV_NAME}" python -m ipykernel install \
+  --user \
+  --name "${ENV_NAME}" \
+  --display-name "${ENV_NAME}"
+
 echo
 echo "Activate with:"
 echo "  conda activate ${ENV_NAME}"
+echo
+echo "In Jupyter or VS Code, select the '${ENV_NAME}' kernel for notebooks."
