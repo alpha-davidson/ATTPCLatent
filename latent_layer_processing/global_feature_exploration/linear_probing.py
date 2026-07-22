@@ -12,7 +12,13 @@ import seaborn as sns
 import os
 import json
 
-from utils import validate_features_and_labels, format_class_names, validate_features_and_targets
+from utils import (
+    DEFAULT_UNLABELED_VALUES,
+    filter_unlabeled,
+    format_class_names,
+    validate_features_and_labels,
+    validate_features_and_targets,
+)
 
 
 
@@ -286,8 +292,9 @@ def linear_probe_evaluation(
     """
     Evaluate frozen embeddings with a linear probe for classification or regression.
 
-    Unlabeled events (sentinel values such as -1) are dropped before the
-    train/test split rather than treated as their own class.
+    For classification, unlabeled events (sentinel values such as -1) are
+    dropped before the train/test split rather than treated as their own
+    class.
 
     By default, input batch normalization is applied before the probe:
     train-split mean/variance per dimension, no learnable scale or shift.
@@ -313,6 +320,12 @@ def linear_probe_evaluation(
     
     if task == "classification":
         global_features, target_values = validate_features_and_labels(global_features, target_values)
+        global_features, target_values, n_dropped = filter_unlabeled(global_features, target_values)
+        if n_dropped:
+            print(
+                f"Dropped {n_dropped} unlabeled event(s) "
+                f"(sentinel value(s): {DEFAULT_UNLABELED_VALUES})."
+            )
         split_kwargs = {"stratify": target_values}
     else:
         global_features, target_values = validate_features_and_targets(global_features, target_values)

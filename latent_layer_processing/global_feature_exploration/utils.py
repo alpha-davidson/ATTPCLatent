@@ -23,6 +23,18 @@ def _is_unlabeled_label(label_value, unlabeled_values):
     return False
 
 
+def filter_unlabeled(features, labels, unlabeled_values=None):
+    """Drop rows whose label matches an unlabeled sentinel value (default -1).
+
+    Returns the filtered features, filtered labels, and the number of rows removed.
+    """
+    labels = np.asarray(labels)
+    mask = np.array(
+        [not _is_unlabeled_label(label_value, unlabeled_values) for label_value in labels]
+    )
+    return features[mask], labels[mask], int(len(labels) - mask.sum())
+
+
 def validate_features_and_labels(features, labels):
     """Validate that every feature row has exactly one label."""
     labels = np.asarray(labels)
