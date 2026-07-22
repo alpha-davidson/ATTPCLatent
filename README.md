@@ -21,10 +21,12 @@ Where `N` is the number of events and `D` is the embedding dimension. Row order
 must match between the two files.
 
 **Partially labeled data:** assign unlabeled events a dedicated label value such
-as `-1`. That value is treated as its own class in every analysis (plots, k-means,
-linear probing), not filtered out. On label-colored plots it is always drawn in
-grey so it stands out from verified classes. Use `class_names` in the notebook or
-`--class-name` in linear probing to give it a readable legend name.
+as `-1`. That value is treated as its own class in visualizations and k-means
+(plots, cluster counts), not filtered out — on label-colored plots it is always
+drawn in grey so it stands out from verified classes. Use `class_names` in the
+notebook to give it a readable legend name. Linear probing is the exception: it
+drops unlabeled events entirely before training, since a supervised probe has
+no meaningful way to evaluate a sentinel "class".
 
 To export embeddings from your model, add the following to your evaluation
 notebook:
@@ -98,12 +100,16 @@ structure.
 
 A logistic regression model, linear SVM, or Ridge regressor trained on top of
 frozen embeddings. Use `--task classification` for discrete labels or
-`--task regression` for continuous targets `(N,)`.
+`--task regression` for continuous targets `(N,)`. Input batch normalization
+(train-split mean/variance, applied identically to both tasks) is on by
+default; use `--no-batch-norm` to probe raw embeddings instead.
 It is assumed that if a simple linear boundary can classify events accurately, 
 it means the relevant physics information is cleanly and explicitly encoded in
 the latent space.  
 
-This is the standard benchmark for representation quality. 
+This is the standard benchmark for representation quality. Unlabeled events
+(default sentinel `-1`) are dropped before the train/test split, since they
+would otherwise be probed as if they were a real class.
 
 To use linear probing:
 

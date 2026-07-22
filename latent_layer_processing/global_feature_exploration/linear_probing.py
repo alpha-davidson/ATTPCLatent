@@ -107,8 +107,17 @@ def compute_regression_metrics(y_true, y_pred):
     }
 
 
-def scale_probe_features(X_train, X_test):
-    """Fit StandardScaler on the training split and transform both splits."""
+def scale_probe_features(X_train, X_test, apply_batch_norm=True):
+    """Return probe inputs with optional input batch norm (Lee et al. 2023).
+
+    When enabled (the default), per-dimension mean and variance are fit on the
+    training split only (affine-free, equivalent to BN with gamma=1 and
+    beta=0). Applies identically ahead of both classification and regression
+    probes, since this call site runs before the task branch.
+    """
+    if not apply_batch_norm:
+        return X_train, X_test, None
+
     scaler = StandardScaler()
     return scaler.fit_transform(X_train), scaler.transform(X_test), scaler
 
@@ -254,6 +263,12 @@ def run_regression_probe(
     multiple=True,
     help="Class display name. Repeat once per sorted unique label.",
 )
+@click.option(
+    "--no-batch-norm",
+    is_flag=True,
+    default=False,
+    help="Skip input batch normalization before probing.",
+)
 @click.argument('features-file', type=click.Path(exists=True))
 @click.argument('labels-file', type=click.Path(exists=True))
 def linear_probe_evaluation(
@@ -264,15 +279,21 @@ def linear_probe_evaluation(
     regularization,
     classifier,
     class_names,
+    no_batch_norm,
     features_file,
     labels_file,
 ):
     """
     Evaluate frozen embeddings with a linear probe for classification or regression.
 
-    For classification, every unique label value is treated as its own class,
-    including sentinel values such as -1 for unlabeled events.
+    Unlabeled events (sentinel values such as -1) are dropped before the
+    train/test split rather than treated as their own class.
+
+    By default, input batch normalization is applied before the probe:
+    train-split mean/variance per dimension, no learnable scale or shift.
+    Use --no-batch-norm to probe raw embeddings instead.
     """
+    apply_batch_norm = not no_batch_norm
 
     print("Loading features and labels...")
     global_features = np.load(features_file)  # Expected shape: (N, D)
@@ -308,8 +329,11 @@ def linear_probe_evaluation(
     print(f"Training set size: {X_train.shape[0]}")
     print(f"Test set size: {X_test.shape[0]}")
 
-    print("Standardizing features (train-split fit)...")
-    X_train_scaled, X_test_scaled, _ = scale_probe_features(X_train, X_test)
+    if apply_batch_norm:
+        print("Using input batch normalization (train-split mean/variance, Lee et al. 2023 protocol).")
+    else:
+        print("Using raw frozen embeddings without input batch normalization.")
+    X_train_scaled, X_test_scaled, _ = scale_probe_features(X_train, X_test, apply_batch_norm)
 
     if task == "classification":
         task_results = run_classification_probe(
@@ -345,6 +369,7 @@ def linear_probe_evaluation(
             'test_size': test_size,
             'seed': seed,
             'effective_seed': int(base_seed),
+            'batch_norm': apply_batch_norm,
             **task_results["experiment_config"],
         },
         "metrics": task_results["metrics"],
