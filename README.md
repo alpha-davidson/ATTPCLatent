@@ -129,3 +129,10 @@ lower-dimensional representation. This representation maps the data along new,
 flat axes that capture the maximum variation and spread of your embeddings.
 PCA variance analysis runs without label coloring; labeled projection plots use
 every class in the label file.
+
+### TwoNN Intrinsic Dimension
+
+Estimates the effective intrinsic dimension of the embedding cloud from 1st/2nd
+nearest-neighbor distance ratios, implemented via `scikit-dimension`. The
+exploration notebook runs TwoNN on random subsamples of many sizes and plots ID
+vs subsample size; the plateau of that curve is reported as the effective ID.
