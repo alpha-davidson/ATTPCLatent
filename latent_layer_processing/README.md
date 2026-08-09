@@ -11,6 +11,11 @@ the geometric distribution of the latent space. It interfaces with
 `clustering.py`, which implements t-SNE, UMAP, and k-means clustering,
 generating projections in both 2D and 3D spaces.
 
+For high-dimensional dense embeddings, the notebook's UMAP and t-SNE cells
+support an optional PCA (or TruncatedSVD) reduction step before the manifold
+fit, via `reduce_features_for_manifold`. This is recommended for t-SNE by
+default and off by default for UMAP; toggle each independently in its cell.
+
 ### How to Use
 
 1. Ensure your model's extracted representation matrix is saved in the
@@ -47,7 +52,9 @@ python latent_layer_processing/latent_pipeline.py \
 
 `linear_probing.py` applies a fast linear classifier or Ridge regressor over frozen
 latent spaces. Use `--task classification` (default) for class labels, or
-`--task regression` for continuous targets with shape `(N,)`.
+`--task regression` for continuous targets with shape `(N,)`. Input batch
+normalization is applied by default before either task; pass `--no-batch-norm`
+to skip it.
 
 ### How to Run
 
